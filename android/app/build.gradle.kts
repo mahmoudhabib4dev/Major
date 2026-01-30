@@ -47,6 +47,7 @@ flutter {
 dependencies {
     // Required for image_cropper (ucrop library)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
 
     // Import the Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.7.0"))

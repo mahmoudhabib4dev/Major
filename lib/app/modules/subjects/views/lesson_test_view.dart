@@ -127,62 +127,34 @@ class LessonTestView extends GetView<LessonTestController> {
             ),
           )),
           const SizedBox(height: 30),
-          // Navigation buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Previous button
-              Obx(() => controller.currentQuestionIndex.value > 0
-                  ? ElevatedButton(
-                      onPressed: controller.previousQuestion,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF000D47),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 30,
-                          vertical: 15,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'السابق',
-                        style: TextStyle(
-                          fontFamily: 'Tajawal',
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink()),
-              // Next button
-              Obx(() => ElevatedButton(
-                    onPressed: controller.isCurrentQuestionAnswered()
-                        ? controller.nextQuestion
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFB2B3A),
-                      disabledBackgroundColor: Colors.grey[300],
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 15,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+          // Navigation button - centered (no back button to prevent going back)
+          Center(
+            child: Obx(() => ElevatedButton(
+                  onPressed: controller.isCurrentQuestionAnswered()
+                      ? controller.nextQuestion
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFB2B3A),
+                    disabledBackgroundColor: Colors.grey[300],
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 50,
+                      vertical: 15,
                     ),
-                    child: Text(
-                      controller.currentQuestionIndex.value < controller.totalQuestions - 1
-                          ? 'التالي'
-                          : 'إنهاء',
-                      style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  )),
-            ],
+                  ),
+                  child: Text(
+                    controller.currentQuestionIndex.value < controller.totalQuestions - 1
+                        ? 'التالي'
+                        : 'إنهاء',
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                )),
           ),
         ],
       ),

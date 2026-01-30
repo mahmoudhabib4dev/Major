@@ -265,9 +265,28 @@ class QuizController extends GetxController {
       print('🔵 Response status: ${response.statusCode}');
       print('🔵 Response body: ${response.body}');
 
+      // Check for server errors
+      if (response.statusCode >= 500) {
+        print('❌ Server error: ${response.statusCode}');
+        AppDialog.showError(
+          message: 'خطأ في الخادم. يرجى المحاولة لاحقاً',
+        );
+        return;
+      }
+
       final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
       print('🔵 JSON decoded successfully');
       print('🔵 JSON data: $jsonData');
+
+      // Check if the response indicates success and has data
+      if (jsonData['success'] != true || jsonData['data'] == null) {
+        final errorMessage = jsonData['message'] as String? ?? 'فشل تحميل الاختبار';
+        print('❌ API error: $errorMessage');
+        AppDialog.showError(
+          message: errorMessage,
+        );
+        return;
+      }
 
       final selfTestResponse = SelfTestResponseModel.fromJson(jsonData);
       print('🔵 Model parsed successfully');
@@ -290,7 +309,7 @@ class QuizController extends GetxController {
       print('❌ Error loading self-test: $e');
       print('❌ Stack trace: $stackTrace');
       AppDialog.showError(
-        message: 'فشل تحميل الاختبار: $e',
+        message: 'فشل تحميل الاختبار',
       );
     } finally {
       isLoading.value = false;
@@ -394,6 +413,7 @@ class QuizController extends GetxController {
 
     // Store the user's answer
     userAnswers[currentQuestionIndex.value] = selectedAnswerKey.value!;
+    userAnswers.refresh(); // Trigger UI update for progress indicators
 
     // Check if answer is correct - handle both SelfTestQuestionModel and TestQuestion
     int? correctAnswer;

@@ -20,12 +20,21 @@ class LessonModel {
   });
 
   factory LessonModel.fromJson(Map<String, dynamic> json) {
+    // Handle is_alive as either bool or int
+    int isAliveValue = 0;
+    final isAliveRaw = json['is_alive'];
+    if (isAliveRaw is bool) {
+      isAliveValue = isAliveRaw ? 1 : 0;
+    } else if (isAliveRaw is int) {
+      isAliveValue = isAliveRaw;
+    }
+
     return LessonModel(
       id: json['id'] as int,
       testId: json['test_id'] as int?,
       name: json['name'] as String,
       order: json['order'] as String?,
-      isAlive: json['is_alive'] as int? ?? 0,
+      isAlive: isAliveValue,
       pdfFile: json['pdf_file'] as String?,
       videoUrl: json['video_url'] as String?,
       isFavorite: json['is_favorite'] as bool?,

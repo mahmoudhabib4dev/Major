@@ -152,11 +152,7 @@ class QuizView extends GetView<QuizController> {
         ),
         SizedBox(height: screenSize.height * 0.03),
         // Question
-        ZoomIn(
-          duration: const Duration(milliseconds: 700),
-          delay: const Duration(milliseconds: 400),
-          child: _buildQuestion(context),
-        ),
+        Obx(() => _buildQuestion(context)),
         SizedBox(height: screenSize.height * 0.03),
         // Answer options
         Obx(() => _buildAnswerOptions(context)),
@@ -207,8 +203,28 @@ class QuizView extends GetView<QuizController> {
         itemBuilder: (context, index) {
           final number = index + 1;
           final isCurrent = index == controller.currentQuestionIndex.value;
+          final isAnswered = controller.userAnswers.containsKey(index);
+
+          // Determine colors based on state
+          Color backgroundColor;
+          Color textColor;
+
+          if (isCurrent) {
+            backgroundColor = AppColors.primary;
+            textColor = Colors.white;
+          } else if (isAnswered) {
+            backgroundColor = AppColors.success;
+            textColor = Colors.white;
+          } else {
+            backgroundColor = AppColors.grey200;
+            textColor = AppColors.grey500;
+          }
+
+          // Only allow tapping on current or future questions (not previous answered ones)
+          final canTap = index >= controller.currentQuestionIndex.value;
+
           return GestureDetector(
-            onTap: () => controller.goToQuestion(index),
+            onTap: canTap ? () => controller.goToQuestion(index) : null,
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 4),
               width: 37,
@@ -216,14 +232,14 @@ class QuizView extends GetView<QuizController> {
               padding: const EdgeInsets.only(top: 3.5, right: 1.5),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isCurrent ? AppColors.primary : AppColors.grey200,
+                color: backgroundColor,
                 shape: BoxShape.circle,
               ),
               child: Text(
                 '$number',
                 style: TextStyle(
                   fontFamily: 'Tajawal',
-                  color: isCurrent ? Colors.white : AppColors.grey500,
+                  color: textColor,
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
                   height: 1.2,
@@ -285,21 +301,28 @@ class QuizView extends GetView<QuizController> {
             ),
           ),
         ),
-        // Show explanation after checking answer
+        // Show correct answer after checking answer (when wrong)
         if (controller.showExplanation.value) ...[
-          // Get explanation from the question
+          // Get correct answer from the question
           () {
-            String? explanation;
+            int? rightAnswer;
+            Map<String, String?>? options;
             if (question is SelfTestQuestionModel) {
-              explanation = question.explanation;
+              rightAnswer = question.rightAnswer;
+              options = question.options;
             } else if (question is TestQuestionModel) {
-              explanation = question.explanation;
+              rightAnswer = question.rightAnswer;
+              options = question.options;
             } else {
-              explanation = (question as dynamic).explanation;
+              rightAnswer = (question as dynamic).rightAnswer;
+              options = (question as dynamic).options as Map<String, String?>?;
             }
 
-            // Only show if explanation exists and answer is wrong
-            if (explanation != null && explanation.isNotEmpty && controller.isCorrectAnswer.value == false) {
+            // Only show if answer is wrong and we have the correct answer
+            if (rightAnswer != null && controller.isCorrectAnswer.value == false) {
+              // Get the correct answer text
+              final correctAnswerText = options?[rightAnswer.toString()] ?? '';
+
               return Column(
                 children: [
                   const SizedBox(height: 16),
@@ -307,10 +330,10 @@ class QuizView extends GetView<QuizController> {
                     width: double.infinity,
                     padding: EdgeInsets.all(AppDimensions.spacing(context, 0.04)),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: AppColors.success.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.error,
+                        color: AppColors.success,
                         width: 1,
                       ),
                     ),
@@ -321,39 +344,29 @@ class QuizView extends GetView<QuizController> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Icon(
-                              Icons.cancel,
-                              color: AppColors.error,
+                              Icons.check_circle,
+                              color: AppColors.success,
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'إجابة خاطئة',
+                              'الجواب الصحيح:',
                               style: TextStyle(
                                 fontFamily: 'Tajawal',
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.error,
+                                color: AppColors.success,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'التفسير:',
+                          correctAnswerText,
                           style: const TextStyle(
                             fontFamily: 'Tajawal',
                             fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             color: Color(0xFF333333),
-                          ),
-                          textAlign: TextAlign.right,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          explanation,
-                          style: const TextStyle(
-                            fontFamily: 'Tajawal',
-                            fontSize: 14,
-                            color: Color(0xFF666666),
                           ),
                           textAlign: TextAlign.right,
                         ),
@@ -377,7 +390,7 @@ class QuizView extends GetView<QuizController> {
     return Column(
       children: List.generate(validOptions.length, (index) {
         final optionKey = question.getOptionKey(index)!;
-        final optionLabel = String.fromCharCode(65 + index); // A, B, C, D
+        final optionLabel = (index + 1).toString(); // 1, 2, 3, 4
         final isSelected = controller.selectedAnswerKey.value == optionKey;
 
         // Get the correct answer key
@@ -530,114 +543,61 @@ class QuizView extends GetView<QuizController> {
   }
 
   Widget _buildNavigationButtons(BuildContext context) {
-    final Size screenSize = MediaQuery.of(context).size;
-    final isFirstQuestion = controller.currentQuestionIndex.value == 0;
     final isLastQuestion = controller.currentQuestionIndex.value == controller.questions.length - 1;
 
-    return Row(
-      children: [
-        // Back button - only show if not first question
-        if (!isFirstQuestion)
-          Container(
-            width: 50,
-            height: 50,
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: controller.previousQuestion,
-                borderRadius: BorderRadius.circular(25),
-                child: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
+    return Center(
+      child: SizedBox(
+        width: 250,
+        height: 50,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: controller.selectedAnswerKey.value == null
+                ? null
+                : const LinearGradient(
+                    colors: [Color(0xFF000D47), Color(0xFF5765B0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
           ),
-        if (!isFirstQuestion) SizedBox(width: screenSize.width * 0.03),
-        // Check answer / Next button
-        Expanded(
-          child: SizedBox(
-            width: 195,
-            height: 50,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: controller.selectedAnswerKey.value == null
-                    ? null
-                    : const LinearGradient(
-                        colors: [Color(0xFF000D47), Color(0xFF5765B0)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-              ),
-              child: Container(
-                margin: const EdgeInsets.all(1), // Border width
-                decoration: BoxDecoration(
-                  color: Colors.white,
+          child: Container(
+            margin: const EdgeInsets.all(1), // Border width
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(19),
+            ),
+            child: ElevatedButton(
+              onPressed: controller.selectedAnswerKey.value == null
+                  ? null
+                  : () async {
+                      if (!controller.hasCheckedAnswer.value) {
+                        await controller.checkAnswer();
+                      } else {
+                        controller.nextQuestion();
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                disabledBackgroundColor: AppColors.grey200,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(19),
                 ),
-                child: ElevatedButton(
-                  onPressed: controller.selectedAnswerKey.value == null
-                      ? null
-                      : () async {
-                          if (!controller.hasCheckedAnswer.value) {
-                            await controller.checkAnswer();
-                          } else {
-                            controller.nextQuestion();
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    disabledBackgroundColor: AppColors.grey200,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(19),
-                    ),
-                  ),
-                  child: Text(
-                    controller.hasCheckedAnswer.value
-                        ? (isLastQuestion ? 'إنهاء الاختبار' : 'next'.tr)
-                        : 'check_answer'.tr,
-                    style: AppTextStyles.buttonText(context).copyWith(
-                      color: controller.selectedAnswerKey.value == null
-                          ? AppColors.grey500
-                          : AppColors.textDark,
-                    ),
-                  ),
+              ),
+              child: Text(
+                controller.hasCheckedAnswer.value
+                    ? (isLastQuestion ? 'إنهاء الاختبار' : 'next'.tr)
+                    : 'check_answer'.tr,
+                style: AppTextStyles.buttonText(context).copyWith(
+                  color: controller.selectedAnswerKey.value == null
+                      ? AppColors.grey500
+                      : AppColors.textDark,
                 ),
               ),
             ),
           ),
         ),
-        if (!isLastQuestion) SizedBox(width: screenSize.width * 0.03),
-        // Forward button - only show if not last question
-        if (!isLastQuestion)
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: AppColors.grey200,
-              shape: BoxShape.circle,
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: controller.nextQuestion,
-                borderRadius: BorderRadius.circular(25),
-                child: const Icon(
-                  Icons.arrow_forward_ios,
-                  color: AppColors.grey500,
-                  size: 20,
-                ),
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }

@@ -9,6 +9,7 @@ import 'package:hive/hive.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/guest_selection_dialog.dart';
+import '../../../core/widgets/camera_view.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/services/device_registration_service.dart';
 import '../../../core/api_client.dart';
@@ -869,7 +870,7 @@ class AuthenticationController extends GetxController {
   Future<void> pickProfileImage() async {
     try {
       // Show bottom sheet to choose camera or gallery
-      final source = await Get.bottomSheet<ImageSource>(
+      final source = await Get.bottomSheet<String>(
         Container(
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -894,12 +895,12 @@ class AuthenticationController extends GetxController {
                 ListTile(
                   leading: const Icon(Icons.camera_alt),
                   title: Text('camera'.tr),
-                  onTap: () => Get.back(result: ImageSource.camera),
+                  onTap: () => Get.back(result: 'camera'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo_library),
                   title: Text('gallery'.tr),
-                  onTap: () => Get.back(result: ImageSource.gallery),
+                  onTap: () => Get.back(result: 'gallery'),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -910,17 +911,28 @@ class AuthenticationController extends GetxController {
 
       if (source == null) return;
 
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
-      );
+      File? imageFile;
 
-      if (image != null) {
-        profileImage.value = File(image.path);
-        developer.log('✅ Profile image selected: ${image.path}', name: 'AuthController');
+      if (source == 'camera') {
+        // Use camera package for camera capture
+        imageFile = await Get.to<File>(() => const CameraView());
+      } else {
+        // Use image_picker for gallery
+        final ImagePicker picker = ImagePicker();
+        final XFile? image = await picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 85,
+        );
+        if (image != null) {
+          imageFile = File(image.path);
+        }
+      }
+
+      if (imageFile != null) {
+        profileImage.value = imageFile;
+        developer.log('✅ Profile image selected: ${imageFile.path}', name: 'AuthController');
       }
     } catch (e) {
       developer.log('❌ Error picking image: $e', name: 'AuthController');
@@ -1195,9 +1207,11 @@ class AuthenticationController extends GetxController {
     } on ApiErrorModel catch (error) {
       developer.log('❌ Verify OTP error: ${error.displayMessage}', name: 'AuthController');
       otpError.value = error.displayMessage;
+      AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error: $e', name: 'AuthController');
       otpError.value = 'الرمز غير صحيح';
+      AppDialog.showError(message: 'الرمز غير صحيح');
     } finally {
       isLoading.value = false;
     }
@@ -1570,27 +1584,36 @@ class AuthenticationController extends GetxController {
     try {
       developer.log('📸 Opening image picker...', name: 'AuthController');
 
-      final ImagePicker picker = ImagePicker();
-
       // Show source selection bottom sheet
       final source = await _showImageSourceBottomSheet();
 
       if (source == null) return;
 
-      // Pick image from selected source
-      final XFile? image = await picker.pickImage(source: source);
+      File? imageFile;
 
-      if (image == null) {
+      if (source == ImageSource.camera) {
+        // Use camera package for camera capture
+        imageFile = await Get.to<File>(() => const CameraView());
+      } else {
+        // Use image_picker for gallery
+        final ImagePicker picker = ImagePicker();
+        final XFile? image = await picker.pickImage(source: source);
+        if (image != null) {
+          imageFile = File(image.path);
+        }
+      }
+
+      if (imageFile == null) {
         developer.log('❌ No image selected', name: 'AuthController');
         return;
       }
 
-      developer.log('✅ Image selected: ${image.path}', name: 'AuthController');
+      developer.log('✅ Image selected: ${imageFile.path}', name: 'AuthController');
 
       // Use the image directly without cropping
-      transferReceiptFile.value = File(image.path);
-      transferReceiptFileName.value = image.path.split('/').last;
-      developer.log('✅ Image saved: ${image.path}', name: 'AuthController');
+      transferReceiptFile.value = imageFile;
+      transferReceiptFileName.value = imageFile.path.split('/').last;
+      developer.log('✅ Image saved: ${imageFile.path}', name: 'AuthController');
       AppDialog.showSuccess(message: 'تم اختيار الصورة بنجاح');
     } catch (e) {
       developer.log('❌ Error picking image: $e', name: 'AuthController');

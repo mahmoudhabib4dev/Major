@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_images.dart';
 import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/camera_view.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/api_client.dart';
 import '../../../routes/app_pages.dart';
@@ -552,17 +553,70 @@ class ProfileController extends GetxController {
   // ==================== Edit Account Methods ====================
   void changeProfilePicture() async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
+      // Show bottom sheet to choose camera or gallery
+      final source = await Get.bottomSheet<String>(
+        Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 20),
+                Text(
+                  'choose_image_source'.tr,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: Text('camera'.tr),
+                  onTap: () => Get.back(result: 'camera'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: Text('gallery'.tr),
+                  onTap: () => Get.back(result: 'gallery'),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
       );
 
-      if (pickedFile != null) {
-        selectedProfileImage.value = File(pickedFile.path);
-        userImageUrl.value = pickedFile.path;
-        developer.log('✅ Image selected: ${pickedFile.path}', name: 'ProfileController');
+      if (source == null) return;
+
+      File? imageFile;
+
+      if (source == 'camera') {
+        // Use camera package for camera capture
+        imageFile = await Get.to<File>(() => const CameraView());
+      } else {
+        // Use image_picker for gallery
+        final XFile? pickedFile = await _picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 85,
+        );
+        if (pickedFile != null) {
+          imageFile = File(pickedFile.path);
+        }
+      }
+
+      if (imageFile != null) {
+        selectedProfileImage.value = imageFile;
+        userImageUrl.value = imageFile.path;
+        developer.log('✅ Image selected: ${imageFile.path}', name: 'ProfileController');
       }
     } catch (e) {
       developer.log('❌ Error picking image: $e', name: 'ProfileController');

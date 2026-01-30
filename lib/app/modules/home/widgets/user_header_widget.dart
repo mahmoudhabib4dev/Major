@@ -20,42 +20,14 @@ class UserHeaderWidget extends GetView<HomeController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Notification icon
-          FadeInLeft(
-            duration: const Duration(milliseconds: 600),
-            child: IconButton(
-              onPressed: controller.onNotificationTap,
-              icon: Image.asset(
-                AppImages.icon14,
-                width: 40,
-                height: 40,
-              ),
-            ),
-          ),
-          // User info
-          FadeInRight(
+          // User info - First item appears on RIGHT in RTL (Arabic)
+          FadeIn(
             duration: const Duration(milliseconds: 600),
             child: InkWell(
               onTap: controller.onProfileTap,
               child: Row(
                 children: [
-                  Obx(
-                    () => Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          controller.greetingText.value,
-                          style: AppTextStyles.homeTitle(context),
-                        ),
-                        Text(
-                          controller.userName.value,
-                          style: AppTextStyles.homeSubtitle(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: screenSize.width * 0.03),
-                  // User avatar
+                  // User avatar (appears first, on the right in RTL)
                   Obx(
                     () {
                       developer.log('🖼️ Rendering avatar - URL: "${controller.userAvatarUrl.value}"', name: 'UserHeaderWidget');
@@ -92,7 +64,36 @@ class UserHeaderWidget extends GetView<HomeController> {
                       );
                     },
                   ),
+                  SizedBox(width: screenSize.width * 0.03),
+                  // Title and subtitle (appears second, to the left of avatar in RTL)
+                  Obx(
+                    () => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          controller.greetingText.value,
+                          style: AppTextStyles.homeTitle(context),
+                        ),
+                        Text(
+                          controller.userName.value,
+                          style: AppTextStyles.homeSubtitle(context),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
+              ),
+            ),
+          ),
+          // Notification icon - Second item appears on LEFT in RTL (Arabic)
+          FadeIn(
+            duration: const Duration(milliseconds: 600),
+            child: IconButton(
+              onPressed: controller.onNotificationTap,
+              icon: Image.asset(
+                AppImages.icon14,
+                width: 40,
+                height: 40,
               ),
             ),
           ),

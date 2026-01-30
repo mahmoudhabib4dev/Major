@@ -14,37 +14,41 @@ class HomeView extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
+    final bool isArabic = Get.locale?.languageCode == 'ar';
 
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: AppScaffold(
-        backgroundImage: AppImages.image3,
-        showContentContainer: true,
-        headerChildren: [
-          SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenSize.width * 0.05,
-              ),
-              child: Column(
-                children: [
-                  SizedBox(height: screenSize.height * 0.01),
-                  // User header with notification and profile
-                  const UserHeaderWidget(),
-                  SizedBox(height: screenSize.height * 0.025),
-                  // Carousel slider with dots indicator
-                  const HomeCarouselWidget(),
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: AppScaffold(
+          backgroundImage: AppImages.image3,
+          showContentContainer: true,
+          headerChildren: [
+            SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenSize.width * 0.05,
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: screenSize.height * 0.01),
+                    // User header with notification and profile
+                    const UserHeaderWidget(),
+                    SizedBox(height: screenSize.height * 0.025),
+                    // Carousel slider with dots indicator
+                    const HomeCarouselWidget(),
 
-                  // Space before white container (15px)
-                ],
+                    // Space before white container (15px)
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-        children: const [
-          // Subjects section
-          SubjectsSectionWidget(),
-        ],
+          ],
+          children: const [
+            // Subjects section
+            SubjectsSectionWidget(),
+          ],
+        ),
       ),
     );
   }

@@ -28,11 +28,6 @@ class _SubjectsSectionWidgetState extends State<SubjectsSectionWidget> {
     super.initState();
     controller = Get.find<HomeController>();
     parentController = Get.find<ParentController>();
-
-    // Listen to focus changes
-    _searchFocusNode.addListener(() {
-      parentController.setFABVisibility(_searchFocusNode.hasFocus);
-    });
   }
 
   @override
@@ -54,22 +49,25 @@ class _SubjectsSectionWidgetState extends State<SubjectsSectionWidget> {
       child: Column(
         children: [
           // Section header
+          // First item = Subjects (RIGHT in RTL), Second item = View All (LEFT in RTL)
           FadeInUp(
             duration: const Duration(milliseconds: 600),
             delay: const Duration(milliseconds: 300),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Subjects title - appears on RIGHT in RTL (Arabic)
+                Text(
+                  'subjects'.tr,
+                  style: AppTextStyles.sectionTitle(context),
+                ),
+                // View All - appears on LEFT in RTL (Arabic)
                 InkWell(
                   onTap: controller.onViewAllSubjectsTap,
                   child: Text(
                     'subjects_view_all'.tr,
                     style: AppTextStyles.viewAllButton(context),
                   ),
-                ),
-                Text(
-                  'subjects'.tr,
-                  style: AppTextStyles.sectionTitle(context),
                 ),
               ],
             ),
@@ -78,49 +76,13 @@ class _SubjectsSectionWidgetState extends State<SubjectsSectionWidget> {
           SizedBox(height: screenSize.height * 0.02),
 
           // Search and Filter Section
+          // First item = Search (RIGHT in RTL), Second item = Filter (LEFT in RTL)
           FadeInUp(
             duration: const Duration(milliseconds: 700),
             delay: const Duration(milliseconds: 350),
             child: Row(
               children: [
-                // Filter Button
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        Get.to(
-                          () => const FilterView(),
-                          transition: Transition.downToUp,
-                          duration: const Duration(milliseconds: 300),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: const Icon(
-                        Icons.tune_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(width: screenSize.width * 0.03),
-
-                // Search Field
+                // Search Field - appears on RIGHT in RTL (Arabic)
                 Expanded(
                   child: Container(
                     height: 50,
@@ -135,7 +97,7 @@ class _SubjectsSectionWidgetState extends State<SubjectsSectionWidget> {
                     child: TextField(
                       controller: _searchController,
                       focusNode: _searchFocusNode,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       style: AppTextStyles.bodyText(context),
                       textInputAction: TextInputAction.search,
                       decoration: InputDecoration(
@@ -183,6 +145,41 @@ class _SubjectsSectionWidgetState extends State<SubjectsSectionWidget> {
                       onSubmitted: (_) {
                         FocusScope.of(context).unfocus();
                       },
+                    ),
+                  ),
+                ),
+                SizedBox(width: screenSize.width * 0.03),
+                // Filter Button - appears on LEFT in RTL (Arabic)
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        Get.to(
+                          () => const FilterView(),
+                          transition: Transition.downToUp,
+                          duration: const Duration(milliseconds: 300),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: const Icon(
+                        Icons.tune_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ),
