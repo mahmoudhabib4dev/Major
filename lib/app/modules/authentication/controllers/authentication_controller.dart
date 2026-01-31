@@ -11,7 +11,6 @@ import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/guest_selection_dialog.dart';
 import '../../../core/widgets/camera_view.dart';
 import '../../../core/services/storage_service.dart';
-import '../../../core/services/device_registration_service.dart';
 import '../../../core/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -639,15 +638,8 @@ class AuthenticationController extends GetxController {
       // Mark onboarding as completed
       await storageService.setOnboardingCompleted();
 
-      // Register device for push notifications
-      developer.log('📱 Registering device for push notifications...', name: 'AuthController');
-      try {
-        await DeviceRegistrationService().registerDevice();
-        developer.log('✅ Device registration completed', name: 'AuthController');
-      } catch (e) {
-        developer.log('⚠️ Device registration failed (non-critical): $e', name: 'AuthController');
-        // Don't block login if device registration fails
-      }
+      // Note: Device registration is handled by HomeController._initialize()
+      // to avoid duplicate registration calls
 
       // Show success dialog
       AppDialog.showSuccess(
@@ -1462,15 +1454,8 @@ class AuthenticationController extends GetxController {
         // Mark onboarding as completed
         await storageService.setOnboardingCompleted();
 
-        // Register device for push notifications
-        developer.log('📱 Registering device for push notifications...', name: 'AuthController');
-        try {
-          await DeviceRegistrationService().registerDevice();
-          developer.log('✅ Device registration completed', name: 'AuthController');
-        } catch (e) {
-          developer.log('⚠️ Device registration failed (non-critical): $e', name: 'AuthController');
-          // Don't block signup if device registration fails
-        }
+        // Note: Device registration is handled by HomeController._initialize()
+        // to avoid duplicate registration calls
 
         // Clear registration persistence data (signup completed successfully)
         await storageService.clearRegistrationData();

@@ -8,7 +8,7 @@ import '../../../core/theme/app_colors.dart';
 
 import '../../../routes/app_pages.dart';
 import '../../../core/services/storage_service.dart';
-import '../../../core/services/device_service.dart';
+import '../../../core/services/device_registration_service.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../parent/controllers/parent_controller.dart';
@@ -23,13 +23,17 @@ import '../models/offer_model.dart';
 import '../models/lesson_search_response_model.dart';
 import '../providers/home_provider.dart';
 import '../providers/notifications_provider.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../../authentication/providers/auth_provider.dart';
 
 class HomeController extends GetxController {
   final StorageService storageService = Get.find<StorageService>();
   final SubjectsProvider subjectsProvider = SubjectsProvider();
   final HomeProvider homeProvider = HomeProvider();
   final NotificationsProvider notificationsProvider = NotificationsProvider();
-  final DeviceService deviceService = DeviceService();
+  final DeviceRegistrationService deviceRegistrationService = DeviceRegistrationService();
+  final ProfileProvider profileProvider = ProfileProvider();
+  final AuthProvider authProvider = AuthProvider();
 
   // Carousel/Offers state
   final currentCarouselIndex = 0.obs;
@@ -65,21 +69,54 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadUserData();
-    loadOffers();
-    loadSubjects();
+    _initialize();
+  }
 
-    // Only for logged-in users
+  // Initialize home controller
+  Future<void> _initialize() async {
+    // For logged-in users, refresh user data from API first to get latest plan_status
     if (!isGuest) {
+      await refreshUserDataFromApi();
       loadUnreadNotificationsCount();
       registerDevice();
     }
+
+    loadUserData();
+    loadOffers();
+    loadSubjects();
   }
 
   @override
   void onClose() {
     _searchDebounceTimer?.cancel();
     super.onClose();
+  }
+
+  // Refresh user data from API to get latest plan_status
+  Future<void> refreshUserDataFromApi() async {
+    try {
+      developer.log('🔄 Refreshing user subscription status from API...', name: 'HomeController');
+
+      final response = await authProvider.refreshSubscription();
+
+      if (response.success && response.data != null) {
+        final currentUser = storageService.currentUser;
+        if (currentUser != null) {
+          // Update user with new plan_status
+          final updatedUser = currentUser.copyWith(
+            planStatus: response.data!.planStatus,
+          );
+
+          // Save updated user to storage
+          await storageService.saveUser(updatedUser);
+
+          developer.log('✅ User subscription refreshed - plan_status: ${response.data!.planStatus}', name: 'HomeController');
+        }
+      }
+    } catch (e) {
+      developer.log('⚠️ Failed to refresh subscription status: $e', name: 'HomeController');
+      // Don't block app load if refresh fails
+    }
   }
 
   // Load user data
@@ -609,7 +646,7 @@ class HomeController extends GetxController {
   Future<void> registerDevice() async {
     try {
       developer.log('📱 Registering device...', name: 'HomeController');
-      await deviceService.registerDevice();
+      await deviceRegistrationService.registerDevice();
     } catch (e) {
       developer.log('❌ Error registering device: $e', name: 'HomeController');
     }

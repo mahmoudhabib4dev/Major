@@ -9,7 +9,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../models/self_test_question_model.dart';
-import '../models/self_test_response_model.dart';
 import '../models/test_start_response_model.dart';
 
 class QuizController extends GetxController {
@@ -274,32 +273,63 @@ class QuizController extends GetxController {
         return;
       }
 
-      final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-      print('🔵 JSON decoded successfully');
-      print('🔵 JSON data: $jsonData');
-
-      // Check if the response indicates success and has data
-      if (jsonData['success'] != true || jsonData['data'] == null) {
-        final errorMessage = jsonData['message'] as String? ?? 'فشل تحميل الاختبار';
-        print('❌ API error: $errorMessage');
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('❌ API error: ${response.statusCode}');
         AppDialog.showError(
-          message: errorMessage,
+          message: 'فشل تحميل الاختبار',
         );
         return;
       }
 
-      final selfTestResponse = SelfTestResponseModel.fromJson(jsonData);
-      print('🔵 Model parsed successfully');
-      print('🔵 Questions count: ${selfTestResponse.data.length}');
+      final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+      print('🔵 JSON decoded successfully');
+      print('🔵 JSON data: $jsonData');
 
-      questions.value = selfTestResponse.data;
-      totalQuestions.value = selfTestResponse.count;
+      // API returns format: {"mode":"start","attempt_id":7,"expires_at":"...","questions":[...]}
+      // Parse using TestStartResponseModel since format is the same
+      final testResponse = TestStartResponseModel.fromJson(jsonData);
 
-      print('🔵 Questions loaded: ${questions.length}');
+      // Store test state
+      attemptId = testResponse.attemptId;
+      testMode = testResponse.mode;
+      isReviewMode = testResponse.isReviewMode;
 
-      // Start timer - 30 minutes (1800 seconds) for the test
-      remainingSeconds.value = 1800;
-      _startTimer();
+      // Load questions
+      questions.value = testResponse.questions;
+      totalQuestions.value = testResponse.questionsCount ?? testResponse.questions.length;
+
+      print('🔵 Self-test loaded successfully');
+      print('🔵 Mode: $testMode');
+      print('🔵 Attempt ID: $attemptId');
+      print('🔵 Questions count: ${questions.length}');
+
+      // Calculate timer from server's expires_at if available
+      if (!isReviewMode && testResponse.expiresAt != null) {
+        try {
+          final expiresAt = DateTime.parse(testResponse.expiresAt!);
+          final now = DateTime.now();
+          final difference = expiresAt.difference(now);
+
+          if (difference.inSeconds > 0) {
+            remainingSeconds.value = difference.inSeconds;
+            _startTimer();
+          } else {
+            // Timer already expired
+            remainingSeconds.value = 0;
+          }
+        } catch (e) {
+          print('⚠️ Failed to parse expires_at, using default timer: $e');
+          remainingSeconds.value = 1800; // Fallback to 30 minutes
+          _startTimer();
+        }
+      } else if (!isReviewMode) {
+        // No expires_at provided, use default 30 minutes
+        remainingSeconds.value = 1800;
+        _startTimer();
+      } else {
+        // In review mode, show previously answered questions
+        _loadReviewModeData();
+      }
 
       // Scroll to current question after build
       WidgetsBinding.instance.addPostFrameCallback((_) {

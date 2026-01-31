@@ -49,46 +49,52 @@ class NotificationsListWidget extends GetView<NotificationsController> {
           ),
           // Load more button
           Obx(() {
-            if (controller.hasMorePages) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: controller.isLoadingMore.value
-                    ? const Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      )
-                    : TextButton(
-                        onPressed: controller.loadMoreNotifications,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'load_more'.tr,
-                              style: TextStyle(
-                                fontFamily: 'Tajawal',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.keyboard_arrow_down,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                          ],
+            // Access observable first to ensure Obx tracks changes
+            final isLoading = controller.isLoadingMore.value;
+            final notificationsCount = controller.notifications.length;
+
+            // hasMorePages is a getter computed from _currentPage < _lastPage
+            if (!controller.hasMorePages || notificationsCount == 0) {
+              return const SizedBox.shrink();
+            }
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: isLoading
+                  ? const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
                         ),
                       ),
-              );
-            }
-            return const SizedBox.shrink();
+                    )
+                  : TextButton(
+                      onPressed: controller.loadMoreNotifications,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'load_more'.tr,
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.keyboard_arrow_down,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+            );
           }),
           SizedBox(height: screenSize.height * 0.15), // Bottom spacing
         ],
