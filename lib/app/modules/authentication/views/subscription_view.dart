@@ -39,6 +39,18 @@ class SubscriptionView extends GetView<AuthenticationController> {
       ],
       children: [
         Obx(() {
+          // Show loader while checking subscription status
+          if (controller.isLoadingSubscription.value) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 50),
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            );
+          }
+
           final subscription = controller.currentSubscription.value;
           final hasActiveSubscription = subscription?.hasSubscription == true && subscription?.isExpired == false;
           final hasPendingRequest = controller.hasPendingSubscription.value;

@@ -151,14 +151,6 @@ class ProfileMenuSliverList extends GetView<ProfileController> {
           'isDanger': false,
         },
         {
-          'titleKey': 'help',
-          'iconPath': AppImages.icon36,
-          'iconBackgroundColor': const Color(0xFFEF7B5F),
-          'type': ProfileMenuItemType.navigation,
-          'onTap': controller.navigateToHelp,
-          'isDanger': false,
-        },
-        {
           'titleKey': 'about',
           'iconPath': AppImages.icon37,
           'iconBackgroundColor': const Color(0xFF000D47),

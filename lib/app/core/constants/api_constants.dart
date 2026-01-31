@@ -44,6 +44,7 @@ class ApiConstants {
   static const String leaderboardPrivacy = '$baseUrl/profile/leaderboard-privacy';
   static const String leaderboardPrivacyToggle = '$baseUrl/profile/leaderboard-privacy/toggle';
   static const String supportCenter = '$baseUrl/support-center';
+  static const String studentComplaints = '$baseUrl/student-complaints';
 
   // Favorites Endpoints
   static const String favorites = '$baseUrl/favorites';

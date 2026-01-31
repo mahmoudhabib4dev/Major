@@ -16,6 +16,7 @@ import '../models/privacy_policy_response_model.dart';
 import '../models/social_links_response_model.dart';
 import '../models/leaderboard_response_model.dart';
 import '../models/support_center_response_model.dart';
+import '../models/complaint_response_model.dart';
 
 class ProfileProvider {
   final ApiClient _apiClient = ApiClient();
@@ -170,6 +171,38 @@ class ProfileProvider {
         return AppReviewResponseModel.fromJson(jsonData);
       } else {
         // Parse error response - handle both success:false and standard error format
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['message'] != null) {
+          throw ApiErrorModel(
+            message: jsonData['message'] as String,
+            statusCode: response.statusCode,
+          );
+        }
+        throw ApiErrorModel.fromJson(jsonData);
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Submit Student Complaint
+  Future<ComplaintResponseModel> submitComplaint({
+    required int complaintTypeId,
+    required String message,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        ApiConstants.studentComplaints,
+        body: {
+          'complaint_type_id': complaintTypeId,
+          'message': message,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonData = jsonDecode(response.body);
+        return ComplaintResponseModel.fromJson(jsonData);
+      } else {
         final jsonData = jsonDecode(response.body);
         if (jsonData['message'] != null) {
           throw ApiErrorModel(

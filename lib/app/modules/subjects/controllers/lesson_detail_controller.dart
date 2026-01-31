@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:dio/dio.dart';
 import 'dart:developer' as developer;
 import '../providers/subjects_provider.dart';
 import '../models/lesson_model.dart';
@@ -30,11 +32,21 @@ class LessonDetailController extends GetxController {
   final RxBool isLoadingSummary = false.obs;
   final RxInt currentLessonId = 0.obs;
 
-  // Download state
+  // YouTube video state
+  final RxBool isYouTubeVideo = false.obs;
+  YoutubePlayerController? youtubePlayerController;
+
+  // Download state (for current playing video)
   final RxBool isDownloading = false.obs;
   final RxDouble downloadProgress = 0.0.obs;
   final RxBool isVideoDownloaded = false.obs;
   String _currentVideoUrl = '';
+
+  // Download state for lesson list (tracks all lessons)
+  final RxMap<int, double> lessonDownloadProgress = <int, double>{}.obs;
+  final RxSet<int> downloadedLessons = <int>{}.obs;
+  final RxSet<int> downloadingLessons = <int>{}.obs;
+  final Map<int, CancelToken> _downloadCancelTokens = {};
 
   // Lessons data from API
   final RxList<LessonModel> lessons = <LessonModel>[].obs;
@@ -42,6 +54,10 @@ class LessonDetailController extends GetxController {
   final RxString teacherName = ''.obs;
   final RxString liveAt = ''.obs;
   final RxInt lessonsCount = 0.obs;
+  final RxBool hasLiveLesson = false.obs; // Track if any lesson is currently live
+
+  // Track favorite lessons
+  final RxSet<int> favoriteLessons = <int>{}.obs;
 
   VideoPlayerController? videoPlayerController;
   ChewieController? chewieController;
@@ -67,7 +83,24 @@ class LessonDetailController extends GetxController {
         liveAt.value = response.data.liveAt;
         lessonsCount.value = response.data.lessonsCount;
 
+        // Check if any lesson is currently live
+        hasLiveLesson.value = lessons.any((lesson) => lesson.isAlive == 1);
+
+        // Populate favorite lessons from API data
+        favoriteLessons.clear();
+        for (final lesson in lessons) {
+          if (lesson.isFavorite == true) {
+            favoriteLessons.add(lesson.id);
+          }
+        }
+
+        // Check which lessons are already downloaded
+        await _checkDownloadedLessons();
+
         developer.log('✅ Lessons loaded: ${lessons.length} lessons', name: 'LessonDetailController');
+        developer.log('   Has live lesson: ${hasLiveLesson.value}', name: 'LessonDetailController');
+        developer.log('   Favorite lessons: ${favoriteLessons.length}', name: 'LessonDetailController');
+        developer.log('   Downloaded lessons: ${downloadedLessons.length}', name: 'LessonDetailController');
       } else {
         developer.log('❌ Failed to load lessons', name: 'LessonDetailController');
       }
@@ -245,6 +278,16 @@ class LessonDetailController extends GetxController {
     );
   }
 
+  // Check if a URL is a YouTube URL
+  bool _isYouTubeUrl(String url) {
+    return url.contains('youtube.com') || url.contains('youtu.be');
+  }
+
+  // Extract YouTube video ID from URL
+  String? _extractYouTubeId(String url) {
+    return YoutubePlayer.convertUrlToId(url);
+  }
+
   // Load and play video for a lesson
   Future<void> playLessonVideo(int lessonId) async {
     try {
@@ -257,6 +300,27 @@ class LessonDetailController extends GetxController {
       if (lesson != null) {
         isFavorite.value = lesson.isFavorite ?? false;
       }
+
+      // For live lessons, use liveUrl (YouTube)
+      if (lesson != null && lesson.isAlive == 1 && lesson.liveUrl != null && lesson.liveUrl!.isNotEmpty) {
+        developer.log('📺 Live lesson detected, using YouTube URL: ${lesson.liveUrl}', name: 'LessonDetailController');
+
+        final videoId = _extractYouTubeId(lesson.liveUrl!);
+        if (videoId != null) {
+          isYouTubeVideo.value = true;
+          isVideoDownloaded.value = false;
+          isVideoPlaying.value = true;
+          _initializeYouTubePlayer(videoId);
+          return;
+        } else {
+          developer.log('❌ Could not extract YouTube video ID', name: 'LessonDetailController');
+          AppDialog.showError(message: 'رابط البث غير صالح');
+          return;
+        }
+      }
+
+      // Reset YouTube flag for non-live videos
+      isYouTubeVideo.value = false;
 
       // Check if video is downloaded
       final localPath = await _downloadService.getLocalVideoPath(lessonId);
@@ -327,6 +391,13 @@ class LessonDetailController extends GetxController {
       final response = await _favoriteProvider.toggleFavorite(id: lessonId, type: 'lesson');
       isFavorite.value = response.isFavorite ?? !isFavorite.value;
 
+      // Update favoriteLessons set
+      if (response.isFavorite == true) {
+        favoriteLessons.add(lessonId);
+      } else {
+        favoriteLessons.remove(lessonId);
+      }
+
       // Update FavoriteController to refresh the favorites list
       try {
         final favoriteController = Get.find<FavoriteController>();
@@ -336,7 +407,7 @@ class LessonDetailController extends GetxController {
       }
 
       developer.log('✅ Toggle favorite successful: ${response.isFavorite}', name: 'LessonDetailController');
-      AppDialog.showSuccess(message: response.message ?? (isFavorite.value ? 'تمت الإضافة للمفضلة' : 'تم الحذف من المفضلة'));
+      AppDialog.showSuccess(message: isFavorite.value ? 'added_to_favorites'.tr : 'removed_from_favorites'.tr);
     } on ApiErrorModel catch (error) {
       developer.log('❌ Failed to toggle favorite: ${error.displayMessage}', name: 'LessonDetailController');
       AppDialog.showError(message: error.displayMessage);
@@ -398,41 +469,28 @@ class LessonDetailController extends GetxController {
         return;
       }
 
-      // OLD FLOW: If no test_id, use the old getLessonTest API
-      developer.log('   Using old lesson test API', name: 'LessonDetailController');
-      final response = await subjectsProvider.getLessonTest(lessonId);
-
-      if (response.status && response.data.questions.isNotEmpty) {
-        developer.log('✅ Test loaded: ${response.data.questions.length} questions', name: 'LessonDetailController');
-
-        // Delete any existing quiz controller to ensure fresh start
-        Get.delete<QuizController>();
-
-        // Navigate to quiz screen with lesson test questions
-        Get.to(
-          () => const QuizView(),
-          binding: BindingsBuilder(() {
-            Get.put(QuizController(
-              lessonTitle: response.data.testName,
-              initialQuestions: response.data.questions,
-            ));
-          }),
-          transition: Transition.rightToLeft,
-          duration: const Duration(milliseconds: 300),
-        )?.then((_) {
-          // Delete controller when returning from quiz
-          Get.delete<QuizController>();
-        });
-      } else {
-        developer.log('❌ No test available', name: 'LessonDetailController');
+      // No test_id means no test available for this lesson
+      developer.log('ℹ️ No test_id for lesson, showing info message', name: 'LessonDetailController');
+      AppDialog.showInfo(
+        message: 'no_test_available'.tr,
+      );
+    } on ApiErrorModel catch (e) {
+      // Handle 404 as "no test available"
+      if (e.statusCode == 404) {
+        developer.log('ℹ️ No test found (404)', name: 'LessonDetailController');
         AppDialog.showInfo(
-          message: 'لا يوجد اختبار متاح لهذا الدرس',
+          message: 'no_test_available'.tr,
+        );
+      } else {
+        developer.log('❌ Error loading test: $e', name: 'LessonDetailController');
+        AppDialog.showError(
+          message: 'error_loading_test'.tr,
         );
       }
     } catch (e) {
       developer.log('❌ Error loading test: $e', name: 'LessonDetailController');
       AppDialog.showError(
-        message: 'حدث خطأ أثناء تحميل الاختبار',
+        message: 'error_loading_test'.tr,
       );
     } finally {
       isLoadingTest.value = false;
@@ -519,6 +577,20 @@ class LessonDetailController extends GetxController {
       );
       update();
     });
+  }
+
+  void _initializeYouTubePlayer(String videoId) {
+    youtubePlayerController = YoutubePlayerController(
+      initialVideoId: videoId,
+      flags: const YoutubePlayerFlags(
+        autoPlay: true,
+        mute: false,
+        enableCaption: false,
+        hideControls: false,
+        controlsVisibleAtStart: true,
+      ),
+    );
+    update();
   }
 
   // Download current video
@@ -623,11 +695,296 @@ class LessonDetailController extends GetxController {
     }
   }
 
+  // Check which lessons are already downloaded
+  Future<void> _checkDownloadedLessons() async {
+    downloadedLessons.clear();
+    for (final lesson in lessons) {
+      final localPath = await _downloadService.getLocalVideoPath(lesson.id);
+      if (localPath != null && await File(localPath).exists()) {
+        downloadedLessons.add(lesson.id);
+      }
+    }
+  }
+
+  // Download a specific lesson video from the list
+  Future<void> downloadLessonVideo(int lessonId) async {
+    developer.log('📥 Download requested for lesson: $lessonId', name: 'LessonDetailController');
+
+    // Check subscription access first
+    if (!_checkSubscriptionAccess()) {
+      developer.log('❌ Subscription check failed', name: 'LessonDetailController');
+      return;
+    }
+
+    // If already downloading this lesson, do nothing
+    if (downloadingLessons.contains(lessonId)) {
+      developer.log('⚠️ Already downloading lesson: $lessonId', name: 'LessonDetailController');
+      return;
+    }
+
+    // If already downloaded, show delete confirmation
+    if (downloadedLessons.contains(lessonId)) {
+      developer.log('📦 Lesson already downloaded, showing delete dialog', name: 'LessonDetailController');
+      _showDeleteLessonVideoDialog(lessonId);
+      return;
+    }
+
+    final lesson = lessons.firstWhereOrNull((l) => l.id == lessonId);
+    if (lesson == null) {
+      developer.log('❌ Lesson not found in list: $lessonId', name: 'LessonDetailController');
+      AppDialog.showError(message: 'لم يتم العثور على الدرس');
+      return;
+    }
+
+    developer.log('📋 Lesson data:', name: 'LessonDetailController');
+    developer.log('   - id: ${lesson.id}', name: 'LessonDetailController');
+    developer.log('   - name: ${lesson.name}', name: 'LessonDetailController');
+    developer.log('   - videoUrl: ${lesson.videoUrl}', name: 'LessonDetailController');
+    developer.log('   - liveUrl: ${lesson.liveUrl}', name: 'LessonDetailController');
+    developer.log('   - pdfFile: ${lesson.pdfFile}', name: 'LessonDetailController');
+    developer.log('   - isAlive: ${lesson.isAlive}', name: 'LessonDetailController');
+
+    // Get video URL from lesson model or fetch from API
+    String? videoUrl = lesson.videoUrl;
+
+    if (videoUrl == null || videoUrl.isEmpty) {
+      developer.log('⚠️ No video URL in lesson data, fetching from API...', name: 'LessonDetailController');
+
+      try {
+        final response = await subjectsProvider.getLessonVideo(lessonId);
+        if (response.status && response.data.videoUrl.isNotEmpty) {
+          videoUrl = response.data.videoUrl;
+          developer.log('✅ Video URL loaded from API: $videoUrl', name: 'LessonDetailController');
+        } else {
+          developer.log('❌ API returned no video URL', name: 'LessonDetailController');
+          AppDialog.showError(message: 'لا يوجد فيديو متاح للتنزيل');
+          return;
+        }
+      } catch (e) {
+        developer.log('❌ Failed to fetch video URL from API: $e', name: 'LessonDetailController');
+        AppDialog.showError(message: 'لا يوجد فيديو متاح للتنزيل');
+        return;
+      }
+    }
+
+    try {
+      downloadingLessons.add(lessonId);
+      lessonDownloadProgress[lessonId] = 0.0;
+
+      // Create cancel token for this download
+      final cancelToken = CancelToken();
+      _downloadCancelTokens[lessonId] = cancelToken;
+
+      developer.log('📥 Starting video download for lesson: $lessonId', name: 'LessonDetailController');
+
+      await _downloadService.downloadVideo(
+        lessonId: lessonId,
+        videoUrl: videoUrl,
+        lessonName: lesson.name,
+        onProgress: (progress) {
+          lessonDownloadProgress[lessonId] = progress;
+        },
+        cancelToken: cancelToken,
+      );
+
+      downloadedLessons.add(lessonId);
+      lessonDownloadProgress[lessonId] = 1.0;
+
+      developer.log('✅ Lesson video downloaded successfully', name: 'LessonDetailController');
+      AppDialog.showSuccess(message: 'تم تنزيل الفيديو بنجاح');
+
+      // Reload downloaded videos in FavoriteController if it exists
+      try {
+        final favoriteController = Get.find<FavoriteController>();
+        favoriteController.loadDownloadedVideos();
+      } catch (e) {
+        // FavoriteController might not be initialized
+      }
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
+        developer.log('⚠️ Download cancelled for lesson: $lessonId', name: 'LessonDetailController');
+        AppDialog.showInfo(message: 'تم إلغاء التنزيل');
+      } else {
+        developer.log('❌ Error downloading lesson video: $e', name: 'LessonDetailController');
+        AppDialog.showError(message: 'حدث خطأ أثناء تنزيل الفيديو');
+      }
+    } catch (e) {
+      developer.log('❌ Error downloading lesson video: $e', name: 'LessonDetailController');
+      AppDialog.showError(message: 'حدث خطأ أثناء تنزيل الفيديو');
+    } finally {
+      downloadingLessons.remove(lessonId);
+      lessonDownloadProgress.remove(lessonId);
+      _downloadCancelTokens.remove(lessonId);
+    }
+  }
+
+  // Cancel a download in progress
+  void cancelDownload(int lessonId) {
+    developer.log('🔴 Cancel requested for lesson: $lessonId', name: 'LessonDetailController');
+    developer.log('   Active tokens: ${_downloadCancelTokens.keys.toList()}', name: 'LessonDetailController');
+
+    final cancelToken = _downloadCancelTokens[lessonId];
+    if (cancelToken == null) {
+      developer.log('   ❌ No cancel token found for lesson', name: 'LessonDetailController');
+      return;
+    }
+
+    if (cancelToken.isCancelled) {
+      developer.log('   ⚠️ Token already cancelled', name: 'LessonDetailController');
+      return;
+    }
+
+    developer.log('🚫 Cancelling download for lesson: $lessonId', name: 'LessonDetailController');
+    cancelToken.cancel('User cancelled download');
+  }
+
+  // Show delete confirmation dialog for lesson video
+  void _showDeleteLessonVideoDialog(int lessonId) {
+    Get.dialog(
+      Center(
+        child: Container(
+          width: Get.width * 0.85,
+          margin: EdgeInsets.symmetric(horizontal: Get.width * 0.05),
+          padding: EdgeInsets.all(Get.width * 0.06),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
+                    size: 40,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Title
+              const Text(
+                'حذف الفيديو',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF000D47),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              // Subtitle
+              const Text(
+                'هل أنت متأكد من حذف هذا الفيديو المحمل؟\nيمكنك تنزيله مرة أخرى لاحقاً',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              // Buttons
+              Row(
+                children: [
+                  // Cancel button
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFF000D47), width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'إلغاء',
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF000D47),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Delete button
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Get.back();
+
+                        await _downloadService.deleteDownload(lessonId);
+                        downloadedLessons.remove(lessonId);
+
+                        developer.log('✅ Lesson video deleted successfully', name: 'LessonDetailController');
+                        AppDialog.showSuccess(message: 'تم حذف الفيديو بنجاح');
+
+                        // Reload downloaded videos in FavoriteController if it exists
+                        try {
+                          final favoriteController = Get.find<FavoriteController>();
+                          favoriteController.loadDownloadedVideos();
+                        } catch (e) {
+                          // FavoriteController might not be initialized
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'حذف',
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: true,
+    );
+  }
+
   void _disposeVideoPlayer() {
     chewieController?.dispose();
     videoPlayerController?.dispose();
+    youtubePlayerController?.dispose();
     chewieController = null;
     videoPlayerController = null;
+    youtubePlayerController = null;
+    isYouTubeVideo.value = false;
   }
 
   @override

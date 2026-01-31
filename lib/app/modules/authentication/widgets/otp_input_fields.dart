@@ -7,16 +7,41 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../controllers/authentication_controller.dart';
 
-class OtpInputFields extends GetView<AuthenticationController> {
+class OtpInputFields extends StatefulWidget {
   const OtpInputFields({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final focusNode1 = FocusNode();
-    final focusNode2 = FocusNode();
-    final focusNode3 = FocusNode();
-    final focusNode4 = FocusNode();
+  State<OtpInputFields> createState() => _OtpInputFieldsState();
+}
 
+class _OtpInputFieldsState extends State<OtpInputFields> {
+  late final FocusNode focusNode1;
+  late final FocusNode focusNode2;
+  late final FocusNode focusNode3;
+  late final FocusNode focusNode4;
+  late final AuthenticationController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<AuthenticationController>();
+    focusNode1 = FocusNode();
+    focusNode2 = FocusNode();
+    focusNode3 = FocusNode();
+    focusNode4 = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    focusNode1.dispose();
+    focusNode2.dispose();
+    focusNode3.dispose();
+    focusNode4.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Row(
@@ -79,12 +104,18 @@ class OtpInputFields extends GetView<AuthenticationController> {
               if (value.isEmpty) {
                 FocusScope.of(context).requestFocus(focusNode3);
               } else {
-                // Dismiss keyboard when last OTP digit is entered
+                // Dismiss keyboard and auto-verify when last OTP digit is entered
                 FocusScope.of(context).unfocus();
+                // Auto-verify OTP
+                controller.verifyOtp();
               }
               if (controller.otpError.value.isNotEmpty) {
                 controller.otpError.value = '';
               }
+            },
+            onSubmitted: (_) {
+              // Verify OTP when "Done" is pressed
+              controller.verifyOtp();
             },
           ),
         ],
@@ -99,6 +130,7 @@ class _OtpBox extends StatefulWidget {
   final FocusNode? previousFocusNode;
   final FocusNode? nextFocusNode;
   final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
   final bool isLastField;
 
   const _OtpBox({
@@ -107,6 +139,7 @@ class _OtpBox extends StatefulWidget {
     this.previousFocusNode,
     this.nextFocusNode,
     this.onChanged,
+    this.onSubmitted,
     this.isLastField = false,
   });
 
@@ -139,38 +172,45 @@ class _OtpBoxState extends State<_OtpBox> {
   Widget build(BuildContext context) {
     final size = AppDimensions.screenWidth(context) * 0.15;
 
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: AppColors.grey100,
-        borderRadius: BorderRadius.circular(
-          AppDimensions.borderRadius(context, 0.02),
+    return GestureDetector(
+      onTap: () {
+        // Ensure the field gets focus when tapped
+        widget.focusNode.requestFocus();
+      },
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: AppColors.grey100,
+          borderRadius: BorderRadius.circular(
+            AppDimensions.borderRadius(context, 0.02),
+          ),
+          border: Border.all(
+            color: _isFocused ? AppColors.primary : Colors.transparent,
+            width: 2,
+          ),
         ),
-        border: Border.all(
-          color: _isFocused ? AppColors.primary : Colors.transparent,
-          width: 2,
-        ),
-      ),
-      child: TextField(
-        controller: widget.controller,
-        focusNode: widget.focusNode,
-        textAlign: TextAlign.center,
-        style: AppTextStyles.bodyText(context).copyWith(
-          fontSize: AppDimensions.fontSize(context, 0.05),
-          fontWeight: FontWeight.w600,
-        ),
-        keyboardType: TextInputType.number,
-        textInputAction: widget.isLastField ? TextInputAction.done : TextInputAction.next,
-        maxLength: 1,
-        inputFormatters: [
-          FilteringTextInputFormatter.digitsOnly,
-        ],
-        onChanged: widget.onChanged,
-        decoration: const InputDecoration(
-          counterText: '',
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
+        child: TextField(
+          controller: widget.controller,
+          focusNode: widget.focusNode,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.bodyText(context).copyWith(
+            fontSize: AppDimensions.fontSize(context, 0.05),
+            fontWeight: FontWeight.w600,
+          ),
+          keyboardType: TextInputType.number,
+          textInputAction: widget.isLastField ? TextInputAction.done : TextInputAction.next,
+          maxLength: 1,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+          ],
+          onChanged: widget.onChanged,
+          onSubmitted: widget.onSubmitted,
+          decoration: const InputDecoration(
+            counterText: '',
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+          ),
         ),
       ),
     );

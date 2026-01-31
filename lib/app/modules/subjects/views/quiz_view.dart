@@ -220,8 +220,11 @@ class QuizView extends GetView<QuizController> {
             textColor = AppColors.grey500;
           }
 
-          // Only allow tapping on current or future questions (not previous answered ones)
-          final canTap = index >= controller.currentQuestionIndex.value;
+          // In review/finish mode, allow navigation to all questions (view only)
+          // In start/resume mode, only allow forward navigation (can't go back)
+          final canTap = controller.isReviewMode
+              ? true
+              : index >= controller.currentQuestionIndex.value;
 
           return GestureDetector(
             onTap: canTap ? () => controller.goToQuestion(index) : null,
@@ -544,7 +547,68 @@ class QuizView extends GetView<QuizController> {
 
   Widget _buildNavigationButtons(BuildContext context) {
     final isLastQuestion = controller.currentQuestionIndex.value == controller.questions.length - 1;
+    final isFirstQuestion = controller.currentQuestionIndex.value == 0;
 
+    // In review/finish mode, show back/forward buttons to navigate between questions
+    if (controller.isReviewMode) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Back button (if not first question)
+          if (!isFirstQuestion)
+            IconButton(
+              onPressed: () => controller.goToQuestion(controller.currentQuestionIndex.value - 1),
+              icon: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.grey200,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.arrow_back, color: AppColors.primary),
+              ),
+            ),
+          const SizedBox(width: 20),
+          // Close/Exit button
+          SizedBox(
+            width: 150,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () => Get.back(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: Text(
+                'إغلاق',
+                style: AppTextStyles.buttonText(context).copyWith(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          // Forward button (if not last question)
+          if (!isLastQuestion)
+            IconButton(
+              onPressed: () => controller.goToQuestion(controller.currentQuestionIndex.value + 1),
+              icon: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.grey200,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.arrow_forward, color: AppColors.primary),
+              ),
+            ),
+        ],
+      );
+    }
+
+    // In start/resume mode, only show next button (no going back)
     return Center(
       child: SizedBox(
         width: 250,

@@ -24,6 +24,12 @@ class StorageService {
   static const String _guestDivisionIdKey = 'guestDivisionId';
   static const String _guestDivisionNameKey = 'guestDivisionName';
 
+  // Registration persistence keys
+  static const String _registrationStepKey = 'registrationStep';
+  static const String _registrationPhoneKey = 'registrationPhone';
+  static const String _registrationEmailKey = 'registrationEmail';
+  static const String _registrationTokenKey = 'registrationToken';
+
   // Settings Box
   Box get _settingsBox => _hiveService.getSettingsBox();
   Box get _userBox => _hiveService.getUserBox();
@@ -160,12 +166,66 @@ class StorageService {
     return guestStageId != null && guestDivisionId != null;
   }
 
+  // ==================== Registration Persistence ====================
+
+  // Registration step: 'otp', 'password', or null
+  String? get registrationStep {
+    return _settingsBox.get(_registrationStepKey);
+  }
+
+  String? get registrationPhone {
+    return _settingsBox.get(_registrationPhoneKey);
+  }
+
+  String? get registrationEmail {
+    return _settingsBox.get(_registrationEmailKey);
+  }
+
+  String? get registrationToken {
+    return _settingsBox.get(_registrationTokenKey);
+  }
+
+  // Check if there's a pending registration
+  bool get hasPendingRegistration {
+    return registrationStep != null;
+  }
+
+  // Save registration step (called when moving to OTP step)
+  Future<void> saveRegistrationOtpStep({
+    required String phone,
+    required String email,
+  }) async {
+    await _settingsBox.put(_registrationStepKey, 'otp');
+    await _settingsBox.put(_registrationPhoneKey, phone);
+    await _settingsBox.put(_registrationEmailKey, email);
+    developer.log('✅ Saved registration OTP step: phone=$phone, email=$email', name: 'StorageService');
+  }
+
+  // Save registration step (called when moving to password step)
+  Future<void> saveRegistrationPasswordStep({
+    required String token,
+  }) async {
+    await _settingsBox.put(_registrationStepKey, 'password');
+    await _settingsBox.put(_registrationTokenKey, token);
+    developer.log('✅ Saved registration password step with token', name: 'StorageService');
+  }
+
+  // Clear registration data (called on completion or back to login)
+  Future<void> clearRegistrationData() async {
+    await _settingsBox.delete(_registrationStepKey);
+    await _settingsBox.delete(_registrationPhoneKey);
+    await _settingsBox.delete(_registrationEmailKey);
+    await _settingsBox.delete(_registrationTokenKey);
+    developer.log('🗑️  Cleared registration data', name: 'StorageService');
+  }
+
   // Logout (clear all user-related data)
   Future<void> logout() async {
     await clearAuthToken();
     await clearUser();
     await clearPassword();
     await clearGuestData(); // Also clear guest data on logout
+    await clearRegistrationData(); // Also clear any pending registration
   }
 
   // Clear all data
@@ -181,8 +241,15 @@ class StorageService {
     developer.log('  - isLoggedIn: $isLoggedIn', name: 'StorageService');
     developer.log('  - authToken exists: ${authToken != null}', name: 'StorageService');
     developer.log('  - hasGuestPreferences: $hasGuestPreferences', name: 'StorageService');
+    developer.log('  - hasPendingRegistration: $hasPendingRegistration', name: 'StorageService');
 
-    // Check login status FIRST - if user is logged in, they should go to main app
+    // Check for pending registration FIRST - user might have token but not fully registered
+    if (hasPendingRegistration) {
+      developer.log('➡️  Route: /authentication (pending registration at step: $registrationStep)', name: 'StorageService');
+      return '/authentication'; // Resume registration
+    }
+
+    // Check login status - if user is logged in, they should go to main app
     if (isLoggedIn && authToken != null) {
       developer.log('➡️  Route: /parent (logged in)', name: 'StorageService');
       return '/parent'; // User is logged in, go to main app

@@ -82,11 +82,40 @@ class AuthenticationController extends GetxController {
 
     // If onboarding is already completed, skip to login page
     developer.log('🎬 AuthenticationController onInit', name: 'AuthController');
-    if (storageService.isOnboardingCompleted) {
+
+    // Check for pending registration first
+    if (storageService.hasPendingRegistration) {
+      _resumePendingRegistration();
+    } else if (storageService.isOnboardingCompleted) {
       developer.log('✅ Onboarding completed - showing login page', name: 'AuthController');
       showLoginPage.value = true;
     } else {
       developer.log('📖 First time - showing onboarding', name: 'AuthController');
+    }
+  }
+
+  // Resume pending registration if user closed app during signup
+  void _resumePendingRegistration() {
+    final step = storageService.registrationStep;
+    developer.log('🔄 Resuming pending registration at step: $step', name: 'AuthController');
+
+    if (step == 'otp') {
+      // User was at OTP verification step
+      userEmail.value = storageService.registrationEmail ?? '';
+      isSignUpMode.value = true;
+      showRestorePasswordPage.value = true;
+      startResendCountdown();
+      developer.log('📱 Resumed at OTP step - email: ${userEmail.value}', name: 'AuthController');
+    } else if (step == 'password') {
+      // User was at password creation step - token should already be in storage
+      userEmail.value = storageService.registrationEmail ?? '';
+      isSignUpMode.value = true;
+      showNewPasswordPage.value = true;
+      developer.log('🔐 Resumed at password step', name: 'AuthController');
+    } else {
+      // Unknown step, clear and show login
+      storageService.clearRegistrationData();
+      showLoginPage.value = true;
     }
   }
 
@@ -647,10 +676,11 @@ class AuthenticationController extends GetxController {
     showLoginPage.value = false;
   }
 
-  // Navigate back to login from forgot password
+  // Navigate back to login from forgot password or signup OTP/password pages
   void backToLogin() {
     showForgotPasswordPage.value = false;
     showRestorePasswordPage.value = false;
+    showNewPasswordPage.value = false;
     showLoginPage.value = true;
     emailError.value = '';
     otpError.value = '';
@@ -659,6 +689,15 @@ class AuthenticationController extends GetxController {
     otp2Controller.clear();
     otp3Controller.clear();
     otp4Controller.clear();
+
+    // Clear registration data if user cancels signup
+    if (isSignUpMode.value) {
+      storageService.clearRegistrationData();
+      _resetSignUpState();
+      _resetNewPasswordState();
+      developer.log('🗑️ Registration cancelled - data cleared', name: 'AuthController');
+    }
+    isSignUpMode.value = false;
   }
 
   // Navigate to create account (sign up page)
@@ -721,6 +760,8 @@ class AuthenticationController extends GetxController {
     showSignUpPage.value = false;
     showLoginPage.value = true;
     _resetSignUpState();
+    // Clear any pending registration data
+    storageService.clearRegistrationData();
   }
 
   // Reset sign up state
@@ -1017,11 +1058,17 @@ class AuthenticationController extends GetxController {
       showSignUpPage.value = false;
       showRestorePasswordPage.value = true;
 
+      // Save registration step for persistence (in case user closes app)
+      await storageService.saveRegistrationOtpStep(
+        phone: fullPhoneNumber,
+        email: signUpEmailController.text.trim(),
+      );
+
       // Start resend countdown timer
       startResendCountdown();
 
       AppDialog.showSuccess(
-        message: response.message ?? 'تم إرسال رمز التحقق إلى بريدك الإلكتروني',
+        message: response.message ?? 'otp_sent_success'.tr,
       );
     } on ApiErrorModel catch (error) {
       developer.log('❌ Registration error: ${error.displayMessage}', name: 'AuthController');
@@ -1156,7 +1203,12 @@ class AuthenticationController extends GetxController {
         if (response.token != null) {
           await storageService.saveAuthToken(response.token!);
           apiClient.setToken(response.token!);
-          developer.log('💾 Verification token saved', name: 'AuthController');
+          developer.log('💾 Verification token saved: ${response.token!.substring(0, 10)}...', name: 'AuthController');
+
+          // Update registration step to password (for persistence)
+          await storageService.saveRegistrationPasswordStep(token: response.token!);
+        } else {
+          developer.log('⚠️ No token received from OTP verification!', name: 'AuthController');
         }
 
         AppDialog.showSuccess(
@@ -1191,7 +1243,9 @@ class AuthenticationController extends GetxController {
       if (response.token != null) {
         await storageService.saveAuthToken(response.token!);
         apiClient.setToken(response.token!);
-        developer.log('💾 Reset token saved', name: 'AuthController');
+        developer.log('💾 Reset token saved: ${response.token!.substring(0, 10)}...', name: 'AuthController');
+      } else {
+        developer.log('⚠️ No token received from OTP verification!', name: 'AuthController');
       }
 
       AppDialog.showSuccess(
@@ -1255,7 +1309,7 @@ class AuthenticationController extends GetxController {
 
       developer.log('✅ OTP resent successfully', name: 'AuthController');
 
-      AppDialog.showSuccess(message: 'تم إرسال الرمز مرة أخرى');
+      AppDialog.showSuccess(message: 'otp_resent_success'.tr);
 
       // Restart countdown
       startResendCountdown();
@@ -1265,7 +1319,7 @@ class AuthenticationController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error: $e', name: 'AuthController');
-      AppDialog.showError(message: 'حدث خطأ أثناء إعادة إرسال الرمز');
+      AppDialog.showError(message: 'otp_resend_error'.tr);
     } finally {
       isLoading.value = false;
     }
@@ -1344,8 +1398,9 @@ class AuthenticationController extends GetxController {
         final token = storageService.authToken;
         if (token != null) {
           apiClient.setToken(token);
-          developer.log('🔑 Token loaded and set for authentication', name: 'AuthController');
+          developer.log('🔑 Token loaded and set for authentication: ${token.substring(0, 10)}...', name: 'AuthController');
         } else {
+          developer.log('❌ No token found in storage!', name: 'AuthController');
           AppDialog.showError(message: 'حدث خطأ في التحقق، الرجاء المحاولة مرة أخرى');
           isLoading.value = false;
           return;
@@ -1356,6 +1411,7 @@ class AuthenticationController extends GetxController {
           passwordConfirmation: confirmNewPasswordController.text.trim(),
         );
 
+        developer.log('📤 Calling setPassword API with token...', name: 'AuthController');
         final response = await authProvider.setPassword(
           request: setPasswordRequest,
         );
@@ -1419,6 +1475,10 @@ class AuthenticationController extends GetxController {
           developer.log('⚠️ Device registration failed (non-critical): $e', name: 'AuthController');
           // Don't block signup if device registration fails
         }
+
+        // Clear registration persistence data (signup completed successfully)
+        await storageService.clearRegistrationData();
+        developer.log('🗑️ Registration data cleared after successful signup', name: 'AuthController');
 
         AppDialog.showSuccess(
           message: response.message ?? 'تم إنشاء كلمة المرور بنجاح',
@@ -1787,6 +1847,7 @@ class AuthenticationController extends GetxController {
 
   // Refresh subscription status (check if pending, active, or can subscribe)
   Future<void> refreshSubscriptionStatus() async {
+    isLoadingSubscription.value = true;
     try {
       developer.log('🔄 Refreshing subscription status...', name: 'AuthController');
 
@@ -1810,6 +1871,8 @@ class AuthenticationController extends GetxController {
     } catch (e) {
       developer.log('❌ Unexpected error refreshing subscription status: $e', name: 'AuthController');
       // Don't show error to user - just log it
+    } finally {
+      isLoadingSubscription.value = false;
     }
   }
 

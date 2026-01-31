@@ -158,6 +158,9 @@ class AppTranslations extends Translations {
           'didnt_receive_message': 'لم تستلم رسالة بعد ؟',
           'resend': 'إعادة الإرسال',
           'resend_after': 'إعادة الإرسال بعد ',
+          'otp_sent_success': 'تم إرسال رمز التحقق إلى بريدك الإلكتروني',
+          'otp_resent_success': 'تم إرسال الرمز مرة أخرى',
+          'otp_resend_error': 'حدث خطأ أثناء إعادة إرسال الرمز',
 
           // New Password
           'create_password': 'انشئ كلمة المرور 🔒',
@@ -170,7 +173,6 @@ class AppTranslations extends Translations {
           'password_req_special': 'علي الاقل رمز واحد خاص',
           'password_req_number': 'علي الاقل رقم واحد',
           'passwords_must_match': 'يجب ان تكون كلمتا المرور متطابقان',
-          'save': 'حفظ',
 
           // Subscription
           'subscription': 'الاشتراك',
@@ -235,6 +237,8 @@ class AppTranslations extends Translations {
           'send': 'إرسال',
           'sent': 'تم الإرسال',
           'problem_submitted': 'تم إرسال مشكلتك بنجاح، سنقوم بالرد في أقرب وقت',
+          'please_enter_problem_description': 'الرجاء إدخال وصف المشكلة',
+          'error_submitting_complaint': 'حدث خطأ أثناء إرسال الشكوى',
 
           // Help Center
           'help_center': 'مركز المساعدة',
@@ -250,6 +254,8 @@ class AppTranslations extends Translations {
           'calling_phone_number': 'جاري الاتصال بـ',
           'whatsapp': 'واتساب',
           'opening_whatsapp': 'جاري فتح واتساب',
+          'cannot_make_call': 'لا يمكن إجراء المكالمة',
+          'cannot_open_whatsapp': 'لا يمكن فتح واتساب',
           'faq_join_subscription_q': 'كيفية الانضمام الي اشتراك معين ؟',
           'faq_join_subscription_a': 'يمكنك الاشتراك من خلال الذهاب إلى صفحة الاشتراكات واختيار الخطة المناسبة لك، ثم إتمام عملية الدفع.',
           'faq_guest_login_q': 'هل يمكنني الدخول كزائر؟',
@@ -309,7 +315,11 @@ class AppTranslations extends Translations {
           'favorites': 'المفضلة',
           'favorites_tab': 'المفضلة',
           'saved_videos_tab': 'الدروس المحفوظة',
+          'added_to_favorites': 'تمت الإضافة للمفضلة',
+          'removed_from_favorites': 'تم الحذف من المفضلة',
           'lesson_test': 'اختبار الدرس',
+          'no_test_available': 'لا يوجد اختبار متاح لهذا الدرس',
+          'error_loading_test': 'حدث خطأ أثناء تحميل الاختبار',
 
           // Subjects
           'subjects': 'المواد',
@@ -328,6 +338,7 @@ class AppTranslations extends Translations {
           'topics_count': '@count محاور',
           'lessons_count': '@count درس',
           'live_time': 'موعد اللايف',
+          'ongoing': 'جاري',
           'number_of_lessons': 'عدد الدروس',
           'teacher': 'المدرس',
           'lesson_summary': 'ملخص الدرس',
@@ -516,6 +527,9 @@ class AppTranslations extends Translations {
           'didnt_receive_message': 'Didn\'t receive a message?',
           'resend': 'Resend',
           'resend_after': 'Resend after ',
+          'otp_sent_success': 'Verification code sent to your email',
+          'otp_resent_success': 'Code resent successfully',
+          'otp_resend_error': 'Error resending the code',
 
           // New Password
           'create_password': 'Create Password 🔒',
@@ -528,7 +542,6 @@ class AppTranslations extends Translations {
           'password_req_special': 'At least one special character',
           'password_req_number': 'At least one number',
           'passwords_must_match': 'Passwords must match',
-          'save': 'Save',
 
           // Subscription
           'subscription': 'Subscription',
@@ -593,6 +606,8 @@ class AppTranslations extends Translations {
           'send': 'Send',
           'sent': 'Sent',
           'problem_submitted': 'Your problem has been submitted successfully, we will respond as soon as possible',
+          'please_enter_problem_description': 'Please enter problem description',
+          'error_submitting_complaint': 'Error submitting complaint',
 
           // Help Center
           'help_center': 'Help Center',
@@ -608,6 +623,8 @@ class AppTranslations extends Translations {
           'calling_phone_number': 'Calling',
           'whatsapp': 'WhatsApp',
           'opening_whatsapp': 'Opening WhatsApp',
+          'cannot_make_call': 'Cannot make call',
+          'cannot_open_whatsapp': 'Cannot open WhatsApp',
           'faq_join_subscription_q': 'How to join a specific subscription?',
           'faq_join_subscription_a': 'You can subscribe by going to the subscriptions page and choosing the plan that suits you, then completing the payment process.',
           'faq_guest_login_q': 'Can I login as a guest?',
@@ -667,7 +684,11 @@ class AppTranslations extends Translations {
           'favorites': 'Favorites',
           'favorites_tab': 'Favorites',
           'saved_videos_tab': 'Saved Videos',
+          'added_to_favorites': 'Added to favorites',
+          'removed_from_favorites': 'Removed from favorites',
           'lesson_test': 'Lesson Test',
+          'no_test_available': 'No test available for this lesson',
+          'error_loading_test': 'Error loading test',
 
           // Subjects
           'subjects': 'Subjects',
@@ -686,6 +707,7 @@ class AppTranslations extends Translations {
           'topics_count': '@count topics',
           'lessons_count': '@count lessons',
           'live_time': 'Live Time',
+          'ongoing': 'Ongoing',
           'number_of_lessons': 'Number of Lessons',
           'teacher': 'Teacher',
           'lesson_summary': 'Lesson Summary',
@@ -880,6 +902,9 @@ class AppTranslations extends Translations {
           'didnt_receive_message': 'Vous n\'avez pas reçu de message?',
           'resend': 'Renvoyer',
           'resend_after': 'Renvoyer après ',
+          'otp_sent_success': 'Code de vérification envoyé à votre email',
+          'otp_resent_success': 'Code renvoyé avec succès',
+          'otp_resend_error': 'Erreur lors du renvoi du code',
 
           // New Password
           'create_password': 'Créer un mot de passe 🔒',
@@ -892,7 +917,6 @@ class AppTranslations extends Translations {
           'password_req_special': 'Au moins un caractère spécial',
           'password_req_number': 'Au moins un chiffre',
           'passwords_must_match': 'Les mots de passe doivent correspondre',
-          'save': 'Enregistrer',
 
           // Subscription
           'subscription': 'Abonnement',
@@ -957,6 +981,8 @@ class AppTranslations extends Translations {
           'send': 'Envoyer',
           'sent': 'Envoyé',
           'problem_submitted': 'Votre problème a été soumis avec succès, nous répondrons dès que possible',
+          'please_enter_problem_description': 'Veuillez entrer la description du problème',
+          'error_submitting_complaint': 'Erreur lors de l\'envoi de la plainte',
 
           // Help Center
           'help_center': 'Centre d\'aide',
@@ -972,6 +998,8 @@ class AppTranslations extends Translations {
           'calling_phone_number': 'Appel en cours',
           'whatsapp': 'WhatsApp',
           'opening_whatsapp': 'Ouverture de WhatsApp',
+          'cannot_make_call': 'Impossible de passer l\'appel',
+          'cannot_open_whatsapp': 'Impossible d\'ouvrir WhatsApp',
           'faq_join_subscription_q': 'Comment rejoindre un abonnement spécifique?',
           'faq_join_subscription_a': 'Vous pouvez vous abonner en vous rendant sur la page des abonnements et en choisissant le plan qui vous convient, puis en complétant le processus de paiement.',
           'faq_guest_login_q': 'Puis-je me connecter en tant qu\'invité?',
@@ -1031,7 +1059,11 @@ class AppTranslations extends Translations {
           'favorites': 'Favoris',
           'favorites_tab': 'Favoris',
           'saved_videos_tab': 'Vidéos enregistrées',
+          'added_to_favorites': 'Ajouté aux favoris',
+          'removed_from_favorites': 'Supprimé des favoris',
           'lesson_test': 'Test de leçon',
+          'no_test_available': 'Aucun test disponible pour cette leçon',
+          'error_loading_test': 'Erreur lors du chargement du test',
 
           // Subjects
           'subjects': 'Matières',
@@ -1050,6 +1082,7 @@ class AppTranslations extends Translations {
           'topics_count': '@count sujets',
           'lessons_count': '@count leçons',
           'live_time': 'Heure du direct',
+          'ongoing': 'En cours',
           'number_of_lessons': 'Nombre de leçons',
           'teacher': 'Enseignant',
           'lesson_summary': 'Résumé de la leçon',

@@ -130,7 +130,7 @@ class FavoriteController extends GetxController {
       final response = await _favoriteProvider.toggleFavorite(id: id, type: type);
       await loadFavorites();
       developer.log('✅ Toggle favorite successful: ${response.isFavorite}', name: 'FavoriteController');
-      AppDialog.showSuccess(message: response.message ?? (response.isFavorite == true ? 'تمت الإضافة للمفضلة' : 'تم الحذف من المفضلة'));
+      AppDialog.showSuccess(message: response.isFavorite == true ? 'added_to_favorites'.tr : 'removed_from_favorites'.tr);
     } on ApiErrorModel catch (error) {
       developer.log('❌ Failed to toggle favorite: ${error.displayMessage}', name: 'FavoriteController');
       AppDialog.showError(message: error.displayMessage);

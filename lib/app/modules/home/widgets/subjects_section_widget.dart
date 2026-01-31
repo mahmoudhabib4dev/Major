@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
+import '../../../core/services/storage_service.dart';
 import '../controllers/home_controller.dart';
 import '../../parent/controllers/parent_controller.dart';
 import '../views/filter_view.dart';
@@ -22,6 +23,8 @@ class _SubjectsSectionWidgetState extends State<SubjectsSectionWidget> {
   final TextEditingController _searchController = TextEditingController();
   late final HomeController controller;
   late final ParentController parentController;
+
+  bool get isGuest => !Get.find<StorageService>().isLoggedIn;
 
   @override
   void initState() {
@@ -75,171 +78,173 @@ class _SubjectsSectionWidgetState extends State<SubjectsSectionWidget> {
 
           SizedBox(height: screenSize.height * 0.02),
 
-          // Search and Filter Section
-          // First item = Search (RIGHT in RTL), Second item = Filter (LEFT in RTL)
-          FadeInUp(
-            duration: const Duration(milliseconds: 700),
-            delay: const Duration(milliseconds: 350),
-            child: Row(
-              children: [
-                // Search Field - appears on RIGHT in RTL (Arabic)
-                Expanded(
-                  child: Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: AppColors.grey100,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.grey200,
-                        width: 1,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _searchFocusNode,
-                      textAlign: TextAlign.start,
-                      style: AppTextStyles.bodyText(context),
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        hintText: 'subjects_search_placeholder'.tr,
-                        hintStyle: AppTextStyles.inputHint(context),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: AppDimensions.spacing(context, 0.04),
-                          vertical: AppDimensions.spacing(context, 0.035),
+          // Search and Filter Section - hidden for guests
+          if (!isGuest) ...[
+            // First item = Search (RIGHT in RTL), Second item = Filter (LEFT in RTL)
+            FadeInUp(
+              duration: const Duration(milliseconds: 700),
+              delay: const Duration(milliseconds: 350),
+              child: Row(
+                children: [
+                  // Search Field - appears on RIGHT in RTL (Arabic)
+                  Expanded(
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: AppColors.grey100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.grey200,
+                          width: 1,
                         ),
-                        prefixIcon: Obx(() => controller.isSearching.value
-                            ? const Padding(
-                                padding: EdgeInsets.all(12.0),
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                ),
-                              )
-                            : controller.searchQuery.value.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear, color: AppColors.grey400),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      controller.clearSearch();
-                                    },
-                                  )
-                                : const SizedBox.shrink()),
-                        suffixIcon: Padding(
-                          padding: const EdgeInsets.only(left: 12),
-                          child: Icon(
-                            Icons.search_rounded,
-                            color: AppColors.grey400,
-                            size: 22,
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        textAlign: TextAlign.start,
+                        style: AppTextStyles.bodyText(context),
+                        textInputAction: TextInputAction.search,
+                        decoration: InputDecoration(
+                          hintText: 'subjects_search_placeholder'.tr,
+                          hintStyle: AppTextStyles.inputHint(context),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: AppDimensions.spacing(context, 0.04),
+                            vertical: AppDimensions.spacing(context, 0.035),
+                          ),
+                          prefixIcon: Obx(() => controller.isSearching.value
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                )
+                              : controller.searchQuery.value.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear, color: AppColors.grey400),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        controller.clearSearch();
+                                      },
+                                    )
+                                  : const SizedBox.shrink()),
+                          suffixIcon: Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Icon(
+                              Icons.search_rounded,
+                              color: AppColors.grey400,
+                              size: 22,
+                            ),
                           ),
                         ),
-                      ),
-                      onChanged: (query) {
-                        if (query.trim().isNotEmpty) {
-                          controller.searchLessons(query);
-                        } else {
-                          controller.clearSearch();
-                        }
-                      },
-                      onSubmitted: (_) {
-                        FocusScope.of(context).unfocus();
-                      },
-                    ),
-                  ),
-                ),
-                SizedBox(width: screenSize.width * 0.03),
-                // Filter Button - appears on LEFT in RTL (Arabic)
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        Get.to(
-                          () => const FilterView(),
-                          transition: Transition.downToUp,
-                          duration: const Duration(milliseconds: 300),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: const Icon(
-                        Icons.tune_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Search results
-          Obx(() {
-            if (controller.searchResults.isEmpty && controller.searchQuery.value.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            return FadeInUp(
-              duration: const Duration(milliseconds: 400),
-              child: Container(
-                margin: EdgeInsets.only(top: screenSize.height * 0.02),
-                constraints: BoxConstraints(maxHeight: screenSize.height * 0.4),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.grey200),
-                ),
-                child: controller.searchResults.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Text(
-                          'لا توجد نتائج',
-                          style: AppTextStyles.bodyText(context).copyWith(
-                            color: AppColors.grey500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      )
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.all(8),
-                        itemCount: controller.searchResults.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final lesson = controller.searchResults[index];
-                          return ListTile(
-                            title: Text(
-                              lesson.name,
-                              style: AppTextStyles.bodyText(context),
-                              textAlign: TextAlign.right,
-                            ),
-                            leading: const Icon(
-                              Icons.play_circle_outline,
-                              color: AppColors.primary,
-                            ),
-                            onTap: () {
-                              _searchController.clear();
-                              controller.onSearchResultTap(lesson);
-                            },
-                          );
+                        onChanged: (query) {
+                          if (query.trim().isNotEmpty) {
+                            controller.searchLessons(query);
+                          } else {
+                            controller.clearSearch();
+                          }
+                        },
+                        onSubmitted: (_) {
+                          FocusScope.of(context).unfocus();
                         },
                       ),
+                    ),
+                  ),
+                  SizedBox(width: screenSize.width * 0.03),
+                  // Filter Button - appears on LEFT in RTL (Arabic)
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Get.to(
+                            () => const FilterView(),
+                            transition: Transition.downToUp,
+                            duration: const Duration(milliseconds: 300),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: const Icon(
+                          Icons.tune_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            );
-          }),
+            ),
+
+            // Search results
+            Obx(() {
+              if (controller.searchResults.isEmpty && controller.searchQuery.value.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return FadeInUp(
+                duration: const Duration(milliseconds: 400),
+                child: Container(
+                  margin: EdgeInsets.only(top: screenSize.height * 0.02),
+                  constraints: BoxConstraints(maxHeight: screenSize.height * 0.4),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.grey200),
+                  ),
+                  child: controller.searchResults.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Text(
+                            'لا توجد نتائج',
+                            style: AppTextStyles.bodyText(context).copyWith(
+                              color: AppColors.grey500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.all(8),
+                          itemCount: controller.searchResults.length,
+                          separatorBuilder: (context, index) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final lesson = controller.searchResults[index];
+                            return ListTile(
+                              title: Text(
+                                lesson.name,
+                                style: AppTextStyles.bodyText(context),
+                                textAlign: TextAlign.right,
+                              ),
+                              leading: const Icon(
+                                Icons.play_circle_outline,
+                                color: AppColors.primary,
+                              ),
+                              onTap: () {
+                                _searchController.clear();
+                                controller.onSearchResultTap(lesson);
+                              },
+                            );
+                          },
+                        ),
+                ),
+              );
+            }),
+          ],
 
           // Subjects grid
           FadeInUp(

@@ -1378,4 +1378,35 @@ class ProfileController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  // Submit student complaint
+  Future<bool> submitComplaint({
+    required int complaintTypeId,
+    required String message,
+  }) async {
+    isLoading.value = true;
+
+    try {
+      developer.log('📝 Submitting complaint: type=$complaintTypeId', name: 'ProfileController');
+
+      final response = await profileProvider.submitComplaint(
+        complaintTypeId: complaintTypeId,
+        message: message,
+      );
+
+      developer.log('✅ Complaint submitted successfully', name: 'ProfileController');
+
+      return response.status;
+    } on ApiErrorModel catch (error) {
+      developer.log('❌ Complaint submission error: ${error.displayMessage}', name: 'ProfileController');
+      AppDialog.showError(message: error.displayMessage);
+      return false;
+    } catch (e) {
+      developer.log('❌ Unexpected complaint error: $e', name: 'ProfileController');
+      AppDialog.showError(message: 'error_submitting_complaint'.tr);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }

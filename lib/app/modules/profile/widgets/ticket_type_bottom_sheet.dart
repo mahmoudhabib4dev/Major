@@ -86,17 +86,17 @@ class TicketTypeBottomSheet extends StatefulWidget {
 }
 
 class _TicketTypeBottomSheetState extends State<TicketTypeBottomSheet> {
-  String selectedTicketType = 'technical';
+  int selectedTicketTypeId = 1;
 
-  List<Map<String, String>> get ticketTypes => [
-    {'code': 'technical', 'name': 'technical_issue'.tr},
-    {'code': 'academic', 'name': 'academic_issue'.tr},
-    {'code': 'educational', 'name': 'educational_issue'.tr},
+  List<Map<String, dynamic>> get ticketTypes => [
+    {'id': 1, 'name': 'technical_issue'.tr},
+    {'id': 2, 'name': 'academic_issue'.tr},
+    {'id': 3, 'name': 'educational_issue'.tr},
   ];
 
   void _showProblemDialog() {
     Navigator.pop(context); // Close bottom sheet first
-    _showWriteProblemDialog(context);
+    _showWriteProblemDialog(context, selectedTicketTypeId);
   }
 
   @override
@@ -236,16 +236,16 @@ class _TicketTypeBottomSheetState extends State<TicketTypeBottomSheet> {
 
   Widget _buildTicketTypeOption({
     required BuildContext context,
-    required Map<String, String> ticketType,
+    required Map<String, dynamic> ticketType,
     required bool isLast,
   }) {
-    final isSelected = selectedTicketType == ticketType['code'];
+    final isSelected = selectedTicketTypeId == ticketType['id'];
     return Column(
       children: [
         InkWell(
           onTap: () {
             setState(() {
-              selectedTicketType = ticketType['code']!;
+              selectedTicketTypeId = ticketType['id'] as int;
             });
           },
           child: Padding(
@@ -637,7 +637,7 @@ void showRatingDialog(BuildContext context) {
   );
 }
 
-void _showWriteProblemDialog(BuildContext context) {
+void _showWriteProblemDialog(BuildContext context, int complaintTypeId) {
   final TextEditingController problemController = TextEditingController();
   final iconSize = 70.0;
   final iconRadius = iconSize / 2;
@@ -736,12 +736,31 @@ void _showWriteProblemDialog(BuildContext context) {
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: () {
-                        // Handle send
+                      onPressed: () async {
+                        // Validate message is not empty
+                        if (problemController.text.trim().isEmpty) {
+                          AppDialog.showError(
+                            message: 'please_enter_problem_description'.tr,
+                          );
+                          return;
+                        }
+
+                        // Close dialog first
                         Navigator.pop(context);
-                        AppDialog.showSuccess(
-                          message: 'problem_submitted'.tr,
+
+                        // Get ProfileController and submit complaint
+                        final profileController = Get.find<ProfileController>();
+                        final success = await profileController.submitComplaint(
+                          complaintTypeId: complaintTypeId,
+                          message: problemController.text.trim(),
                         );
+
+                        // Show success message if submitted
+                        if (success) {
+                          AppDialog.showSuccess(
+                            message: 'problem_submitted'.tr,
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,

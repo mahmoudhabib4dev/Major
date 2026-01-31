@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -15,6 +16,7 @@ class HelpView extends GetView<ProfileController> {
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
+    final isRtl = Get.locale?.languageCode == 'ar';
 
     // Load support center data when view opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -123,7 +125,7 @@ class HelpView extends GetView<ProfileController> {
                               horizontal: screenSize.width * 0.05,
                             ),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                              crossAxisAlignment: isRtl ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                               children: [
                                 SizedBox(height: screenSize.height * 0.03),
                                 // Support numbers section
@@ -177,25 +179,30 @@ class HelpView extends GetView<ProfileController> {
   }
 
   Widget _buildSupportNumbers(BuildContext context) {
+    final isRtl = Get.locale?.languageCode == 'ar';
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'support_numbers'.tr,
-          style: const TextStyle(
-            fontFamily: 'Tajawal',
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF10162E),
-            height: 1.71,
-            letterSpacing: 0,
+        Align(
+          alignment: isRtl ? Alignment.centerRight : Alignment.centerLeft,
+          child: Text(
+            'support_numbers'.tr,
+            style: const TextStyle(
+              fontFamily: 'Tajawal',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF10162E),
+              height: 1.71,
+              letterSpacing: 0,
+            ),
           ),
-          textAlign: TextAlign.right,
         ),
         const SizedBox(height: 16),
         // Mobile number
         Obx(
           () => _buildContactItem(
+            context: context,
             iconPath: AppImages.icon64,
             label: 'mobile'.tr,
             value:
@@ -213,6 +220,7 @@ class HelpView extends GetView<ProfileController> {
         // WhatsApp number
         Obx(
           () => _buildContactItem(
+            context: context,
             iconPath: AppImages.icon65,
             label: 'whatsapp_number'.tr,
             value:
@@ -231,22 +239,28 @@ class HelpView extends GetView<ProfileController> {
   }
 
   Widget _buildContactItem({
+    required BuildContext context,
     required String iconPath,
     required String label,
     required String value,
     required VoidCallback? onTap,
   }) {
+    final isRtl = Get.locale?.languageCode == 'ar';
+
     return InkWell(
       onTap: onTap,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
         children: [
+          Image.asset(iconPath, width: 21, height: 21),
+          const SizedBox(width: 8),
           RichText(
-            textAlign: TextAlign.right,
+            textAlign: isRtl ? TextAlign.right : TextAlign.left,
+            textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
             text: TextSpan(
               children: [
                 TextSpan(
-                  text: '$label : ',
+                  text: '$label • ',
                   style: const TextStyle(
                     fontFamily: 'Tajawal',
                     fontSize: 12,
@@ -270,52 +284,56 @@ class HelpView extends GetView<ProfileController> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Image.asset(iconPath, width: 21, height: 21),
+          const Spacer(),
         ],
       ),
     );
   }
 
   Widget _buildFaqsSection(BuildContext context) {
+    final isRtl = Get.locale?.languageCode == 'ar';
+
     return Obx(
       () => Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'some_faqs'.tr,
-            style: const TextStyle(
-              fontFamily: 'Tajawal',
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF10162E),
-              height: 1.71,
-              letterSpacing: 0,
-            ),
-            textAlign: TextAlign.right,
-          ),
-          const SizedBox(height: 16),
-          if (controller.isLoadingSupportCenter.value)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: CircularProgressIndicator(),
+          Align(
+            alignment: isRtl ? Alignment.centerRight : Alignment.centerLeft,
+            child: Text(
+              'some_faqs'.tr,
+              style: const TextStyle(
+                fontFamily: 'Tajawal',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF10162E),
+                height: 1.71,
+                letterSpacing: 0,
               ),
-            )
-          else
-            ...List.generate(controller.faqs.length, (index) {
-              final faq = controller.faqs[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _FaqItem(
-                  question: faq.question,
-                  answer: faq.answer,
-                  index: index,
+            ),
+          ),
+            const SizedBox(height: 16),
+            if (controller.isLoadingSupportCenter.value)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: CircularProgressIndicator(),
                 ),
-              );
-            }),
-        ],
-      ),
+              )
+            else
+              ...List.generate(controller.faqs.length, (index) {
+                final faq = controller.faqs[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _FaqItem(
+                    question: faq.question,
+                    answer: faq.answer,
+                    index: index,
+                    isRtl: isRtl,
+                  ),
+                );
+              }),
+          ],
+        ),
     );
   }
 
@@ -399,16 +417,41 @@ class HelpView extends GetView<ProfileController> {
     );
   }
 
-  void _makePhoneCall(String phoneNumber) {
-    AppDialog.showInfo(
-      message: '${'calling_phone_number'.tr} $phoneNumber',
-    );
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    // Clean phone number - remove spaces and special characters except +
+    final cleanNumber = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+    final Uri phoneUri = Uri(scheme: 'tel', path: cleanNumber);
+
+    try {
+      if (await canLaunchUrl(phoneUri)) {
+        await launchUrl(phoneUri);
+      } else {
+        AppDialog.showError(message: 'cannot_make_call'.tr);
+      }
+    } catch (e) {
+      AppDialog.showError(message: 'cannot_make_call'.tr);
+    }
   }
 
-  void _openWhatsApp(String phoneNumber) {
-    AppDialog.showInfo(
-      message: '${'opening_whatsapp'.tr} $phoneNumber',
-    );
+  Future<void> _openWhatsApp(String phoneNumber) async {
+    // Clean phone number - remove spaces, dashes, and leading zeros
+    String cleanNumber = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+    // Remove leading + if present for WhatsApp URL
+    if (cleanNumber.startsWith('+')) {
+      cleanNumber = cleanNumber.substring(1);
+    }
+
+    final Uri whatsappUri = Uri.parse('https://wa.me/$cleanNumber');
+
+    try {
+      if (await canLaunchUrl(whatsappUri)) {
+        await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+      } else {
+        AppDialog.showError(message: 'cannot_open_whatsapp'.tr);
+      }
+    } catch (e) {
+      AppDialog.showError(message: 'cannot_open_whatsapp'.tr);
+    }
   }
 }
 
@@ -474,11 +517,13 @@ class _FaqItem extends StatefulWidget {
   final String question;
   final String answer;
   final int index;
+  final bool isRtl;
 
   const _FaqItem({
     required this.question,
     required this.answer,
     required this.index,
+    required this.isRtl,
   });
 
   @override
@@ -497,6 +542,7 @@ class _FaqItemState extends State<_FaqItem> {
         border: Border.all(color: const Color(0xFFEAEAEA), width: 1),
       ),
       child: Column(
+        crossAxisAlignment: widget.isRtl ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           InkWell(
             onTap: () {
@@ -508,15 +554,9 @@ class _FaqItemState extends State<_FaqItem> {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
+                textDirection: widget.isRtl ? TextDirection.rtl : TextDirection.ltr,
                 children: [
-                  Icon(
-                    isExpanded ? Icons.remove : Icons.add,
-                    color: const Color(0xFF000D47),
-                    size: 24,
-                  ),
-                  const Spacer(),
                   Expanded(
-                    flex: 10,
                     child: Text(
                       widget.question,
                       style: const TextStyle(
@@ -525,8 +565,14 @@ class _FaqItemState extends State<_FaqItem> {
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF000D47),
                       ),
-                      textAlign: TextAlign.right,
+                      textAlign: widget.isRtl ? TextAlign.right : TextAlign.left,
                     ),
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(
+                    isExpanded ? Icons.remove : Icons.add,
+                    color: const Color(0xFF000D47),
+                    size: 24,
                   ),
                 ],
               ),
@@ -544,7 +590,7 @@ class _FaqItemState extends State<_FaqItem> {
                   color: Colors.grey,
                   height: 1.6,
                 ),
-                textAlign: TextAlign.right,
+                textAlign: widget.isRtl ? TextAlign.right : TextAlign.left,
               ),
             ),
         ],

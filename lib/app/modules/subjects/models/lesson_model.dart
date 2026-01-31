@@ -6,6 +6,8 @@ class LessonModel {
   final int isAlive;
   final String? pdfFile;
   final String? videoUrl;
+  final String? liveUrl; // YouTube URL for live lessons
+  final String? videoThumbnail; // Thumbnail image for the video
   final bool? isFavorite;
 
   LessonModel({
@@ -16,6 +18,8 @@ class LessonModel {
     this.isAlive = 0,
     this.pdfFile,
     this.videoUrl,
+    this.liveUrl,
+    this.videoThumbnail,
     this.isFavorite,
   });
 
@@ -37,6 +41,8 @@ class LessonModel {
       isAlive: isAliveValue,
       pdfFile: json['pdf_file'] as String?,
       videoUrl: json['video_url'] as String?,
+      liveUrl: json['live_url'] as String?,
+      videoThumbnail: json['video_thumbnail'] as String?,
       isFavorite: json['is_favorite'] as bool?,
     );
   }
@@ -50,6 +56,8 @@ class LessonModel {
       'is_alive': isAlive,
       'pdf_file': pdfFile,
       'video_url': videoUrl,
+      'live_url': liveUrl,
+      'video_thumbnail': videoThumbnail,
       'is_favorite': isFavorite,
     };
   }

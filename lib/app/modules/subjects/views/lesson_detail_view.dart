@@ -3,10 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:chewie/chewie.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/services/storage_service.dart';
+import '../../../core/widgets/api_image.dart';
 import '../controllers/lesson_detail_controller.dart';
 import '../models/unit_model.dart';
 
@@ -234,17 +235,33 @@ class LessonDetailView extends GetView<LessonDetailController> {
                   decoration: const BoxDecoration(
                     color: Colors.black,
                   ),
-                  child: ctrl.chewieController != null &&
-                          ctrl.chewieController!.videoPlayerController.value.isInitialized
-                      ? Chewie(controller: ctrl.chewieController!)
-                      : const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFFFB2B3A),
-                          ),
+                  child: Obx(() {
+                    // YouTube player for live lessons
+                    if (ctrl.isYouTubeVideo.value && ctrl.youtubePlayerController != null) {
+                      return YoutubePlayer(
+                        controller: ctrl.youtubePlayerController!,
+                        showVideoProgressIndicator: true,
+                        progressIndicatorColor: const Color(0xFFFB2B3A),
+                        progressColors: const ProgressBarColors(
+                          playedColor: Color(0xFFFB2B3A),
+                          handleColor: Color(0xFFFB2B3A),
                         ),
+                      );
+                    }
+                    // Regular video player
+                    if (ctrl.chewieController != null &&
+                        ctrl.chewieController!.videoPlayerController.value.isInitialized) {
+                      return Chewie(controller: ctrl.chewieController!);
+                    }
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFFB2B3A),
+                      ),
+                    );
+                  }),
                 ),
               ),
-              // Top controls (download, favorite and back) - with status bar padding
+              // Top controls (favorite and back) - with status bar padding
               Positioned(
                 top: statusBarHeight + 8,
                 left: 8,
@@ -260,71 +277,29 @@ class LessonDetailView extends GetView<LessonDetailController> {
                         onPressed: controller.hideVideo,
                       ),
                       const Spacer(),
-                      // Download button
-                      Obx(() {
-                        if (controller.isDownloading.value) {
-                          return SizedBox(
-                            width: 32,
-                            height: 32,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  value: controller.downloadProgress.value,
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                                Text(
-                                  '${(controller.downloadProgress.value * 100).toInt()}%',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        return IconButton(
-                          icon: Icon(
-                            controller.isVideoDownloaded.value
-                                ? Icons.download_done
-                                : Icons.download,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                          onPressed: () {
-                            if (controller.isVideoDownloaded.value) {
-                              controller.deleteCurrentVideo();
-                            } else {
-                              controller.downloadCurrentVideo();
-                            }
-                          },
-                        );
-                      }),
-                      // Favorite button (left side in RTL)
-                      Obx(() => IconButton(
-                        icon: Icon(
-                          controller.isFavorite.value
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: controller.isFavorite.value
-                              ? const Color(0xFFFF6B6B)
-                              : Colors.white,
-                          size: 28,
-                        ),
-                        onPressed: () {
-                          // Get current lesson ID from the playing lesson
-                          final currentLesson = controller.lessons.firstWhereOrNull(
-                            (lesson) => lesson.id == controller.currentLessonId.value
-                          );
-                          if (currentLesson != null) {
-                            controller.toggleFavorite(currentLesson.id);
-                          }
-                        },
-                      )),
+                      // Favorite button (left side in RTL) - only show for non-YouTube videos
+                      Obx(() => controller.isYouTubeVideo.value
+                          ? const SizedBox.shrink()
+                          : IconButton(
+                              icon: Icon(
+                                controller.isFavorite.value
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: controller.isFavorite.value
+                                    ? const Color(0xFFFF6B6B)
+                                    : Colors.white,
+                                size: 28,
+                              ),
+                              onPressed: () {
+                                // Get current lesson ID from the playing lesson
+                                final currentLesson = controller.lessons.firstWhereOrNull(
+                                  (lesson) => lesson.id == controller.currentLessonId.value
+                                );
+                                if (currentLesson != null) {
+                                  controller.toggleFavorite(currentLesson.id);
+                                }
+                              },
+                            )),
                     ],
                   ),
                 ),
@@ -336,84 +311,128 @@ class LessonDetailView extends GetView<LessonDetailController> {
     );
   }
 
-  // Build teacher info section
+  // Build teacher info section - always dark style with image7 background
   Widget _buildTeacherInfoSection(BuildContext context, Size screenSize) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 25,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8E8F7),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Expanded(
-            child: _buildInfoItem(
-              context,
-              'live_time'.tr,
-              Obx(() => Text(
-                _formatTime(controller.liveAt.value.isNotEmpty ? controller.liveAt.value : '08:00'),
-                style: AppTextStyles.statisticsValue(context),
-                textAlign: TextAlign.center,
-              )),
-              AppImages.icon24,
+    return Obx(() {
+      const dividerColor = Colors.white30;
+
+      return Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 25,
+        ),
+        decoration: BoxDecoration(
+          image: const DecorationImage(
+            image: AssetImage(AppImages.image7),
+            fit: BoxFit.cover,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Live time (left in RTL - appears on the left)
+            Expanded(
+              child: _buildInfoItem(
+                context,
+                'live_time'.tr,
+                Text(
+                  // Show "جاري" (ongoing) if any lesson is live, otherwise show scheduled time
+                  controller.hasLiveLesson.value
+                      ? 'ongoing'.tr
+                      : (controller.liveAt.value.isNotEmpty
+                          ? _formatTime(controller.liveAt.value)
+                          : '-'),
+                  style: const TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                AppImages.icon24,
+                true, // Always white mode
+              ),
             ),
-          ),
-          SizedBox(
-            width: 1,
-            height: 50,
-            child: ColoredBox(color: Colors.grey[300]!),
-          ),
-          Expanded(
-            child: _buildInfoItem(
-              context,
-              'number_of_lessons'.tr,
-              Obx(() => Text(
-                'lessons_count'.tr.replaceAll('@count', '${controller.lessonsCount.value}'),
-                style: AppTextStyles.statisticsValue(context),
-                textAlign: TextAlign.center,
-              )),
-              AppImages.icon25,
+            const SizedBox(
+              width: 1,
+              height: 50,
+              child: ColoredBox(color: dividerColor),
             ),
-          ),
-          SizedBox(
-            width: 1,
-            height: 50,
-            child: ColoredBox(color: Colors.grey[300]!),
-          ),
-          Expanded(
-            child: _buildInfoItem(
-              context,
-              'teacher'.tr,
-              Obx(() => Text(
-                controller.teacherName.value.isNotEmpty ? controller.teacherName.value : 'صابرين الأحمد',
-                style: AppTextStyles.statisticsValue(context),
-                textAlign: TextAlign.center,
-              )),
-              AppImages.icon26,
+            // Number of lessons (middle)
+            Expanded(
+              child: _buildInfoItem(
+                context,
+                'number_of_lessons'.tr,
+                Text(
+                  'lessons_count'.tr.replaceAll('@count', '${controller.lessonsCount.value}'),
+                  style: const TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                AppImages.icon25,
+                true, // Always white mode
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+            const SizedBox(
+              width: 1,
+              height: 50,
+              child: ColoredBox(color: dividerColor),
+            ),
+            // Teacher (right in RTL - appears on the right)
+            Expanded(
+              child: _buildInfoItem(
+                context,
+                'teacher'.tr,
+                Text(
+                  controller.teacherName.value.isNotEmpty ? controller.teacherName.value : 'صابرين الأحمد',
+                  style: const TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                AppImages.icon26,
+                true, // Always white mode
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
-  // Build individual info item
-  Widget _buildInfoItem(BuildContext context, String label, Widget value, String iconPath) {
+  // Build individual info item - always white mode
+  Widget _buildInfoItem(BuildContext context, String label, Widget value, String iconPath, [bool isWhiteMode = true]) {
     return Column(
       children: [
-        Image.asset(
-          iconPath,
-          width: 28,
-          height: 28,
+        // Icon - always white
+        ColorFiltered(
+          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          child: Image.asset(
+            iconPath,
+            width: 28,
+            height: 28,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
           label,
-          style: AppTextStyles.statisticsLabel(context),
+          style: const TextStyle(
+            fontFamily: 'Tajawal',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.white70,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 4),
@@ -453,19 +472,23 @@ class LessonDetailView extends GetView<LessonDetailController> {
         );
       }
 
-      return Column(
-        children: controller.lessons.map((lesson) {
-          // Get storage service to check subscription status
-          final storageService = Get.find<StorageService>();
-          final isGuestMode = !storageService.isLoggedIn;
-          final currentUser = storageService.currentUser;
-          final hasActiveSubscription = currentUser?.planStatus == 'active';
+      // Sort lessons: live lessons first (isAlive == 1), then by order
+      final sortedLessons = controller.lessons.toList()
+        ..sort((a, b) {
+          // Live lessons come first
+          if (a.isAlive == 1 && b.isAlive != 1) return -1;
+          if (b.isAlive == 1 && a.isAlive != 1) return 1;
+          // Then sort by order if available
+          final orderA = int.tryParse(a.order ?? '') ?? 999;
+          final orderB = int.tryParse(b.order ?? '') ?? 999;
+          return orderA.compareTo(orderB);
+        });
 
-          // For guests and users without active subscription, show all lessons as available
-          // They'll see subscription/registration dialogs when accessing content
-          final status = (isGuestMode || !hasActiveSubscription)
-              ? 'available'
-              : (lesson.isAlive == 1 ? 'available' : 'locked');
+      return Column(
+        children: sortedLessons.map((lesson) {
+          // All lessons are shown as available
+          // Access control (subscription/login checks) is handled in playLessonVideo()
+          const status = 'available';
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 15),
@@ -488,172 +511,320 @@ class LessonDetailView extends GetView<LessonDetailController> {
     lesson,
     String status,
   ) {
-    return GestureDetector(
-      onTap: status != 'locked'
-          ? () {
-              // Play video for the lesson
-              controller.playLessonVideo(lesson.id);
-            }
-          : null,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F7FF),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            // Status icon (right side in RTL)
-            _buildStatusIcon(status),
-            const SizedBox(width: 16),
-            // Center text
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+    final bool isLive = lesson.isAlive == 1;
+    final bool isLocked = status == 'locked';
+
+    return Column(
+      children: [
+        // Main card with thumbnail
+        GestureDetector(
+          onTap: !isLocked
+              ? () => controller.playLessonVideo(lesson.id)
+              : null,
+          child: Container(
+            height: 149,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: isLive
+                  ? Border.all(color: const Color(0xFFFFB5B5), width: 3)
+                  : null,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(isLive ? 13 : 16),
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  // Title
-                  Text(
-                    lesson.name,
-                    style: AppTextStyles.lessonTitle(context),
-                  ),
-                  const SizedBox(height: 4),
-                  // Show order if available, otherwise show PDF/Video indicator
-                  if (lesson.order != null && lesson.order!.isNotEmpty)
-                    Text(
-                      lesson.order!,
-                      style: AppTextStyles.lessonSubtitle(context),
-                    )
-                  else if (lesson.pdfFile != null || lesson.videoUrl != null)
-                    Text(
-                      lesson.pdfFile != null ? 'PDF متاح' : 'فيديو متاح',
-                      style: AppTextStyles.lessonSubtitle(context),
+                  // Thumbnail - show image if available, otherwise placeholder color
+                  if (lesson.videoThumbnail != null && lesson.videoThumbnail!.isNotEmpty)
+                    ApiImage(
+                      imageUrl: lesson.videoThumbnail!,
+                      fit: BoxFit.cover,
+                      placeholder: Container(
+                        color: isLive
+                            ? const Color(0xFFE8D4D4)
+                            : const Color(0xFFD4D8E8),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF000D47),
+                          ),
+                        ),
+                      ),
+                      errorWidget: Container(
+                        color: isLive
+                            ? const Color(0xFFE8D4D4)
+                            : const Color(0xFFD4D8E8),
+                      ),
                     )
                   else
-                    Text(
-                      'لا يوجد محتوى',
-                      style: AppTextStyles.lessonSubtitle(context),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isLive
+                            ? const Color(0xFFE8D4D4) // Light pink/beige for live
+                            : const Color(0xFFD4D8E8), // Light blue/gray for regular
+                      ),
+                    ),
+                  // Play button in center (37x37)
+                  Center(
+                    child: Container(
+                      width: 37,
+                      height: 37,
+                      decoration: BoxDecoration(
+                        color: isLive
+                            ? const Color(0xFFFB2B3A)
+                            : const Color(0xFF000D47),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                  // Favorite button (top-left in RTL = top-right visually) - only for non-live lessons
+                  if (!isLive)
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: GestureDetector(
+                        onTap: () => controller.toggleFavorite(lesson.id),
+                        child: Obx(() {
+                          final isFav = controller.favoriteLessons.contains(lesson.id) ||
+                              lesson.isFavorite == true;
+                          return Icon(
+                            isFav ? Icons.favorite : Icons.favorite_border,
+                            color: isFav ? const Color(0xFFFF6B6B) : Colors.white,
+                            size: 24,
+                          );
+                        }),
+                      ),
+                    ),
+                  // LIVE icon (top-left in RTL = top-right visually)
+                  if (isLive)
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Image.asset(
+                        AppImages.icon28,
+                        width: 32,
+                        height: 32,
+                      ),
+                    ),
+                  // Lesson info overlay at bottom (name and order)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.7),
+                          ],
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Lesson order (left in RTL)
+                          if (lesson.order != null && lesson.order!.isNotEmpty)
+                            Text(
+                              lesson.order!,
+                              style: const TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontSize: 12,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          const Spacer(),
+                          // Lesson name (right in RTL)
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              lesson.name,
+                              style: const TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.right,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Locked overlay
+                  if (isLocked)
+                    Container(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      child: Center(
+                        child: Image.asset(
+                          AppImages.icon29,
+                          width: 40,
+                          height: 40,
+                        ),
+                      ),
                     ),
                 ],
               ),
             ),
-            const SizedBox(width: 16),
-            // Buttons (left side in RTL)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Test button
-                  GestureDetector(
-                    onTap: status != 'locked'
-                        ? () => controller.openLessonTest(lesson.id)
-                        : null,
-                    child: Container(
-                      width: 78,
-                      height: 30,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: status == 'locked'
-                            ? Colors.grey[300]
-                            : const Color(0xFFD4D9F7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'lesson_test'.tr,
-                        style: status == 'locked'
-                            ? AppTextStyles.lessonButtonDisabled(context)
-                            : AppTextStyles.lessonButtonActive(context),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Summary button
-                  GestureDetector(
-                    onTap: status != 'locked'
-                        ? () => controller.openLessonSummary(lesson.id)
-                        : null,
-                    child: Container(
-                      width: 78,
-                      height: 30,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: status == 'locked'
-                            ? Colors.grey[300]
-                            : const Color(0xFFD4D9F7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'lesson_summary'.tr,
-                        style: status == 'locked'
-                            ? AppTextStyles.lessonButtonDisabled(context)
-                            : AppTextStyles.lessonButtonActive(context),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
-    );
-  }
+        // Action buttons - only show for non-live lessons
+        if (!isLive) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              // Download video button (right in RTL)
+              Expanded(
+                child: Obx(() {
+                  final isDownloading = controller.downloadingLessons.contains(lesson.id);
+                  final isDownloaded = controller.downloadedLessons.contains(lesson.id);
+                  final progress = controller.lessonDownloadProgress[lesson.id] ?? 0.0;
 
-  // Build status icon based on lesson status
-  Widget _buildStatusIcon(String status) {
-    if (status == 'locked') {
-      // Locked icon centered in 72x72 space
-      return SizedBox(
-        width: 72,
-        height: 72,
-        child: Center(
-          child: Image.asset(
-            AppImages.icon29,
-            width: 30,
-            height: 30,
+                  return GestureDetector(
+                    onTap: !isLocked
+                        ? () {
+                            if (isDownloading) {
+                              // Cancel download
+                              controller.cancelDownload(lesson.id);
+                            } else {
+                              // Start download
+                              controller.downloadLessonVideo(lesson.id);
+                            }
+                          }
+                        : null,
+                    child: Container(
+                      height: 45,
+                      decoration: BoxDecoration(
+                        color: isLocked
+                            ? Colors.grey[300]
+                            : isDownloading
+                                ? const Color(0xFFE53935) // Red for cancel
+                                : isDownloaded
+                                    ? const Color(0xFF4CAF50) // Green for downloaded
+                                    : const Color(0xFF000D47),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: isDownloading
+                          // Show progress while downloading with cancel option
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  progress > 0 ? 'إلغاء ${(progress * 100).toInt()}%' : 'إلغاء',
+                                  style: const TextStyle(
+                                    fontFamily: 'Tajawal',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                    height: 1.0,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                isLocked
+                                    ? Icon(
+                                        Icons.download,
+                                        color: Colors.grey[500],
+                                        size: 20,
+                                      )
+                                    : isDownloaded
+                                        ? const Icon(
+                                            Icons.download_done,
+                                            color: Colors.white,
+                                            size: 20,
+                                          )
+                                        : Image.asset(
+                                            AppImages.icon78,
+                                            width: 20,
+                                            height: 20,
+                                          ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  isDownloaded ? 'تم التنزيل' : 'تنزيل الدرس',
+                                  style: TextStyle(
+                                    fontFamily: 'Tajawal',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: isLocked ? Colors.grey[500] : Colors.white,
+                                    height: 1.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(width: 12),
+              // Test button (left in RTL) - same dark blue background as download button
+              Expanded(
+                child: GestureDetector(
+                  onTap: !isLocked
+                      ? () => controller.openLessonTest(lesson.id)
+                      : null,
+                  child: Container(
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: isLocked ? Colors.grey[300] : const Color(0xFF000D47),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        isLocked
+                            ? Icon(
+                                Icons.help_outline,
+                                color: Colors.grey[500],
+                                size: 20,
+                              )
+                            : Image.asset(
+                                AppImages.icon77,
+                                width: 20,
+                                height: 20,
+                              ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'اختبار الدرس',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isLocked ? Colors.grey[500] : Colors.white,
+                            height: 1.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-      );
-    } else if (status == 'live') {
-      return InkWell(
-        onTap: controller.showVideo,
-        child: Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: const Color(0x66FF4F6B), // 60% transparency (40% opacity)
-            border: Border.all(
-              color: const Color(0xFFFB2B3A),
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(36), // 50% radius
-          ),
-          child: Center(
-            child: Image.asset(
-              AppImages.icon28,
-              width: 30,
-              height: 30,
-            ),
-          ),
-        ),
-      );
-    } else {
-      return Container(
-        width: 72,
-        height: 72,
-        decoration: BoxDecoration(
-          color: const Color(0xFFE2E6F5),
-          borderRadius: BorderRadius.circular(36), // 50% radius
-        ),
-        child: Center(
-          child: Image.asset(
-            AppImages.icon27,
-            width: 30,
-            height: 30,
-          ),
-        ),
-      );
-    }
+        ],
+      ],
+    );
   }
 }
 

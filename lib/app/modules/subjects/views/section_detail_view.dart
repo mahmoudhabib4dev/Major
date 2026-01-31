@@ -167,7 +167,7 @@ class SectionDetailView extends GetView<SubjectsController> {
     );
   }
 
-  // Build statistics section
+  // Build statistics section - dark style with image7 background
   Widget _buildStatisticsSection(BuildContext context, Size screenSize) {
     // Calculate total lessons across all units
     final totalLessons = controller.units.fold<int>(
@@ -175,69 +175,83 @@ class SectionDetailView extends GetView<SubjectsController> {
       (sum, unit) => sum + unit.lessons.length,
     );
 
+    const dividerColor = Colors.white30;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: 20,
         vertical: 25,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8E8F7),
+        image: const DecorationImage(
+          image: AssetImage(AppImages.image7),
+          fit: BoxFit.cover,
+        ),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildStatItem(
-            context,
-            'number_of_students'.tr,
-            'students_count'.tr.replaceAll('@count', '30'),
-            AppImages.icon24,
+          Expanded(
+            child: _buildStatItem(
+              context,
+              'number_of_hours'.tr,
+              'hours_count'.tr.replaceAll('@count', '36'),
+              AppImages.icon24,
+            ),
           ),
-          Container(
+          const SizedBox(
             width: 1,
             height: 50,
-            color: Colors.grey[300],
+            child: ColoredBox(color: dividerColor),
           ),
-          _buildStatItem(
-            context,
-            'number_of_hours'.tr,
-            'hours_count'.tr.replaceAll('@count', '36'),
-            AppImages.icon24,
-          ),
-          Container(
-            width: 1,
-            height: 50,
-            color: Colors.grey[300],
-          ),
-          _buildStatItem(
-            context,
-            'number_of_topics'.tr,
-            'topics_count'.tr.replaceAll('@count', '${controller.units.length}'),
-            AppImages.icon25,
+          Expanded(
+            child: _buildStatItem(
+              context,
+              'number_of_topics'.tr,
+              'topics_count'.tr.replaceAll('@count', '${controller.units.length}'),
+              AppImages.icon25,
+            ),
           ),
         ],
       ),
     );
   }
 
-  // Build individual stat item
+  // Build individual stat item - white mode for dark background
   Widget _buildStatItem(BuildContext context, String label, String value, String iconPath) {
     return Column(
       children: [
-        Image.asset(
-          iconPath,
-          width: 28,
-          height: 28,
+        // Icon - white
+        ColorFiltered(
+          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          child: Image.asset(
+            iconPath,
+            width: 28,
+            height: 28,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
           label,
-          style: AppTextStyles.statisticsLabel(context),
+          style: const TextStyle(
+            fontFamily: 'Tajawal',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.white70,
+          ),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: AppTextStyles.statisticsValue(context),
+          style: const TextStyle(
+            fontFamily: 'Tajawal',
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -268,7 +282,7 @@ class SectionDetailView extends GetView<SubjectsController> {
         crossAxisCount: 2,
         crossAxisSpacing: 15,
         mainAxisSpacing: 15,
-        childAspectRatio: 1.0,
+        childAspectRatio: 0.9,
       ),
       itemCount: controller.units.length,
       itemBuilder: (context, index) {

@@ -76,6 +76,9 @@ class AppImages {
   static const String icon74 = 'assets/icons/74.png'; // Facebook icon
   static const String icon75 = 'assets/icons/75.png'; // YouTube icon
   static const String icon76 = 'assets/icons/76.png'; // TikTok icon
+  static const String icon77 = 'assets/icons/77.png'; // Lesson test icon
+  static const String icon78 = 'assets/icons/78.png'; // Download/favorite icon
+  static const String icon79 = 'assets/icons/logo.png';
   // Images
   static const String image1 = 'assets/images/1.png';
   static const String image2 = 'assets/images/2.png';
@@ -83,6 +86,7 @@ class AppImages {
   static const String image4 = 'assets/images/4.png';
   static const String image5 = 'assets/images/5.png';
   static const String image6 = 'assets/images/6.png';
+  static const String image7 = 'assets/images/7.png'; // Dark blue background for video player info
   // Add your image paths here as needed
   // Example: static const String imageName = 'assets/images/image_name.png';
 }
