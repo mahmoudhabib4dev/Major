@@ -103,19 +103,37 @@ class QuizController extends GetxController {
         // Store test state
         attemptId = testResponse.attemptId;
         testMode = testResponse.mode;
+
+        // Check if test is expired
+        final isExpired = testResponse.status == 'expired';
+        final hasAnsweredQuestions = testResponse.questions.any((q) => q.studentAnswer != null);
+
+        if (isExpired && !hasAnsweredQuestions) {
+          // Expired test with no answers - show message and go back
+          print('🔵 Test expired with no answers - showing message and going back');
+          AppDialog.showInfo(
+            message: 'انتهى وقت الاختبار. يمكنك بدء اختبار جديد.',
+          );
+          Future.delayed(const Duration(seconds: 2), () {
+            Get.back();
+          });
+          return;
+        }
+
         isReviewMode = testResponse.isReviewMode;
 
         // Load questions
         questions.value = testResponse.questions;
-        totalQuestions.value = testResponse.questionsCount ??0;
+        totalQuestions.value = testResponse.questionsCount ?? 0;
 
         print('🔵 Test started successfully');
         print('🔵 Mode: $testMode');
         print('🔵 Attempt ID: $attemptId');
+        print('🔵 Is Review Mode: $isReviewMode');
         print('🔵 Questions count: ${questions.length}');
 
-        // Calculate timer from server's expires_at if available
         if (!isReviewMode && testResponse.expiresAt != null) {
+          // Calculate timer from server's expires_at if available
           try {
             final expiresAt = DateTime.parse(testResponse.expiresAt!);
             final now = DateTime.now();
@@ -125,20 +143,31 @@ class QuizController extends GetxController {
               remainingSeconds.value = difference.inSeconds;
               _startTimer();
             } else {
-              // Timer already expired
-              remainingSeconds.value = 0;
+              // Timer already expired, use default
+              remainingSeconds.value = 1800;
+              _startTimer();
             }
           } catch (e) {
             print('⚠️ Failed to parse expires_at, using default timer: $e');
             remainingSeconds.value = 1800; // Fallback to 30 minutes
             _startTimer();
           }
+
+          // Handle resume mode - load existing answers and navigate to first unanswered
+          if (testMode == 'resume') {
+            _loadResumeModeData();
+          }
         } else if (!isReviewMode) {
           // No expires_at provided, use default 30 minutes
           remainingSeconds.value = 1800;
           _startTimer();
+
+          // Handle resume mode - load existing answers and navigate to first unanswered
+          if (testMode == 'resume') {
+            _loadResumeModeData();
+          }
         } else {
-          // In review mode, show previously answered questions
+          // In review mode with actual answers, show previously answered questions
           _loadReviewModeData();
         }
 
@@ -187,17 +216,58 @@ class QuizController extends GetxController {
     }
   }
 
-  Future<void> submitAnswer(int questionId, int answer) async {
+  void _loadResumeModeData() {
+    // In resume mode, load existing answers and navigate to first unanswered question
+    print('🔵 Loading resume mode data');
+
+    int firstUnansweredIndex = -1;
+
+    for (int i = 0; i < questions.length; i++) {
+      final question = questions[i] as TestQuestionModel;
+      if (question.studentAnswer != null) {
+        // Pre-populate userAnswers with existing answers
+        userAnswers[i] = question.studentAnswer.toString();
+
+        // Update counters for already answered questions
+        if (question.isCorrect == true) {
+          correctAnswersCount.value++;
+        } else {
+          wrongAnswersCount.value++;
+        }
+
+        print('🔵 Question $i already answered: ${question.studentAnswer}, correct: ${question.isCorrect}');
+      } else if (firstUnansweredIndex == -1) {
+        // Track the first unanswered question
+        firstUnansweredIndex = i;
+        print('🔵 First unanswered question found at index: $i');
+      }
+    }
+
+    // Navigate to first unanswered question, or stay at first if all answered
+    if (firstUnansweredIndex != -1) {
+      currentQuestionIndex.value = firstUnansweredIndex;
+      print('🔵 Navigating to first unanswered question: $firstUnansweredIndex');
+    } else {
+      // All questions answered - stay at first question
+      print('🔵 All questions already answered, staying at first question');
+    }
+
+    // Reset state for the current question
+    _resetQuestionState();
+  }
+
+  /// Submits answer to the API and returns whether the answer is correct
+  /// Returns null if the API call fails
+  Future<bool?> submitAnswer(int questionId, int answer) async {
     try {
       print('🔵 Submitting answer for question $questionId: $answer');
       print('🔵 Attempt ID: $attemptId');
+      print('🔵 Subject ID: $subjectId');
 
+      // New API endpoint format: /api/subjects/{attempt_id}/self-test-attempts/{attempt_id}/answer
+      // With query parameters: self_test_id and answer
       final response = await apiClient.post(
-        '${ApiConstants.baseUrl}/test-attempts/$attemptId/answer',
-        body: {
-          'question_id': questionId,
-          'answer': answer,
-        },
+        '${ApiConstants.baseUrl}/subjects/$attemptId/self-test-attempts/$attemptId/answer?self_test_id=$questionId&answer=$answer',
       );
 
       print('🔵 Answer submit response status: ${response.statusCode}');
@@ -208,6 +278,9 @@ class QuizController extends GetxController {
 
         // Log the entire response to understand its structure
         print('📝 Full response data: $jsonData');
+
+        // Get the is_correct value from API response
+        final isCorrect = jsonData['is_correct'] as bool?;
 
         // Update the current question with the server response
         // This allows the UI to show the correct answer and explanation
@@ -221,7 +294,7 @@ class QuizController extends GetxController {
             rightAnswer: jsonData['right_answer'] as int?,
             explanation: jsonData['explanation'] as String?,
             studentAnswer: answer,
-            isCorrect: jsonData['is_correct'] as bool?,
+            isCorrect: isCorrect,
           );
 
           // Replace the question in the list
@@ -231,7 +304,7 @@ class QuizController extends GetxController {
           questions.refresh();
         }
 
-        return;
+        return isCorrect;
       } else if (response.statusCode == 422) {
         // Handle validation error - could be "already answered" or "time expired"
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
@@ -240,6 +313,7 @@ class QuizController extends GetxController {
         AppDialog.showInfo(
           message: errorMessage,
         );
+        return null;
       } else {
         throw Exception('Failed to submit answer: ${response.statusCode}');
       }
@@ -249,6 +323,7 @@ class QuizController extends GetxController {
       AppDialog.showError(
         message: 'فشل إرسال الإجابة',
       );
+      return null;
     }
   }
 
@@ -292,6 +367,23 @@ class QuizController extends GetxController {
       // Store test state
       attemptId = testResponse.attemptId;
       testMode = testResponse.mode;
+
+      // Check if test is expired
+      final isExpired = testResponse.status == 'expired';
+      final hasAnsweredQuestions = testResponse.questions.any((q) => q.studentAnswer != null);
+
+      if (isExpired && !hasAnsweredQuestions) {
+        // Expired test with no answers - show message and go back
+        print('🔵 Test expired with no answers - showing message and going back');
+        AppDialog.showInfo(
+          message: 'انتهى وقت الاختبار. يمكنك بدء اختبار جديد.',
+        );
+        Future.delayed(const Duration(seconds: 2), () {
+          Get.back();
+        });
+        return;
+      }
+
       isReviewMode = testResponse.isReviewMode;
 
       // Load questions
@@ -301,10 +393,11 @@ class QuizController extends GetxController {
       print('🔵 Self-test loaded successfully');
       print('🔵 Mode: $testMode');
       print('🔵 Attempt ID: $attemptId');
+      print('🔵 Is Review Mode: $isReviewMode');
       print('🔵 Questions count: ${questions.length}');
 
-      // Calculate timer from server's expires_at if available
       if (!isReviewMode && testResponse.expiresAt != null) {
+        // Calculate timer from server's expires_at if available
         try {
           final expiresAt = DateTime.parse(testResponse.expiresAt!);
           final now = DateTime.now();
@@ -314,20 +407,31 @@ class QuizController extends GetxController {
             remainingSeconds.value = difference.inSeconds;
             _startTimer();
           } else {
-            // Timer already expired
-            remainingSeconds.value = 0;
+            // Timer already expired, use default
+            remainingSeconds.value = 1800;
+            _startTimer();
           }
         } catch (e) {
           print('⚠️ Failed to parse expires_at, using default timer: $e');
           remainingSeconds.value = 1800; // Fallback to 30 minutes
           _startTimer();
         }
+
+        // Handle resume mode - load existing answers and navigate to first unanswered
+        if (testMode == 'resume') {
+          _loadResumeModeData();
+        }
       } else if (!isReviewMode) {
         // No expires_at provided, use default 30 minutes
         remainingSeconds.value = 1800;
         _startTimer();
+
+        // Handle resume mode - load existing answers and navigate to first unanswered
+        if (testMode == 'resume') {
+          _loadResumeModeData();
+        }
       } else {
-        // In review mode, show previously answered questions
+        // In review mode with actual answers, show previously answered questions
         _loadReviewModeData();
       }
 
@@ -445,20 +549,45 @@ class QuizController extends GetxController {
     userAnswers[currentQuestionIndex.value] = selectedAnswerKey.value!;
     userAnswers.refresh(); // Trigger UI update for progress indicators
 
-    // Check if answer is correct - handle both SelfTestQuestionModel and TestQuestion
-    int? correctAnswer;
+    // Get question ID
     int? questionId;
-
     if (currentQuestion is SelfTestQuestionModel) {
-      correctAnswer = currentQuestion.rightAnswer;
       questionId = currentQuestion.id;
     } else if (currentQuestion is TestQuestionModel) {
-      correctAnswer = currentQuestion.rightAnswer;
       questionId = currentQuestion.id;
     } else {
-      // TestQuestion (from lesson_test_response_model.dart)
-      correctAnswer = (currentQuestion as dynamic).rightAnswer;
       questionId = (currentQuestion as dynamic).id;
+    }
+
+    // Submit answer to API first if we have an attemptId (test mode)
+    // The API will return whether the answer is correct
+    if (attemptId != null && questionId != null && selectedKey != null) {
+      final apiResult = await submitAnswer(questionId, selectedKey);
+
+      // Use the API result to determine correctness
+      if (apiResult != null) {
+        isCorrectAnswer.value = apiResult;
+        hasCheckedAnswer.value = true;
+        showExplanation.value = !apiResult;
+
+        // Update score counters
+        if (apiResult) {
+          correctAnswersCount.value++;
+        } else {
+          wrongAnswersCount.value++;
+        }
+        return;
+      }
+    }
+
+    // Fallback: Check answer locally if API call failed or no attemptId
+    int? correctAnswer;
+    if (currentQuestion is SelfTestQuestionModel) {
+      correctAnswer = currentQuestion.rightAnswer;
+    } else if (currentQuestion is TestQuestionModel) {
+      correctAnswer = currentQuestion.rightAnswer;
+    } else {
+      correctAnswer = (currentQuestion as dynamic).rightAnswer;
     }
 
     final isCorrect = correctAnswer != null && selectedKey == correctAnswer;
@@ -473,11 +602,6 @@ class QuizController extends GetxController {
       correctAnswersCount.value++;
     } else {
       wrongAnswersCount.value++;
-    }
-
-    // Submit answer to API if we have an attemptId (test mode)
-    if (attemptId != null && questionId != null && selectedKey != null) {
-      await submitAnswer(questionId, selectedKey);
     }
   }
 
@@ -518,12 +642,13 @@ class QuizController extends GetxController {
       selectedAnswerKey.value = userAnswers[currentIndex];
       hasCheckedAnswer.value = true;
 
-      // In review mode, use the is_correct field from server
-      if (isReviewMode && currentQuestion is TestQuestionModel) {
+      // Check if we have isCorrect from the server (review/resume mode)
+      if (currentQuestion is TestQuestionModel && currentQuestion.isCorrect != null) {
+        // Use the is_correct field from server (works for both review and resume modes)
         isCorrectAnswer.value = currentQuestion.isCorrect;
         showExplanation.value = currentQuestion.isCorrect == false;
       } else {
-        // In test mode, check if the answer was correct
+        // Fall back to local check using rightAnswer
         int? correctAnswer;
         if (currentQuestion is SelfTestQuestionModel) {
           correctAnswer = currentQuestion.rightAnswer;
@@ -534,7 +659,7 @@ class QuizController extends GetxController {
         }
         final selectedKey = int.tryParse(userAnswers[currentIndex]!);
         isCorrectAnswer.value = correctAnswer != null && selectedKey == correctAnswer;
-        showExplanation.value = !isCorrectAnswer.value!;
+        showExplanation.value = isCorrectAnswer.value != true;
       }
     } else {
       // Fresh question

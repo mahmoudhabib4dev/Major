@@ -25,6 +25,9 @@ class DownloadedVideoModel extends HiveObject {
   @HiveField(6)
   final String? thumbnailPath; // Optional: for downloads page
 
+  @HiveField(7)
+  final int? userId; // User who downloaded the video
+
   DownloadedVideoModel({
     required this.lessonId,
     required this.lessonName,
@@ -33,6 +36,7 @@ class DownloadedVideoModel extends HiveObject {
     required this.fileSize,
     required this.downloadDate,
     this.thumbnailPath,
+    this.userId,
   });
 
   // Convert file size to readable format
@@ -58,6 +62,7 @@ class DownloadedVideoModel extends HiveObject {
       'fileSize': fileSize,
       'downloadDate': downloadDate.toIso8601String(),
       'thumbnailPath': thumbnailPath,
+      'userId': userId,
     };
   }
 
@@ -71,6 +76,7 @@ class DownloadedVideoModel extends HiveObject {
       fileSize: json['fileSize'] as int,
       downloadDate: DateTime.parse(json['downloadDate'] as String),
       thumbnailPath: json['thumbnailPath'] as String?,
+      userId: json['userId'] as int?,
     );
   }
 }

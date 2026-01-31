@@ -166,7 +166,7 @@ class ProfileProvider {
         body: request.toJson(),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final jsonData = jsonDecode(response.body);
         return AppReviewResponseModel.fromJson(jsonData);
       } else {

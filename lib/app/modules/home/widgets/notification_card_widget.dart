@@ -17,6 +17,8 @@ class NotificationCardWidget extends GetView<NotificationsController> {
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Get.locale?.languageCode == 'ar';
+
     return InkWell(
       onTap: () {
         controller.onNotificationTap(notification);
@@ -43,9 +45,35 @@ class NotificationCardWidget extends GetView<NotificationsController> {
               : [],
         ),
         child: Row(
+          textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Time and unread dot on the left with animations
+            // Notification content with fade animation
+            Expanded(
+              child: FadeIn(
+                duration: const Duration(milliseconds: 500),
+                child: Column(
+                  crossAxisAlignment: isRtl ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      notification.title,
+                      style: AppTextStyles.notificationCardText(context).copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      notification.body,
+                      style: AppTextStyles.notificationCardText(context),
+                      textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Time and unread dot with animations
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -79,31 +107,6 @@ class NotificationCardWidget extends GetView<NotificationsController> {
                   ),
                 ],
               ],
-            ),
-            const SizedBox(width: 16),
-            // Notification content with fade animation
-            Expanded(
-              child: FadeIn(
-                duration: const Duration(milliseconds: 500),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      notification.title,
-                      style: AppTextStyles.notificationCardText(context).copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.right,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      notification.body,
-                      style: AppTextStyles.notificationCardText(context),
-                      textAlign: TextAlign.right,
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),

@@ -349,7 +349,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
               // Build display text - plan name with price if available
               final planName = selectedPlan.planName ?? '';
               final priceText = selectedPlan.formattedPrice ??
-                  (selectedPlan.price != null ? '${selectedPlan.price?.toStringAsFixed(0)} ريال' : '');
+                  (selectedPlan.price != null ? '${selectedPlan.price?.toStringAsFixed(0)} MRU' : '');
               final displayText = priceText.isNotEmpty
                   ? '$planName - $priceText'
                   : planName;
@@ -1184,7 +1184,7 @@ class _SubscriptionPlansBottomSheet extends GetView<AuthenticationController> {
                   SizedBox(width: AppDimensions.spacing(context, 0.02)),
                   // Price
                   Text(
-                    plan.formattedPrice ?? (plan.price != null ? '${plan.price.toStringAsFixed(0)} ريال' : ''),
+                    plan.formattedPrice ?? (plan.price != null ? '${plan.price.toStringAsFixed(0)} MRU' : ''),
                     style: AppTextStyles.bodyText(context).copyWith(
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       color: isSelected ? AppColors.primary : null,

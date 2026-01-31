@@ -42,11 +42,13 @@ class LessonDetailController extends GetxController {
   final RxBool isVideoDownloaded = false.obs;
   String _currentVideoUrl = '';
 
-  // Download state for lesson list (tracks all lessons)
-  final RxMap<int, double> lessonDownloadProgress = <int, double>{}.obs;
+  // Download state for lesson list - use global service state for persistence
+  // These getters delegate to VideoDownloadService singleton for cross-page persistence
+  RxMap<int, double> get lessonDownloadProgress => _downloadService.downloadProgress;
+  RxSet<int> get downloadingLessons => _downloadService.activeDownloads;
+
+  // Local state for tracking which lessons are downloaded (file exists)
   final RxSet<int> downloadedLessons = <int>{}.obs;
-  final RxSet<int> downloadingLessons = <int>{}.obs;
-  final Map<int, CancelToken> _downloadCancelTokens = {};
 
   // Lessons data from API
   final RxList<LessonModel> lessons = <LessonModel>[].obs;
@@ -344,23 +346,23 @@ class LessonDetailController extends GetxController {
         developer.log('✅ Playing video from local storage: $localPath', name: 'LessonDetailController');
         isVideoDownloaded.value = true;
         isVideoPlaying.value = true;
-        _initializeVideoPlayerFromFile(localPath);
+        await _initializeVideoPlayerFromFile(localPath);
       } else if (lesson != null && lesson.videoUrl != null && lesson.videoUrl!.isNotEmpty) {
         // Use video URL from lesson data
         _currentVideoUrl = lesson.videoUrl!;
         developer.log('✅ Using video URL from lesson: ${lesson.videoUrl}', name: 'LessonDetailController');
         isVideoDownloaded.value = false;
         isVideoPlaying.value = true;
-        _initializeVideoPlayer(lesson.videoUrl!);
+        await _initializeVideoPlayer(lesson.videoUrl!);
       } else {
-        // Check if user is authenticated
+        // Check if user is a guest (not logged in or using guest mode)
         final storageService = Get.find<StorageService>();
-        final isAuthenticated = storageService.isLoggedIn && storageService.authToken != null;
+        final isGuestMode = !storageService.isLoggedIn || storageService.currentUser == null;
 
-        if (!isAuthenticated) {
-          // Guest user - video URL is missing, show unavailable message
-          developer.log('❌ Video URL not available for guest', name: 'LessonDetailController');
-          AppDialog.showError(message: 'الفيديو غير متاح حالياً');
+        if (isGuestMode) {
+          // Guest user - video URL is missing, show login dialog
+          developer.log('❌ Video not available for guest, showing login dialog', name: 'LessonDetailController');
+          _showSubscriptionDialog(true);
           return;
         }
 
@@ -372,15 +374,25 @@ class LessonDetailController extends GetxController {
           developer.log('✅ Video URL loaded from API: ${response.data.videoUrl}', name: 'LessonDetailController');
           isVideoDownloaded.value = false;
           isVideoPlaying.value = true;
-          _initializeVideoPlayer(response.data.videoUrl);
+          await _initializeVideoPlayer(response.data.videoUrl);
         } else {
           developer.log('❌ No video URL available', name: 'LessonDetailController');
-          AppDialog.showError(message: 'الفيديو غير متاح حالياً');
+          AppDialog.showError(message: 'video_not_available'.tr);
         }
       }
     } catch (e) {
       developer.log('❌ Error loading video: $e', name: 'LessonDetailController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تحميل الفيديو');
+
+      // Check if user is guest and show login dialog instead of error
+      final storageService = Get.find<StorageService>();
+      final isGuestMode = !storageService.isLoggedIn || storageService.currentUser == null;
+
+      if (isGuestMode) {
+        developer.log('🔐 Guest user, showing login dialog', name: 'LessonDetailController');
+        _showSubscriptionDialog(true);
+      } else {
+        AppDialog.showError(message: 'video_not_available'.tr);
+      }
     } finally {
       isLoadingVideo.value = false;
     }
@@ -551,37 +563,59 @@ class LessonDetailController extends GetxController {
     }
   }
 
-  void _initializeVideoPlayer(String videoUrl) {
+  Future<void> _initializeVideoPlayer(String videoUrl) async {
     videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
 
-    videoPlayerController!.initialize().then((_) {
+    // Initialize with timeout to prevent indefinite waiting
+    try {
+      await videoPlayerController!.initialize().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          developer.log('⚠️ Video initialization timeout', name: 'LessonDetailController');
+        },
+      );
+
       chewieController = ChewieController(
         videoPlayerController: videoPlayerController!,
         autoPlay: true,
         looping: false,
         showControls: true,
         showOptions: false,
+        // Start playing immediately, don't wait for buffering
+        autoInitialize: true,
         materialProgressColors: ChewieProgressColors(
           playedColor: const Color(0xFFFB2B3A),
           handleColor: const Color(0xFFFB2B3A),
           backgroundColor: const Color(0xFF666666),
           bufferedColor: const Color(0xFF999999),
         ),
+        placeholder: const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFFFB2B3A),
+          ),
+        ),
       );
       update();
-    });
+    } catch (e) {
+      developer.log('❌ Error initializing video: $e', name: 'LessonDetailController');
+      AppDialog.showError(message: 'video_not_available'.tr);
+      isVideoPlaying.value = false;
+    }
   }
 
-  void _initializeVideoPlayerFromFile(String filePath) {
+  Future<void> _initializeVideoPlayerFromFile(String filePath) async {
     videoPlayerController = VideoPlayerController.file(File(filePath));
 
-    videoPlayerController!.initialize().then((_) {
+    try {
+      await videoPlayerController!.initialize();
+
       chewieController = ChewieController(
         videoPlayerController: videoPlayerController!,
         autoPlay: true,
         looping: false,
         showControls: true,
         showOptions: false,
+        autoInitialize: true,
         materialProgressColors: ChewieProgressColors(
           playedColor: const Color(0xFFFB2B3A),
           handleColor: const Color(0xFFFB2B3A),
@@ -590,7 +624,11 @@ class LessonDetailController extends GetxController {
         ),
       );
       update();
-    });
+    } catch (e) {
+      developer.log('❌ Error initializing local video: $e', name: 'LessonDetailController');
+      AppDialog.showError(message: 'video_not_available'.tr);
+      isVideoPlaying.value = false;
+    }
   }
 
   void _initializeYouTubePlayer(String videoId) {
@@ -730,8 +768,8 @@ class LessonDetailController extends GetxController {
       return;
     }
 
-    // If already downloading this lesson, do nothing
-    if (downloadingLessons.contains(lessonId)) {
+    // If already downloading this lesson, do nothing (check global state)
+    if (_downloadService.isDownloading(lessonId)) {
       developer.log('⚠️ Already downloading lesson: $lessonId', name: 'LessonDetailController');
       return;
     }
@@ -782,27 +820,17 @@ class LessonDetailController extends GetxController {
     }
 
     try {
-      downloadingLessons.add(lessonId);
-      lessonDownloadProgress[lessonId] = 0.0;
-
-      // Create cancel token for this download
-      final cancelToken = CancelToken();
-      _downloadCancelTokens[lessonId] = cancelToken;
-
       developer.log('📥 Starting video download for lesson: $lessonId', name: 'LessonDetailController');
 
+      // Download using service (global state is managed by service)
       await _downloadService.downloadVideo(
         lessonId: lessonId,
         videoUrl: videoUrl,
         lessonName: lesson.name,
-        onProgress: (progress) {
-          lessonDownloadProgress[lessonId] = progress;
-        },
-        cancelToken: cancelToken,
       );
 
+      // Download completed successfully - add to downloaded list
       downloadedLessons.add(lessonId);
-      lessonDownloadProgress[lessonId] = 1.0;
 
       developer.log('✅ Lesson video downloaded successfully', name: 'LessonDetailController');
       AppDialog.showSuccess(message: 'تم تنزيل الفيديو بنجاح');
@@ -825,31 +853,12 @@ class LessonDetailController extends GetxController {
     } catch (e) {
       developer.log('❌ Error downloading lesson video: $e', name: 'LessonDetailController');
       AppDialog.showError(message: 'حدث خطأ أثناء تنزيل الفيديو');
-    } finally {
-      downloadingLessons.remove(lessonId);
-      lessonDownloadProgress.remove(lessonId);
-      _downloadCancelTokens.remove(lessonId);
     }
   }
 
-  // Cancel a download in progress
+  // Cancel a download in progress (delegates to service)
   void cancelDownload(int lessonId) {
-    developer.log('🔴 Cancel requested for lesson: $lessonId', name: 'LessonDetailController');
-    developer.log('   Active tokens: ${_downloadCancelTokens.keys.toList()}', name: 'LessonDetailController');
-
-    final cancelToken = _downloadCancelTokens[lessonId];
-    if (cancelToken == null) {
-      developer.log('   ❌ No cancel token found for lesson', name: 'LessonDetailController');
-      return;
-    }
-
-    if (cancelToken.isCancelled) {
-      developer.log('   ⚠️ Token already cancelled', name: 'LessonDetailController');
-      return;
-    }
-
-    developer.log('🚫 Cancelling download for lesson: $lessonId', name: 'LessonDetailController');
-    cancelToken.cancel('User cancelled download');
+    _downloadService.cancelDownload(lessonId);
   }
 
   // Show delete confirmation dialog for lesson video

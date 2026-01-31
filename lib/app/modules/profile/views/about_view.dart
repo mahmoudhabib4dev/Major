@@ -43,10 +43,11 @@ class AboutView extends GetView<ProfileController> {
                 duration: const Duration(milliseconds: 600),
                 child: Center(
                   child: Image.asset(
-                    AppImages.icon79,
+                    AppImages.logo,
                     width: 181.76,
                     height: 91.76,
                     fit: BoxFit.contain,
+                    
                   ),
                 ),
               ),

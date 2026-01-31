@@ -63,6 +63,9 @@ class HomeController extends GetxController {
   // Notifications state
   final RxInt unreadNotificationsCount = 0.obs;
 
+  // Initial page loading state
+  final RxBool isInitialLoading = true.obs;
+
   // Guest mode check
   bool get isGuest => !storageService.isLoggedIn;
 
@@ -74,16 +77,26 @@ class HomeController extends GetxController {
 
   // Initialize home controller
   Future<void> _initialize() async {
-    // For logged-in users, refresh user data from API first to get latest plan_status
-    if (!isGuest) {
-      await refreshUserDataFromApi();
-      loadUnreadNotificationsCount();
-      registerDevice();
-    }
+    try {
+      isInitialLoading.value = true;
 
-    loadUserData();
-    loadOffers();
-    loadSubjects();
+      // For logged-in users, refresh user data from API first to get latest plan_status
+      if (!isGuest) {
+        await refreshUserDataFromApi();
+        loadUnreadNotificationsCount();
+        registerDevice();
+      }
+
+      loadUserData();
+
+      // Load offers and subjects in parallel
+      await Future.wait([
+        loadOffers(),
+        loadSubjects(),
+      ]);
+    } finally {
+      isInitialLoading.value = false;
+    }
   }
 
   @override

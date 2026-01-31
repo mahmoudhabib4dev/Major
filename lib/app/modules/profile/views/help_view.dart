@@ -236,39 +236,21 @@ class HelpView extends GetView<ProfileController> {
         ),
         const Divider(height: 24),
         // Website
-        Obx(
-          () => _buildContactItem(
-            context: context,
-            iconPath: AppImages.icon80,
-            label: 'website'.tr,
-            value:
-                controller.supportWebsite.value.isNotEmpty
-                    ? controller.supportWebsite.value
-                    : '...',
-            onTap:
-                () =>
-                    controller.supportWebsite.value.isNotEmpty
-                        ? _openWebsite(controller.supportWebsite.value)
-                        : null,
-          ),
+        _buildContactItem(
+          context: context,
+          iconPath: AppImages.icon80,
+          label: 'website'.tr,
+          value: 'WWW.majorclass.net',
+          onTap: () => _openWebsite('WWW.majorclass.net'),
         ),
         const Divider(height: 24),
         // Email
-        Obx(
-          () => _buildContactItem(
-            context: context,
-            iconPath: AppImages.icon79,
-            label: 'email'.tr,
-            value:
-                controller.supportEmail.value.isNotEmpty
-                    ? controller.supportEmail.value
-                    : '...',
-            onTap:
-                () =>
-                    controller.supportEmail.value.isNotEmpty
-                        ? _openEmail(controller.supportEmail.value)
-                        : null,
-          ),
+        _buildContactItem(
+          context: context,
+          iconPath: AppImages.icon79,
+          label: 'email'.tr,
+          value: 'Contact@majojclass.net',
+          onTap: () => _openEmail('Contact@majojclass.net'),
         ),
       ],
     );

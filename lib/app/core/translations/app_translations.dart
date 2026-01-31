@@ -327,7 +327,9 @@ class AppTranslations extends Translations {
           'removed_from_favorites': 'تم الحذف من المفضلة',
           'lesson_test': 'اختبار الدرس',
           'no_test_available': 'لا يوجد اختبار متاح لهذا الدرس',
+          'video_not_available': 'الفيديو غير متاح',
           'error_loading_test': 'حدث خطأ أثناء تحميل الاختبار',
+          'video_not_available': 'الفيديو غير متاح',
 
           // Subjects
           'subjects': 'المواد',
@@ -354,6 +356,7 @@ class AppTranslations extends Translations {
           'check_answer': 'تحقق من الإجابة',
 
           // Home & Notifications
+          'welcome_greeting': 'مرحبا بك .. !',
           'notifications_title': 'الإشعارات',
           'notifications_empty_title': 'لا توجد إشعارات',
           'notifications_empty_description': 'سيتم عرض جميع إشعاراتك هنا',
@@ -707,6 +710,7 @@ class AppTranslations extends Translations {
           'removed_from_favorites': 'Removed from favorites',
           'lesson_test': 'Lesson Test',
           'no_test_available': 'No test available for this lesson',
+          'video_not_available': 'Video not available',
           'error_loading_test': 'Error loading test',
 
           // Subjects
@@ -734,6 +738,7 @@ class AppTranslations extends Translations {
           'check_answer': 'Check Answer',
 
           // Home & Notifications
+          'welcome_greeting': 'Welcome .. !',
           'notifications_title': 'Notifications',
           'notifications_empty_title': 'No Notifications',
           'notifications_empty_description': 'All your notifications will be displayed here',
@@ -1093,6 +1098,7 @@ class AppTranslations extends Translations {
           'removed_from_favorites': 'Supprimé des favoris',
           'lesson_test': 'Test de leçon',
           'no_test_available': 'Aucun test disponible pour cette leçon',
+          'video_not_available': 'Vidéo non disponible',
           'error_loading_test': 'Erreur lors du chargement du test',
 
           // Subjects
@@ -1120,6 +1126,7 @@ class AppTranslations extends Translations {
           'check_answer': 'Vérifier la réponse',
 
           // Home & Notifications
+          'welcome_greeting': 'Bienvenue .. !',
           'notifications_title': 'Notifications',
           'notifications_empty_title': 'Aucune notification',
           'notifications_empty_description': 'Toutes vos notifications seront affichées ici',

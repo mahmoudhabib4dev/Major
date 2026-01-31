@@ -24,13 +24,14 @@ class DownloadedVideoModelAdapter extends TypeAdapter<DownloadedVideoModel> {
       fileSize: fields[4] as int,
       downloadDate: fields[5] as DateTime,
       thumbnailPath: fields[6] as String?,
+      userId: fields[7] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, DownloadedVideoModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.lessonId)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class DownloadedVideoModelAdapter extends TypeAdapter<DownloadedVideoModel> {
       ..writeByte(5)
       ..write(obj.downloadDate)
       ..writeByte(6)
-      ..write(obj.thumbnailPath);
+      ..write(obj.thumbnailPath)
+      ..writeByte(7)
+      ..write(obj.userId);
   }
 
   @override

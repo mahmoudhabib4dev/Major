@@ -71,7 +71,7 @@ class UserHeaderWidget extends GetView<HomeController> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          controller.greetingText.value,
+                          'welcome_greeting'.tr,
                           style: AppTextStyles.homeTitle(context),
                         ),
                         Text(

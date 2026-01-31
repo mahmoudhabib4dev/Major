@@ -176,14 +176,14 @@ class PaymentView extends GetView<AuthenticationController> {
           text: TextSpan(
             children: [
               TextSpan(
-                text: '* ',
+                text: 'full_name'.tr,
+                style: AppTextStyles.inputLabel(context),
+              ),
+              TextSpan(
+                text: ' *',
                 style: AppTextStyles.inputLabel(context).copyWith(
                   color: AppColors.error,
                 ),
-              ),
-              TextSpan(
-                text: 'full_name'.tr,
-                style: AppTextStyles.inputLabel(context),
               ),
             ],
           ),
@@ -226,14 +226,14 @@ class PaymentView extends GetView<AuthenticationController> {
           text: TextSpan(
             children: [
               TextSpan(
-                text: '* ',
+                text: 'phone_number'.tr,
+                style: AppTextStyles.inputLabel(context),
+              ),
+              TextSpan(
+                text: ' *',
                 style: AppTextStyles.inputLabel(context).copyWith(
                   color: AppColors.error,
                 ),
-              ),
-              TextSpan(
-                text: 'phone_number'.tr,
-                style: AppTextStyles.inputLabel(context),
               ),
             ],
           ),
@@ -550,14 +550,14 @@ class PaymentView extends GetView<AuthenticationController> {
           text: TextSpan(
             children: [
               TextSpan(
-                text: '* ',
+                text: 'reference_number'.tr,
+                style: AppTextStyles.inputLabel(context),
+              ),
+              TextSpan(
+                text: ' *',
                 style: AppTextStyles.inputLabel(context).copyWith(
                   color: AppColors.error,
                 ),
-              ),
-              TextSpan(
-                text: 'reference_number'.tr,
-                style: AppTextStyles.inputLabel(context),
               ),
             ],
           ),
@@ -576,7 +576,7 @@ class PaymentView extends GetView<AuthenticationController> {
             style: AppTextStyles.bodyText(context),
             keyboardType: TextInputType.text,
             decoration: InputDecoration(
-              hintText: 'enter_reference_number'.tr,
+              hintText: '',
               hintStyle: AppTextStyles.inputHint(context),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(
@@ -649,7 +649,7 @@ class PaymentView extends GetView<AuthenticationController> {
           style: AppTextStyles.bodyText(context),
           textInputAction: TextInputAction.done,
           decoration: InputDecoration(
-            hintText: '25gsh20',
+            hintText: '',
             hintStyle: AppTextStyles.inputHint(context),
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(

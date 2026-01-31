@@ -64,9 +64,60 @@ class LessonDetailView extends GetView<LessonDetailController> {
 
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        extendBody: true,
-        body: Container(
+      child: Obx(() {
+        // Use YoutubePlayerBuilder when YouTube video is playing for proper fullscreen handling
+        if (controller.isYouTubeVideo.value && controller.youtubePlayerController != null) {
+          return YoutubePlayerBuilder(
+            onExitFullScreen: () {
+              // Restore portrait orientation when exiting fullscreen
+              SystemChrome.setPreferredOrientations([
+                DeviceOrientation.portraitUp,
+                DeviceOrientation.portraitDown,
+              ]);
+              SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+              // Reset status bar style
+              SystemChrome.setSystemUIOverlayStyle(
+                const SystemUiOverlayStyle(
+                  statusBarColor: Colors.transparent,
+                  statusBarIconBrightness: Brightness.light,
+                  statusBarBrightness: Brightness.dark,
+                ),
+              );
+            },
+            onEnterFullScreen: () {
+              // Allow landscape for fullscreen
+              SystemChrome.setPreferredOrientations([
+                DeviceOrientation.landscapeLeft,
+                DeviceOrientation.landscapeRight,
+              ]);
+              SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+            },
+            player: YoutubePlayer(
+              controller: controller.youtubePlayerController!,
+              showVideoProgressIndicator: true,
+              progressIndicatorColor: const Color(0xFFFB2B3A),
+              progressColors: const ProgressBarColors(
+                playedColor: Color(0xFFFB2B3A),
+                handleColor: Color(0xFFFB2B3A),
+              ),
+            ),
+            builder: (context, player) {
+              return _buildMainScaffold(context, screenSize, youtubePlayer: player);
+            },
+          );
+        }
+
+        // Normal scaffold without YouTube player builder
+        return _buildMainScaffold(context, screenSize);
+      }),
+    );
+  }
+
+  // Build the main scaffold content
+  Widget _buildMainScaffold(BuildContext context, Size screenSize, {Widget? youtubePlayer}) {
+    return Scaffold(
+      extendBody: true,
+      body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
@@ -79,7 +130,7 @@ class LessonDetailView extends GetView<LessonDetailController> {
           children: [
             // Video player or header - behind everything
             Obx(() => controller.isVideoPlaying.value
-                ? _buildVideoPlayer(context, screenSize)
+                ? _buildVideoPlayer(context, screenSize, youtubePlayer: youtubePlayer)
                 : SafeArea(child: _buildHeader(context, screenSize))),
             // Loading overlay for video
             Obx(() => controller.isLoadingVideo.value
@@ -166,7 +217,6 @@ class LessonDetailView extends GetView<LessonDetailController> {
           ],
         ),
       ),
-      ),
     );
   }
 
@@ -216,9 +266,9 @@ class LessonDetailView extends GetView<LessonDetailController> {
   }
 
   // Build video player
-  Widget _buildVideoPlayer(BuildContext context, Size screenSize) {
+  Widget _buildVideoPlayer(BuildContext context, Size screenSize, {Widget? youtubePlayer}) {
     final statusBarHeight = MediaQuery.of(context).padding.top;
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: screenSize.height * 0.40,
       child: GetBuilder<LessonDetailController>(
@@ -236,17 +286,9 @@ class LessonDetailView extends GetView<LessonDetailController> {
                     color: Colors.black,
                   ),
                   child: Obx(() {
-                    // YouTube player for live lessons
-                    if (ctrl.isYouTubeVideo.value && ctrl.youtubePlayerController != null) {
-                      return YoutubePlayer(
-                        controller: ctrl.youtubePlayerController!,
-                        showVideoProgressIndicator: true,
-                        progressIndicatorColor: const Color(0xFFFB2B3A),
-                        progressColors: const ProgressBarColors(
-                          playedColor: Color(0xFFFB2B3A),
-                          handleColor: Color(0xFFFB2B3A),
-                        ),
-                      );
+                    // YouTube player for live lessons - use the player from YoutubePlayerBuilder
+                    if (ctrl.isYouTubeVideo.value && youtubePlayer != null) {
+                      return youtubePlayer;
                     }
                     // Regular video player
                     if (ctrl.chewieController != null &&

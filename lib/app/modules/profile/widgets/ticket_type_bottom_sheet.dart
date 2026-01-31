@@ -95,8 +95,10 @@ class _TicketTypeBottomSheetState extends State<TicketTypeBottomSheet> {
   ];
 
   void _showProblemDialog() {
+    final ticketTypeId = selectedTicketTypeId; // Capture value before closing
     Navigator.pop(context); // Close bottom sheet first
-    _showWriteProblemDialog(context, selectedTicketTypeId);
+    // Use Get.context to ensure a valid context after bottom sheet is closed
+    _showWriteProblemDialog(Get.context!, ticketTypeId);
   }
 
   @override
@@ -745,20 +747,30 @@ void _showWriteProblemDialog(BuildContext context, int complaintTypeId) {
                           return;
                         }
 
+                        // Capture values before closing dialog
+                        final message = problemController.text.trim();
+                        final typeId = complaintTypeId;
+
                         // Close dialog first
                         Navigator.pop(context);
 
                         // Get ProfileController and submit complaint
-                        final profileController = Get.find<ProfileController>();
-                        final success = await profileController.submitComplaint(
-                          complaintTypeId: complaintTypeId,
-                          message: problemController.text.trim(),
-                        );
+                        try {
+                          final profileController = Get.find<ProfileController>();
+                          final success = await profileController.submitComplaint(
+                            complaintTypeId: typeId,
+                            message: message,
+                          );
 
-                        // Show success message if submitted
-                        if (success) {
-                          AppDialog.showSuccess(
-                            message: 'problem_submitted'.tr,
+                          // Show success message if submitted
+                          if (success) {
+                            AppDialog.showSuccess(
+                              message: 'problem_submitted'.tr,
+                            );
+                          }
+                        } catch (e) {
+                          AppDialog.showError(
+                            message: 'error_submitting_complaint'.tr,
                           );
                         }
                       },
