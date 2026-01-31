@@ -39,18 +39,15 @@ class ProfilePageHeaderWidget extends StatelessWidget {
                 ),
               ),
             ),
-            // Back button (RTL - on the right, mirrored arrow)
+            // Back button (RTL - on the left)
             FadeInRight(
               duration: const Duration(milliseconds: 400),
               child: GestureDetector(
                 onTap: onBack,
-                child: Transform.scale(
-                  scaleX: -1,
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: AppColors.white,
-                    size: 24,
-                  ),
+                child: const Icon(
+                  Icons.arrow_forward,
+                  color: AppColors.white,
+                  size: 24,
                 ),
               ),
             ),

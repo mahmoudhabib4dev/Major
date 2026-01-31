@@ -131,13 +131,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           backgroundColor: Colors.black,
           elevation: 0,
           centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-            ),
-            onPressed: () => Get.back(),
-          ),
+          automaticallyImplyLeading: false,
+          leading: const SizedBox(width: 48),
           title: Text(
             widget.title,
             style: const TextStyle(
@@ -149,6 +144,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+              ),
+              onPressed: () => Get.back(),
+            ),
+          ],
         ),
         body: Center(
           child: _isLoading

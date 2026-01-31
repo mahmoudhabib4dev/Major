@@ -223,52 +223,66 @@ class LessonDetailController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              // Action Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Get.back(); // Close dialog
-                    if (isGuestMode) {
-                      Get.toNamed('/authentication');
-                    } else {
-                      Get.toNamed('/subscription');
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isGuestMode
-                        ? const Color(0xFF00A8A8)
-                        : AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    isGuestMode ? 'إنشاء حساب' : 'عرض خطط الاشتراك',
-                    style: const TextStyle(
-                      fontFamily: 'Tajawal',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+              // Buttons
+              Row(
+                children: [
+                  // Cancel button
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.borderPrimary, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'إلغاء',
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Cancel Button
-              TextButton(
-                onPressed: () => Get.back(),
-                child: const Text(
-                  'إلغاء',
-                  style: TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 14,
-                    color: AppColors.textGrey,
+                  const SizedBox(width: 12),
+                  // Action button
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Get.back(); // Close dialog
+                        if (isGuestMode) {
+                          final storage = Get.find<StorageService>();
+                          await storage.clearGuestData();
+                          Get.offAllNamed('/authentication');
+                        } else {
+                          Get.toNamed('/subscription');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        isGuestMode ? 'تسجيل الدخول' : 'عرض خطط الاشتراك',
+                        style: const TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),

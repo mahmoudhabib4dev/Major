@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/services/storage_service.dart';
 import '../models/subject_model.dart';
 import '../controllers/subjects_controller.dart';
@@ -69,15 +70,8 @@ class SubjectDetailView extends GetView<SubjectsController> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Back button (right side in RTL)
-                      IconButton(
-                        onPressed: () => Get.back(),
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
+                      // Spacer to center the title (right side in RTL)
+                      const SizedBox(width: 48),
                       // Title
                       Expanded(
                         child: Text(
@@ -86,8 +80,15 @@ class SubjectDetailView extends GetView<SubjectsController> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      // Spacer to center the title (left side in RTL)
-                      const SizedBox(width: 48),
+                      // Back button (left side in RTL)
+                      IconButton(
+                        onPressed: () => Get.back(),
+                        icon: const Icon(
+                          Icons.arrow_forward,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -424,126 +425,120 @@ class SubjectDetailView extends GetView<SubjectsController> {
   // Show registration/subscription dialog
   void _showSubscriptionDialog(BuildContext context, bool isGuestMode) {
     Get.dialog(
-      Directionality(
-        textDirection: TextDirection.rtl,
-        child: Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Icon
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: isGuestMode
-                        ? const Color(0xFF00A8A8).withAlpha(25)
-                        : const Color(0xFFFFD700).withAlpha(25),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isGuestMode
-                        ? Icons.person_add_rounded
-                        : Icons.workspace_premium_rounded,
-                    color: isGuestMode
-                        ? const Color(0xFF00A8A8)
-                        : const Color(0xFFFFD700),
-                    size: 40,
-                  ),
+      Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              // Icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.grey100,
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 20),
-
-                // Title
-                Text(
-                  isGuestMode
-                      ? 'سجل للوصول الكامل'
-                      : 'اشترك للوصول الكامل',
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF000D47),
-                  ),
-                  textAlign: TextAlign.center,
+                child: Icon(
+                  isGuestMode ? Icons.lock_outline : Icons.workspace_premium,
+                  color: AppColors.primary,
+                  size: 40,
                 ),
-                const SizedBox(height: 12),
-
-                // Message
-                Text(
-                  isGuestMode
-                      ? 'للاستفادة من الاختبارات الذاتية والمحتوى التعليمي الكامل، يرجى إنشاء حساب جديد أو تسجيل الدخول.'
-                      : 'للاستفادة من الاختبارات الذاتية والمحتوى التعليمي الكامل، يرجى الاشتراك في أحد خطط الاشتراك المتاحة.',
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF6B7280),
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // Title
+              Text(
+                isGuestMode ? 'تسجيل الدخول مطلوب' : 'اشتراك مميز مطلوب',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
                 ),
-                const SizedBox(height: 24),
-
-                // Action Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Get.back(); // Close dialog
-                      if (isGuestMode) {
-                        // Navigate to authentication (signup)
-                        Get.toNamed('/authentication');
-                      } else {
-                        // Navigate to subscription page
-                        Get.toNamed('/subscription');
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isGuestMode
-                          ? const Color(0xFF00A8A8)
-                          : const Color(0xFFFFD700),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              // Message
+              Text(
+                isGuestMode
+                    ? 'يجب عليك تسجيل الدخول للوصول إلى المحتوى'
+                    : 'يجب الاشتراك للوصول إلى المحتوى',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textGrey,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              // Buttons
+              Row(
+                children: [
+                  // Cancel button
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.borderPrimary, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      isGuestMode
-                          ? 'إنشاء حساب'
-                          : 'عرض خطط الاشتراك',
-                      style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                      child: Text(
+                        'إلغاء',
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-
-                // Cancel Button
-                TextButton(
-                  onPressed: () => Get.back(),
-                  child: const Text(
-                    'إلغاء',
-                    style: TextStyle(
-                      fontFamily: 'Tajawal',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF6B7280),
+                  const SizedBox(width: 12),
+                  // Action button
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Get.back(); // Close dialog
+                        if (isGuestMode) {
+                          final storage = Get.find<StorageService>();
+                          await storage.clearGuestData();
+                          Get.offAllNamed('/authentication');
+                        } else {
+                          Get.toNamed('/subscription');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        isGuestMode ? 'تسجيل الدخول' : 'عرض خطط الاشتراك',
+                        style: const TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

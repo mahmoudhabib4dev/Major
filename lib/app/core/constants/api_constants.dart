@@ -68,6 +68,13 @@ class ApiConstants {
   static String lessonTest(int lessonId) => '$baseUrl/lessons/$lessonId/test';
   static String lessonSummary(int lessonId) => '$baseUrl/lessons/$lessonId/summary';
 
+  // Notification Endpoints
+  static const String notifications = '$baseUrl/student/notifications';
+  static String markNotificationRead(int notificationId) => '$baseUrl/student/notifications/$notificationId/read';
+
+  // Device Endpoints
+  static const String registerDevice = '$baseUrl/student/devices';
+
   // Guest Endpoints (for unauthenticated users)
   static String guestSubjects(int divisionId) => '$baseUrl/guest/subjects?division_id=$divisionId';
   static String guestUnits(int subjectId) => '$baseUrl/guest/units?subject_id=$subjectId';

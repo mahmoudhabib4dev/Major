@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:get/get.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../controllers/notifications_controller.dart';
 import 'notification_card_widget.dart';
 
@@ -29,8 +30,8 @@ class NotificationsListWidget extends GetView<NotificationsController> {
               itemBuilder: (context, index) {
                 final notification = controller.notifications[index];
 
-                // Calculate animation delay based on index
-                final animationDelay = Duration(milliseconds: 100 + (index * 80));
+                // Calculate animation delay based on index (cap at 5 for performance)
+                final animationDelay = Duration(milliseconds: 100 + ((index % 5) * 80));
 
                 return FadeInUp(
                   duration: const Duration(milliseconds: 600),
@@ -46,6 +47,49 @@ class NotificationsListWidget extends GetView<NotificationsController> {
               },
             ),
           ),
+          // Load more button
+          Obx(() {
+            if (controller.hasMorePages) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: controller.isLoadingMore.value
+                    ? const Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      )
+                    : TextButton(
+                        onPressed: controller.loadMoreNotifications,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'load_more'.tr,
+                              style: TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.keyboard_arrow_down,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
           SizedBox(height: screenSize.height * 0.15), // Bottom spacing
         ],
       ),

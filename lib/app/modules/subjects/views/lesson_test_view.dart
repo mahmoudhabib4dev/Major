@@ -59,14 +59,7 @@ class LessonTestView extends GetView<LessonTestController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            onPressed: () => Get.back(),
-            icon: const Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
+          const SizedBox(width: 48),
           Expanded(
             child: Text(
               controller.testData.testName,
@@ -79,7 +72,14 @@ class LessonTestView extends GetView<LessonTestController> {
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(width: 48),
+          IconButton(
+            onPressed: () => Get.back(),
+            icon: const Icon(
+              Icons.arrow_forward,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
         ],
       ),
     );

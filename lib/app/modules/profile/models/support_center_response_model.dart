@@ -28,16 +28,22 @@ class SupportCenterResponseModel {
 class SupportContacts {
   final String mobile;
   final String whatsapp;
+  final String email;
+  final String website;
 
   SupportContacts({
     required this.mobile,
     required this.whatsapp,
+    required this.email,
+    required this.website,
   });
 
   factory SupportContacts.fromJson(Map<String, dynamic> json) {
     return SupportContacts(
       mobile: json['mobile'] ?? '',
       whatsapp: json['whatsapp'] ?? '',
+      email: json['email'] ?? '',
+      website: json['website'] ?? '',
     );
   }
 
@@ -45,6 +51,8 @@ class SupportContacts {
     return {
       'mobile': mobile,
       'whatsapp': whatsapp,
+      'email': email,
+      'website': website,
     };
   }
 }

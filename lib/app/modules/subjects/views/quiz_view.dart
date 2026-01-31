@@ -50,13 +50,13 @@ class QuizView extends GetView<QuizController> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  // Back arrow (right side in RTL)
+                  // Back arrow (left side in RTL)
                   Positioned(
-                    right: 0,
+                    left: 0,
                     child: GestureDetector(
                       onTap: () => Get.back(),
                       child: const Icon(
-                        Icons.arrow_back,
+                        Icons.arrow_forward,
                         color: Colors.white,
                         size: 28,
                       ),

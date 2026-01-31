@@ -78,7 +78,9 @@ class AppImages {
   static const String icon76 = 'assets/icons/76.png'; // TikTok icon
   static const String icon77 = 'assets/icons/77.png'; // Lesson test icon
   static const String icon78 = 'assets/icons/78.png'; // Download/favorite icon
-  static const String icon79 = 'assets/icons/logo.png';
+  static const String icon79 = 'assets/icons/79.png'; // Email icon
+  static const String icon80 = 'assets/icons/80.png'; // Website icon
+  static const String logo = 'assets/icons/logo.png';
   // Images
   static const String image1 = 'assets/images/1.png';
   static const String image2 = 'assets/images/2.png';

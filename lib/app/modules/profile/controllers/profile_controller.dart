@@ -59,6 +59,8 @@ class ProfileController extends GetxController {
   final RxList<Faq> faqs = <Faq>[].obs;
   final mobileNumber = ''.obs;
   final whatsappNumber = ''.obs;
+  final supportEmail = ''.obs;
+  final supportWebsite = ''.obs;
 
   // Profile data
   final isLoadingProfile = false.obs;
@@ -295,6 +297,8 @@ class ProfileController extends GetxController {
       faqs.value = response.faqs;
       mobileNumber.value = response.supportContacts.mobile;
       whatsappNumber.value = response.supportContacts.whatsapp;
+      supportEmail.value = response.supportContacts.email;
+      supportWebsite.value = response.supportContacts.website;
       developer.log('✅ Support center loaded: ${response.faqs.length} FAQs', name: 'ProfileController');
     } on ApiErrorModel catch (error) {
       developer.log('❌ Failed to load support center: ${error.displayMessage}', name: 'ProfileController');

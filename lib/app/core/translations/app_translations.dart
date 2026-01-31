@@ -177,6 +177,9 @@ class AppTranslations extends Translations {
           // Subscription
           'subscription': 'الاشتراك',
           'subscription_details': 'تفاصيل الاشتراك',
+          'subscription_required': 'الاشتراك مطلوب',
+          'subscription_required_message': 'للوصول إلى هذه الميزة، يرجى الاشتراك في إحدى خطط الاشتراك المتاحة.',
+          'subscribe_now': 'اشترك الآن',
           'why_choose_yearly': 'لماذا يجب أن تختار الاشتراك السنوي؟',
           'subscription_benefit_1': 'الوصول الكامل لجميع برامج البكالوريا بالصوت والصورة',
           'subscription_benefit_2': 'مشاهدة وتحليل اختبارات وامتحانات سابقة مع حلولها التفصيلية',
@@ -190,6 +193,8 @@ class AppTranslations extends Translations {
           'no_plans_available': 'لا توجد خطط اشتراك متاحة حالياً',
           'subscription_for': 'اشتراك ',
           'annual_subscription': 'اشتراك سنوي',
+          'please_select_subscription_plan': 'من فضلك اختر خطة الاشتراك',
+          'please_select_payment_method': 'من فضلك اختر طريقة الدفع',
 
           // Payment
           'enter_payment_details': 'من فضلك أدخل البيانات التالية لإتمام اشتراكك',
@@ -256,6 +261,9 @@ class AppTranslations extends Translations {
           'opening_whatsapp': 'جاري فتح واتساب',
           'cannot_make_call': 'لا يمكن إجراء المكالمة',
           'cannot_open_whatsapp': 'لا يمكن فتح واتساب',
+          'website': 'الموقع الإلكتروني',
+          'cannot_open_website': 'لا يمكن فتح الموقع',
+          'cannot_open_email': 'لا يمكن فتح البريد الإلكتروني',
           'faq_join_subscription_q': 'كيفية الانضمام الي اشتراك معين ؟',
           'faq_join_subscription_a': 'يمكنك الاشتراك من خلال الذهاب إلى صفحة الاشتراكات واختيار الخطة المناسبة لك، ثم إتمام عملية الدفع.',
           'faq_guest_login_q': 'هل يمكنني الدخول كزائر؟',
@@ -349,6 +357,9 @@ class AppTranslations extends Translations {
           'notifications_title': 'الإشعارات',
           'notifications_empty_title': 'لا توجد إشعارات',
           'notifications_empty_description': 'سيتم عرض جميع إشعاراتك هنا',
+          'load_more': 'عرض المزيد',
+          'retry': 'إعادة المحاولة',
+          'error_loading_notifications': 'حدث خطأ في تحميل الإشعارات',
           'subjects_view_all': 'عرض الكل',
           'subjects_search_placeholder': 'ابحث عن درس...',
 
@@ -546,6 +557,9 @@ class AppTranslations extends Translations {
           // Subscription
           'subscription': 'Subscription',
           'subscription_details': 'Subscription Details',
+          'subscription_required': 'Subscription Required',
+          'subscription_required_message': 'To access this feature, please subscribe to one of our available subscription plans.',
+          'subscribe_now': 'Subscribe Now',
           'why_choose_yearly': 'Why should you choose the annual subscription?',
           'subscription_benefit_1': 'Full access to all baccalaureate programs with audio and video',
           'subscription_benefit_2': 'View and analyze past tests and exams with detailed solutions',
@@ -559,6 +573,8 @@ class AppTranslations extends Translations {
           'no_plans_available': 'No subscription plans available currently',
           'subscription_for': 'Subscription ',
           'annual_subscription': 'Annual Subscription',
+          'please_select_subscription_plan': 'Please select a subscription plan',
+          'please_select_payment_method': 'Please select a payment method',
 
           // Payment
           'enter_payment_details': 'Please enter the following details to complete your subscription',
@@ -625,6 +641,9 @@ class AppTranslations extends Translations {
           'opening_whatsapp': 'Opening WhatsApp',
           'cannot_make_call': 'Cannot make call',
           'cannot_open_whatsapp': 'Cannot open WhatsApp',
+          'website': 'Website',
+          'cannot_open_website': 'Cannot open website',
+          'cannot_open_email': 'Cannot open email',
           'faq_join_subscription_q': 'How to join a specific subscription?',
           'faq_join_subscription_a': 'You can subscribe by going to the subscriptions page and choosing the plan that suits you, then completing the payment process.',
           'faq_guest_login_q': 'Can I login as a guest?',
@@ -718,6 +737,9 @@ class AppTranslations extends Translations {
           'notifications_title': 'Notifications',
           'notifications_empty_title': 'No Notifications',
           'notifications_empty_description': 'All your notifications will be displayed here',
+          'load_more': 'Load More',
+          'retry': 'Retry',
+          'error_loading_notifications': 'Error loading notifications',
           'subjects_view_all': 'View All',
           'subjects_search_placeholder': 'Search for a lesson...',
 
@@ -921,6 +943,9 @@ class AppTranslations extends Translations {
           // Subscription
           'subscription': 'Abonnement',
           'subscription_details': 'Détails de l\'abonnement',
+          'subscription_required': 'Abonnement requis',
+          'subscription_required_message': 'Pour accéder à cette fonctionnalité, veuillez vous abonner à l\'un de nos plans d\'abonnement disponibles.',
+          'subscribe_now': 'S\'abonner maintenant',
           'why_choose_yearly': 'Pourquoi choisir l\'abonnement annuel?',
           'subscription_benefit_1': 'Accès complet à tous les programmes de baccalauréat avec audio et vidéo',
           'subscription_benefit_2': 'Visionner et analyser les tests et examens passés avec des solutions détaillées',
@@ -934,6 +959,8 @@ class AppTranslations extends Translations {
           'no_plans_available': 'Aucun plan d\'abonnement disponible actuellement',
           'subscription_for': 'Abonnement ',
           'annual_subscription': 'Abonnement annuel',
+          'please_select_subscription_plan': 'Veuillez sélectionner un plan d\'abonnement',
+          'please_select_payment_method': 'Veuillez sélectionner une méthode de paiement',
 
           // Payment
           'enter_payment_details': 'Veuillez entrer les détails suivants pour compléter votre abonnement',
@@ -1000,6 +1027,9 @@ class AppTranslations extends Translations {
           'opening_whatsapp': 'Ouverture de WhatsApp',
           'cannot_make_call': 'Impossible de passer l\'appel',
           'cannot_open_whatsapp': 'Impossible d\'ouvrir WhatsApp',
+          'website': 'Site web',
+          'cannot_open_website': 'Impossible d\'ouvrir le site web',
+          'cannot_open_email': 'Impossible d\'ouvrir l\'email',
           'faq_join_subscription_q': 'Comment rejoindre un abonnement spécifique?',
           'faq_join_subscription_a': 'Vous pouvez vous abonner en vous rendant sur la page des abonnements et en choisissant le plan qui vous convient, puis en complétant le processus de paiement.',
           'faq_guest_login_q': 'Puis-je me connecter en tant qu\'invité?',
@@ -1093,6 +1123,9 @@ class AppTranslations extends Translations {
           'notifications_title': 'Notifications',
           'notifications_empty_title': 'Aucune notification',
           'notifications_empty_description': 'Toutes vos notifications seront affichées ici',
+          'load_more': 'Charger plus',
+          'retry': 'Réessayer',
+          'error_loading_notifications': 'Erreur de chargement des notifications',
           'subjects_view_all': 'Voir tout',
           'subjects_search_placeholder': 'Rechercher une leçon...',
 

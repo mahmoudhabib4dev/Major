@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:animate_do/animate_do.dart';
 
 import '../../../core/constants/app_images.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../controllers/notifications_controller.dart';
 import '../widgets/notifications_empty_state_widget.dart';
@@ -134,19 +135,80 @@ class NotificationsView extends GetView<NotificationsController> {
                         width: double.infinity,
                         padding: EdgeInsets.only(top: (screenSize.width * 0.08) * 0.8),
                         color: Colors.white,
-                        child: SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              top: screenSize.height * 0.03,
-                            ),
-                            child: FadeIn(
-                              duration: const Duration(milliseconds: 800),
-                              delay: const Duration(milliseconds: 200),
-                              child: Obx(
-                                () => controller.notifications.isEmpty
-                                    ? const NotificationsEmptyStateWidget()
-                                    : const NotificationsListWidget(),
+                        child: RefreshIndicator(
+                          onRefresh: controller.refreshNotifications,
+                          color: AppColors.primary,
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                top: screenSize.height * 0.03,
+                              ),
+                              child: FadeIn(
+                                duration: const Duration(milliseconds: 800),
+                                delay: const Duration(milliseconds: 200),
+                                child: Obx(() {
+                                  // Loading state
+                                  if (controller.isLoading.value) {
+                                    return SizedBox(
+                                      height: screenSize.height * 0.5,
+                                      child: const Center(
+                                        child: CircularProgressIndicator(
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    );
+                                  }
+
+                                  // Error state
+                                  if (controller.hasError.value && controller.notifications.isEmpty) {
+                                    return SizedBox(
+                                      height: screenSize.height * 0.5,
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.error_outline,
+                                              size: 64,
+                                              color: AppColors.grey400,
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              'error_loading_notifications'.tr,
+                                              style: TextStyle(
+                                                fontFamily: 'Tajawal',
+                                                fontSize: 16,
+                                                color: AppColors.grey500,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            TextButton(
+                                              onPressed: controller.loadNotifications,
+                                              child: Text(
+                                                'retry'.tr,
+                                                style: TextStyle(
+                                                  fontFamily: 'Tajawal',
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.primary,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }
+
+                                  // Empty state
+                                  if (controller.notifications.isEmpty) {
+                                    return const NotificationsEmptyStateWidget();
+                                  }
+
+                                  // Notifications list
+                                  return const NotificationsListWidget();
+                                }),
                               ),
                             ),
                           ),
@@ -170,7 +232,7 @@ class NotificationsView extends GetView<NotificationsController> {
                 ),
               ),
             ),
-            
+
           ],
         ),
       ),

@@ -346,9 +346,85 @@ class PaymentView extends GetView<AuthenticationController> {
   }
 
   Widget _buildPaymentAccountItem(BuildContext context, account) {
+    final isArabic = Get.locale?.languageCode == 'ar';
+
     return Obx(
       () {
         final isSelected = controller.selectedBankAccount.value?.id == account.id;
+
+        // Bank logo widget
+        final bankLogo = SizedBox(
+          width: 32,
+          height: 32,
+          child: account.logoUrl != null
+            ? ApiImage(
+                imageUrl: account.logoUrl!,
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+                errorWidget: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.grey200,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(
+                    Icons.account_balance,
+                    size: 20,
+                    color: AppColors.grey500,
+                  ),
+                ),
+              )
+            : Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.grey200,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Icon(
+                  Icons.account_balance,
+                  size: 20,
+                  color: AppColors.grey500,
+                ),
+              ),
+        );
+
+        // Copy icon widget
+        final copyIcon = GestureDetector(
+          onTap: () {
+            // TODO: Copy account number to clipboard
+          },
+          child: Image.asset(
+            AppImages.icon49,
+            width: 20,
+            height: 20,
+          ),
+        );
+
+        // Content widget - use CrossAxisAlignment.start so text aligns next to the bank logo
+        // In LTR: start = left (near left-side logo). In RTL: start = right (near right-side logo)
+        final content = Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Bank name
+              Text(
+                account.bankName ?? 'unknown_bank'.tr,
+                style: AppTextStyles.bodyText(context),
+              ),
+              SizedBox(height: 4),
+              // Account number or IBAN
+              Text(
+                account.accountNumber ?? account.iban ?? '',
+                style: AppTextStyles.smallText(context),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        );
+
         return GestureDetector(
           onTap: () => controller.selectBankAccount(account),
           child: Container(
@@ -367,81 +443,25 @@ class PaymentView extends GetView<AuthenticationController> {
                   : null,
             ),
             child: Row(
-              children: [
-                // Copy icon (left side in RTL)
-                GestureDetector(
-                  onTap: () {
-                    // TODO: Copy account number to clipboard
-                  },
-                  child: Image.asset(
-                    AppImages.icon49,
-                    width: 20,
-                    height: 20,
-                  ),
-                ),
-                SizedBox(width: 10),
-                // Expandable content area
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // Bank name
-                      Text(
-                        account.bankName ?? 'unknown_bank'.tr,
-                        style: AppTextStyles.bodyText(context),
-                        textAlign: TextAlign.right,
-                      ),
-                      SizedBox(height: 4),
-                      // Account number or IBAN
-                      Text(
-                        account.accountNumber ?? account.iban ?? '',
-                        style: AppTextStyles.smallText(context),
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
-                      ),
+              children: isArabic
+                  ? [
+                      // Arabic (RTL auto-reversed): write in reverse order
+                      // We want visually: bank logo RIGHT, content MIDDLE, copy icon LEFT
+                      // So write: [bankLogo, content, copyIcon] → reversed to [copyIcon, content, bankLogo]
+                      bankLogo,
+                      SizedBox(width: 10),
+                      content,
+                      SizedBox(width: 10),
+                      copyIcon,
+                    ]
+                  : [
+                      // LTR: bank logo left, content middle, copy icon right
+                      bankLogo,
+                      SizedBox(width: 10),
+                      content,
+                      SizedBox(width: 10),
+                      copyIcon,
                     ],
-                  ),
-                ),
-                SizedBox(width: 10),
-                // Bank logo (right side in RTL) - fixed width for alignment
-                SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: account.logoUrl != null
-                    ? ApiImage(
-                        imageUrl: account.logoUrl!,
-                        width: 32,
-                        height: 32,
-                        fit: BoxFit.contain,
-                        errorWidget: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppColors.grey200,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Icon(
-                            Icons.account_balance,
-                            size: 20,
-                            color: AppColors.grey500,
-                          ),
-                        ),
-                      )
-                    : Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: AppColors.grey200,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Icon(
-                          Icons.account_balance,
-                          size: 20,
-                          color: AppColors.grey500,
-                        ),
-                      ),
-                ),
-              ],
             ),
           ),
         );
@@ -573,8 +593,97 @@ class PaymentView extends GetView<AuthenticationController> {
   Widget _buildDiscountCouponSection(BuildContext context) {
     final isArabic = Get.locale?.languageCode == 'ar';
 
+    // Apply Button widget
+    final applyButton = Obx(
+      () => SizedBox(
+        width: 80,
+        height: 50,
+        child: ElevatedButton(
+          onPressed: controller.isLoading.value
+              ? null
+              : controller.applyCoupon,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            disabledBackgroundColor: AppColors.grey300,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(
+                AppDimensions.borderRadius(context, 0.03),
+              ),
+            ),
+            padding: EdgeInsets.zero,
+          ),
+          child: controller.isLoading.value
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Text(
+                  'apply'.tr,
+                  style: AppTextStyles.bodyText(context).copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+        ),
+      ),
+    );
+
+    // Coupon Input Field widget
+    final couponInput = Expanded(
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(
+            AppDimensions.borderRadius(context, 0.03),
+          ),
+          border: Border.all(color: AppColors.grey300),
+        ),
+        child: TextField(
+          controller: controller.couponCodeController,
+          textAlign: isArabic ? TextAlign.right : TextAlign.left,
+          style: AppTextStyles.bodyText(context),
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(
+            hintText: '25gsh20',
+            hintStyle: AppTextStyles.inputHint(context),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: AppDimensions.spacing(context, 0.04),
+              vertical: AppDimensions.spacing(context, 0.035),
+            ),
+            suffixIcon: isArabic ? Padding(
+              padding: const EdgeInsets.all(9),
+              child: Image.asset(
+                AppImages.icon62,
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+              ),
+            ) : null,
+            prefixIcon: !isArabic ? Padding(
+              padding: const EdgeInsets.all(9),
+              child: Image.asset(
+                AppImages.icon62,
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+              ),
+            ) : null,
+          ),
+          onSubmitted: (_) {
+            FocusScope.of(context).unfocus();
+          },
+        ),
+      ),
+    );
+
     return Column(
-      crossAxisAlignment: isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      crossAxisAlignment: isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Text(
           'have_coupon'.tr,
@@ -582,87 +691,20 @@ class PaymentView extends GetView<AuthenticationController> {
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
         Row(
-          children: [
-            // Apply Button
-            Obx(
-              () => SizedBox(
-                width: 80,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: controller.isLoading.value
-                      ? null
-                      : controller.applyCoupon,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    disabledBackgroundColor: AppColors.grey300,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.borderRadius(context, 0.03),
-                      ),
-                    ),
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: controller.isLoading.value
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          'apply'.tr,
-                          style: AppTextStyles.bodyText(context).copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                ),
-              ),
-            ),
-            SizedBox(width: 10),
-            // Coupon Input Field
-            Expanded(
-              child: Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.borderRadius(context, 0.03),
-                  ),
-                  border: Border.all(color: AppColors.grey300),
-                ),
-                child: TextField(
-                  controller: controller.couponCodeController,
-                  textAlign: TextAlign.right,
-                  style: AppTextStyles.bodyText(context),
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    hintText: '25gsh20',
-                    hintStyle: AppTextStyles.inputHint(context),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: AppDimensions.spacing(context, 0.04),
-                      vertical: AppDimensions.spacing(context, 0.035),
-                    ),
-                    suffixIcon: Padding(
-                      padding: const EdgeInsets.all(9),
-                      child: Image.asset(
-                        AppImages.icon62,
-                        width: 32,
-                        height: 32,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                  onSubmitted: (_) {
-                    FocusScope.of(context).unfocus();
-                  },
-                ),
-              ),
-            ),
-          ],
+          children: isArabic
+              ? [
+                  // Arabic (RTL auto-reversed): we want Apply button LEFT, input RIGHT
+                  // So write: [couponInput, applyButton] → reversed to [applyButton, couponInput]
+                  couponInput,
+                  SizedBox(width: 10),
+                  applyButton,
+                ]
+              : [
+                  // LTR: Input on the left, apply button on the right
+                  couponInput,
+                  SizedBox(width: 10),
+                  applyButton,
+                ],
         ),
       ],
     );
@@ -774,7 +816,8 @@ class PaymentView extends GetView<AuthenticationController> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: isArabic
           ? [
-              // In Arabic: icon + label on left, amount on right
+              // Arabic (RTL auto-reversed): we want amount LEFT, label+icon RIGHT
+              // So write: [label+icon, amount] → reversed to [amount, label+icon]
               Row(
                 children: [
                   Image.asset(
@@ -795,24 +838,24 @@ class PaymentView extends GetView<AuthenticationController> {
               ),
             ]
           : [
-              // In other languages: amount on left, label + icon on right
-              Text(
-                amount,
-                style: AppTextStyles.bodyText(context),
-              ),
+              // In other languages (LTR): icon + label on left, amount on right
               Row(
                 children: [
-                  Text(
-                    label,
-                    style: AppTextStyles.bodyText(context),
-                  ),
-                  SizedBox(width: 8),
                   Image.asset(
                     iconPath,
                     width: 20,
                     height: 20,
                   ),
+                  SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: AppTextStyles.bodyText(context),
+                  ),
                 ],
+              ),
+              Text(
+                amount,
+                style: AppTextStyles.bodyText(context),
               ),
             ],
     );

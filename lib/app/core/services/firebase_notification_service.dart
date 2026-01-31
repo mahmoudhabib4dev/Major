@@ -3,6 +3,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../routes/app_pages.dart';
+import '../../modules/home/controllers/home_controller.dart';
+
 /// Background message handler - must be a top-level function
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -94,6 +97,9 @@ class FirebaseNotificationService {
     debugPrint('📱 Body: ${message.notification?.body}');
     debugPrint('📱 Data: ${message.data}');
 
+    // Refresh unread notifications count in HomeController
+    _refreshUnreadCount();
+
     // Show in-app notification when app is in foreground
     final notification = message.notification;
     if (notification != null) {
@@ -102,6 +108,19 @@ class FirebaseNotificationService {
         body: notification.body ?? '',
         data: message.data,
       );
+    }
+  }
+
+  /// Refresh unread notifications count in HomeController
+  void _refreshUnreadCount() {
+    try {
+      if (Get.isRegistered<HomeController>()) {
+        final homeController = Get.find<HomeController>();
+        homeController.refreshUnreadCount();
+        debugPrint('📱 Refreshed unread notifications count');
+      }
+    } catch (e) {
+      debugPrint('📱 Could not refresh unread count: $e');
     }
   }
 
@@ -147,10 +166,8 @@ class FirebaseNotificationService {
       shouldIconPulse: true,
       onTap: (snack) {
         debugPrint('📱 In-app notification tapped');
-        if (data != null && data.isNotEmpty) {
-          debugPrint('📱 Notification data: $data');
-          // Handle navigation based on notification data
-        }
+        // Navigate to notifications page
+        _navigateToNotifications();
       },
     );
   }
@@ -160,12 +177,24 @@ class FirebaseNotificationService {
     debugPrint('📱 Notification tapped: ${message.messageId}');
     debugPrint('📱 Data: ${message.data}');
 
-    // Navigate to specific screen based on notification data
-    if (message.data.containsKey('screen')) {
-      final screen = message.data['screen'];
-      debugPrint('📱 Navigating to: $screen');
-      Get.toNamed(screen);
-    }
+    // Navigate to notifications page
+    _navigateToNotifications();
+  }
+
+  /// Navigate to notifications page
+  void _navigateToNotifications() {
+    // Small delay to ensure app is ready
+    Future.delayed(const Duration(milliseconds: 500), () {
+      // Check if we're already on notifications page
+      if (Get.currentRoute == Routes.NOTIFICATIONS) {
+        debugPrint('📱 Already on notifications page');
+        return;
+      }
+
+      // Navigate to notifications
+      debugPrint('📱 Navigating to notifications page');
+      Get.toNamed(Routes.NOTIFICATIONS);
+    });
   }
 
   /// Get FCM token

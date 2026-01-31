@@ -52,13 +52,22 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: Color(0xFF000D47),
-          ),
-          onPressed: () => Get.back(),
+        automaticallyImplyLeading: false,
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Zoom out button
+            IconButton(
+              icon: const Icon(Icons.zoom_out, color: Color(0xFF000D47)),
+              onPressed: () {
+                if (_pdfViewerController.zoomLevel > 1) {
+                  _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel - 0.25;
+                }
+              },
+            ),
+          ],
         ),
+        leadingWidth: 48,
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -94,14 +103,13 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
               _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel + 0.25;
             },
           ),
-          // Zoom out button
+          // Back button (left side in RTL)
           IconButton(
-            icon: const Icon(Icons.zoom_out, color: Color(0xFF000D47)),
-            onPressed: () {
-              if (_pdfViewerController.zoomLevel > 1) {
-                _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel - 0.25;
-              }
-            },
+            icon: const Icon(
+              Icons.arrow_forward_ios,
+              color: Color(0xFF000D47),
+            ),
+            onPressed: () => Get.back(),
           ),
         ],
       ),

@@ -85,18 +85,73 @@ class UserHeaderWidget extends GetView<HomeController> {
               ),
             ),
           ),
-          // Notification icon - Second item appears on LEFT in RTL (Arabic)
-          FadeIn(
-            duration: const Duration(milliseconds: 600),
-            child: IconButton(
-              onPressed: controller.onNotificationTap,
-              icon: Image.asset(
-                AppImages.icon14,
-                width: 40,
-                height: 40,
+          // Notification icon with badge - Second item appears on LEFT in RTL (Arabic)
+          // Hide for guest users
+          if (!controller.isGuest)
+            FadeIn(
+              duration: const Duration(milliseconds: 600),
+              child: Stack(
+                children: [
+                  IconButton(
+                    onPressed: controller.onNotificationTap,
+                    icon: Image.asset(
+                      AppImages.icon14,
+                      width: 40,
+                      height: 40,
+                    ),
+                  ),
+                  // Unread badge
+                  Obx(() {
+                    if (controller.unreadNotificationsCount.value > 0) {
+                      return Positioned(
+                        right: 6,
+                        top: 6,
+                        child: ZoomIn(
+                          duration: const Duration(milliseconds: 300),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.red.withValues(alpha: 0.3),
+                                  blurRadius: 4,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                controller.unreadNotificationsCount.value > 99
+                                    ? '99+'
+                                    : '${controller.unreadNotificationsCount.value}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.0,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
+                ],
               ),
             ),
-          ),
         ],
       ),
     );

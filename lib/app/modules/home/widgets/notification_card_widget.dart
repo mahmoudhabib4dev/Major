@@ -4,6 +4,7 @@ import 'package:animate_do/animate_do.dart';
 
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_colors.dart';
+import '../models/notification_model.dart';
 import '../controllers/notifications_controller.dart';
 
 class NotificationCardWidget extends GetView<NotificationsController> {
@@ -18,7 +19,6 @@ class NotificationCardWidget extends GetView<NotificationsController> {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        // Add haptic feedback on tap
         controller.onNotificationTap(notification);
       },
       borderRadius: BorderRadius.circular(8),
@@ -52,7 +52,7 @@ class NotificationCardWidget extends GetView<NotificationsController> {
                 FadeIn(
                   duration: const Duration(milliseconds: 400),
                   child: Text(
-                    notification.time,
+                    notification.formattedTime,
                     style: AppTextStyles.notificationTime(context),
                   ),
                 ),
@@ -85,10 +85,23 @@ class NotificationCardWidget extends GetView<NotificationsController> {
             Expanded(
               child: FadeIn(
                 duration: const Duration(milliseconds: 500),
-                child: Text(
-                  notification.message,
-                  style: AppTextStyles.notificationCardText(context),
-                  textAlign: TextAlign.right,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      notification.title,
+                      style: AppTextStyles.notificationCardText(context).copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      notification.body,
+                      style: AppTextStyles.notificationCardText(context),
+                      textAlign: TextAlign.right,
+                    ),
+                  ],
                 ),
               ),
             ),

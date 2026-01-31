@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:developer' as developer;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/theme/app_colors.dart';
+
 import '../../../routes/app_pages.dart';
 import '../../../core/services/storage_service.dart';
+import '../../../core/services/device_service.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../parent/controllers/parent_controller.dart';
@@ -18,11 +22,14 @@ import '../../authentication/models/api_error_model.dart';
 import '../models/offer_model.dart';
 import '../models/lesson_search_response_model.dart';
 import '../providers/home_provider.dart';
+import '../providers/notifications_provider.dart';
 
 class HomeController extends GetxController {
   final StorageService storageService = Get.find<StorageService>();
   final SubjectsProvider subjectsProvider = SubjectsProvider();
   final HomeProvider homeProvider = HomeProvider();
+  final NotificationsProvider notificationsProvider = NotificationsProvider();
+  final DeviceService deviceService = DeviceService();
 
   // Carousel/Offers state
   final currentCarouselIndex = 0.obs;
@@ -46,6 +53,14 @@ class HomeController extends GetxController {
   final RxList<LessonSearchItem> searchResults = <LessonSearchItem>[].obs;
   final RxBool isSearching = false.obs;
   final RxString searchQuery = ''.obs;
+  Timer? _searchDebounceTimer;
+  bool _subscriptionDialogShown = false;
+
+  // Notifications state
+  final RxInt unreadNotificationsCount = 0.obs;
+
+  // Guest mode check
+  bool get isGuest => !storageService.isLoggedIn;
 
   @override
   void onInit() {
@@ -53,6 +68,18 @@ class HomeController extends GetxController {
     loadUserData();
     loadOffers();
     loadSubjects();
+
+    // Only for logged-in users
+    if (!isGuest) {
+      loadUnreadNotificationsCount();
+      registerDevice();
+    }
+  }
+
+  @override
+  void onClose() {
+    _searchDebounceTimer?.cancel();
+    super.onClose();
   }
 
   // Load user data
@@ -350,18 +377,31 @@ class HomeController extends GetxController {
     Get.toNamed(Routes.PROFILE);
   }
 
-  // Search for lessons
-  Future<void> searchLessons(String query) async {
+  // Search for lessons with debouncing
+  void searchLessons(String query) {
+    // Cancel any existing timer
+    _searchDebounceTimer?.cancel();
+
     if (query.trim().isEmpty) {
       searchResults.clear();
       searchQuery.value = '';
+      isSearching.value = false;
+      _subscriptionDialogShown = false; // Reset when search is cleared
       return;
     }
 
-    try {
-      isSearching.value = true;
-      searchQuery.value = query;
+    searchQuery.value = query;
+    isSearching.value = true;
 
+    // Debounce: wait 500ms after user stops typing before searching
+    _searchDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _performSearch(query);
+    });
+  }
+
+  // Perform the actual search API call
+  Future<void> _performSearch(String query) async {
+    try {
       developer.log('🔍 Searching for lessons: $query', name: 'HomeController');
 
       final response = await homeProvider.searchLessons(query: query);
@@ -370,7 +410,17 @@ class HomeController extends GetxController {
       developer.log('✅ Search results: ${searchResults.length} lessons found', name: 'HomeController');
     } catch (e) {
       developer.log('❌ Error searching lessons: $e', name: 'HomeController');
-      if (e is ApiErrorModel) {
+
+      // Check if it's a subscription expired error
+      if (e is ApiErrorModel &&
+          (e.message?.contains('Subscription expired') == true ||
+           e.message?.contains('subscription') == true)) {
+        // Show subscription dialog only once
+        if (!_subscriptionDialogShown) {
+          _subscriptionDialogShown = true;
+          _showSubscriptionRequiredDialog();
+        }
+      } else if (e is ApiErrorModel) {
         AppDialog.showError(message: e.displayMessage);
       } else {
         AppDialog.showError(message: 'حدث خطأ أثناء البحث');
@@ -381,10 +431,137 @@ class HomeController extends GetxController {
     }
   }
 
+  // Show subscription required dialog for search
+  void _showSubscriptionRequiredDialog() {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: AppColors.primary,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Title
+              Text(
+                'subscription_required'.tr,
+                style: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Message
+              Text(
+                'subscription_required_message'.tr,
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.grey600,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Buttons row
+              Row(
+                children: [
+                  // Cancel button
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Get.back();
+                        clearSearch();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.grey600,
+                        side: BorderSide(color: AppColors.grey300),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'cancel'.tr,
+                        style: const TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Subscribe button
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        clearSearch();
+                        // Navigate to subscription page
+                        Get.toNamed(Routes.SUBSCRIPTION);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        'subscribe_now'.tr,
+                        style: const TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
   // Clear search results
   void clearSearch() {
+    _searchDebounceTimer?.cancel();
     searchResults.clear();
     searchQuery.value = '';
+    isSearching.value = false;
+    _subscriptionDialogShown = false;
   }
 
   // Navigate to lesson from search result
@@ -404,5 +581,37 @@ class HomeController extends GetxController {
       transition: Transition.rightToLeft,
       duration: const Duration(milliseconds: 300),
     );
+  }
+
+  // Load unread notifications count
+  Future<void> loadUnreadNotificationsCount() async {
+    try {
+      developer.log('🔔 Loading unread notifications count...', name: 'HomeController');
+
+      final response = await notificationsProvider.getNotifications(page: 1);
+      final unreadCount = response.data.where((n) => !n.isRead).length;
+      unreadNotificationsCount.value = unreadCount;
+
+      developer.log('✅ Unread notifications: $unreadCount', name: 'HomeController');
+    } catch (e) {
+      developer.log('❌ Error loading unread notifications count: $e', name: 'HomeController');
+    }
+  }
+
+  // Refresh unread notifications count (call after marking notifications as read)
+  void refreshUnreadCount() {
+    if (!isGuest) {
+      loadUnreadNotificationsCount();
+    }
+  }
+
+  // Register device for push notifications
+  Future<void> registerDevice() async {
+    try {
+      developer.log('📱 Registering device...', name: 'HomeController');
+      await deviceService.registerDevice();
+    } catch (e) {
+      developer.log('❌ Error registering device: $e', name: 'HomeController');
+    }
   }
 }

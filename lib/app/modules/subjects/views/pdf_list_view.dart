@@ -66,15 +66,8 @@ class PdfListView extends GetView<SubjectsController> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Back button (right side in RTL)
-                      IconButton(
-                        onPressed: () => Get.back(),
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
+                      // Spacer (right side in RTL)
+                      const SizedBox(width: 48),
                       // Title
                       Expanded(
                         child: Text(
@@ -83,8 +76,15 @@ class PdfListView extends GetView<SubjectsController> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      // Spacer (left side in RTL)
-                      const SizedBox(width: 48),
+                      // Back button (left side in RTL)
+                      IconButton(
+                        onPressed: () => Get.back(),
+                        icon: const Icon(
+                          Icons.arrow_forward,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
                     ],
                   ),
                 ),

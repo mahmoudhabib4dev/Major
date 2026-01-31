@@ -3,9 +3,8 @@ import 'package:animate_do/animate_do.dart';
 import 'package:get/get.dart';
 
 import '../../../core/theme/app_text_styles.dart';
-import '../controllers/notifications_controller.dart';
 
-class NotificationsEmptyStateWidget extends GetView<NotificationsController> {
+class NotificationsEmptyStateWidget extends StatelessWidget {
   const NotificationsEmptyStateWidget({super.key});
 
   @override
@@ -16,23 +15,7 @@ class NotificationsEmptyStateWidget extends GetView<NotificationsController> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Icon with bounce animation
-            BounceInDown(
-              duration: const Duration(milliseconds: 1000),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.notifications_none,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 48),
             // Text with fade animation
             FadeInUp(
               duration: const Duration(milliseconds: 800),
@@ -51,9 +34,11 @@ class NotificationsEmptyStateWidget extends GetView<NotificationsController> {
               child: Text(
                 'notifications_empty_description'.tr,
                 style: TextStyle(
+                  fontFamily: 'Tajawal',
                   fontSize: 14,
                   color: Colors.grey[500],
                 ),
+                textAlign: TextAlign.center,
               ),
             ),
           ],

@@ -330,27 +330,45 @@ class SubscriptionView extends GetView<AuthenticationController> {
               }
 
               final selectedPlan = controller.selectedSubscriptionPlan.value;
+              if (selectedPlan == null) {
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'choose_subscription_plan'.tr,
+                        style: AppTextStyles.inputHint(context),
+                      ),
+                    ),
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      color: AppColors.grey400,
+                    ),
+                  ],
+                );
+              }
+              // Build display text - plan name with price if available
+              final planName = selectedPlan.planName ?? '';
+              final priceText = selectedPlan.formattedPrice ??
+                  (selectedPlan.price != null ? '${selectedPlan.price?.toStringAsFixed(0)} ريال' : '');
+              final displayText = priceText.isNotEmpty
+                  ? '$planName - $priceText'
+                  : planName;
+
               return Row(
                 children: [
-                  // Plan name first (left side)
-                  Text(
-                    selectedPlan?.planName ?? 'select_plan'.tr,
-                    style: selectedPlan != null
-                        ? AppTextStyles.bodyText(context)
-                        : AppTextStyles.inputHint(context),
+                  // Plan name and price
+                  Expanded(
+                    child: Text(
+                      displayText,
+                      style: AppTextStyles.bodyText(context),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   SizedBox(width: AppDimensions.spacing(context, 0.02)),
-                  // Price in the middle
-                  Text(
-                    selectedPlan?.formattedPrice ?? '${selectedPlan?.price ?? 0} ريال',
-                    style: AppTextStyles.bodyText(context),
-                  ),
-                  const Spacer(),
-                  // Duration at the end (right side)
-                  Text(
-                    selectedPlan?.durationLabel ?? '',
-                    textAlign: TextAlign.right,
-                    style: AppTextStyles.bodyText(context),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    color: AppColors.grey400,
                   ),
                 ],
               );
@@ -1124,6 +1142,7 @@ class _SubscriptionPlansBottomSheet extends GetView<AuthenticationController> {
                 vertical: AppDimensions.spacing(context, 0.03),
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Radio button
                   Container(
@@ -1150,18 +1169,22 @@ class _SubscriptionPlansBottomSheet extends GetView<AuthenticationController> {
                         : null,
                   ),
                   SizedBox(width: AppDimensions.spacing(context, 0.03)),
-                  // Duration
-                  Text(
-                    plan.durationLabel,
-                    style: AppTextStyles.bodyText(context).copyWith(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? AppColors.primary : null,
+                  // Plan name (flexible to handle any text length)
+                  Expanded(
+                    child: Text(
+                      plan.planName ?? '',
+                      style: AppTextStyles.bodyText(context).copyWith(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? AppColors.primary : null,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Spacer(),
+                  SizedBox(width: AppDimensions.spacing(context, 0.02)),
                   // Price
                   Text(
-                    plan.formattedPrice ?? '${plan.price} ريال',
+                    plan.formattedPrice ?? (plan.price != null ? '${plan.price.toStringAsFixed(0)} ريال' : ''),
                     style: AppTextStyles.bodyText(context).copyWith(
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       color: isSelected ? AppColors.primary : null,

@@ -234,13 +234,50 @@ class HelpView extends GetView<ProfileController> {
                         : null,
           ),
         ),
+        const Divider(height: 24),
+        // Website
+        Obx(
+          () => _buildContactItem(
+            context: context,
+            iconPath: AppImages.icon80,
+            label: 'website'.tr,
+            value:
+                controller.supportWebsite.value.isNotEmpty
+                    ? controller.supportWebsite.value
+                    : '...',
+            onTap:
+                () =>
+                    controller.supportWebsite.value.isNotEmpty
+                        ? _openWebsite(controller.supportWebsite.value)
+                        : null,
+          ),
+        ),
+        const Divider(height: 24),
+        // Email
+        Obx(
+          () => _buildContactItem(
+            context: context,
+            iconPath: AppImages.icon79,
+            label: 'email'.tr,
+            value:
+                controller.supportEmail.value.isNotEmpty
+                    ? controller.supportEmail.value
+                    : '...',
+            onTap:
+                () =>
+                    controller.supportEmail.value.isNotEmpty
+                        ? _openEmail(controller.supportEmail.value)
+                        : null,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildContactItem({
     required BuildContext context,
-    required String iconPath,
+    String? iconPath,
+    IconData? icon,
     required String label,
     required String value,
     required VoidCallback? onTap,
@@ -252,39 +289,44 @@ class HelpView extends GetView<ProfileController> {
       child: Row(
         textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
         children: [
-          Image.asset(iconPath, width: 21, height: 21),
+          if (iconPath != null)
+            Image.asset(iconPath, width: 21, height: 21)
+          else if (icon != null)
+            Icon(icon, size: 21, color: const Color(0xFF000D47)),
           const SizedBox(width: 8),
-          RichText(
-            textAlign: isRtl ? TextAlign.right : TextAlign.left,
-            textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '$label • ',
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.grey,
-                    height: 2.0,
-                    letterSpacing: 0,
+          Expanded(
+            child: RichText(
+              textAlign: isRtl ? TextAlign.right : TextAlign.left,
+              textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+              overflow: TextOverflow.ellipsis,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$label • ',
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey,
+                      height: 2.0,
+                      letterSpacing: 0,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: value,
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF000D47),
-                    height: 2.0,
-                    letterSpacing: 0,
+                  TextSpan(
+                    text: value,
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF000D47),
+                      height: 2.0,
+                      letterSpacing: 0,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          const Spacer(),
         ],
       ),
     );
@@ -451,6 +493,43 @@ class HelpView extends GetView<ProfileController> {
       }
     } catch (e) {
       AppDialog.showError(message: 'cannot_open_whatsapp'.tr);
+    }
+  }
+
+  Future<void> _openWebsite(String url) async {
+    // Ensure URL has a scheme
+    String websiteUrl = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      websiteUrl = 'https://$url';
+    }
+
+    final Uri websiteUri = Uri.parse(websiteUrl);
+
+    try {
+      if (await canLaunchUrl(websiteUri)) {
+        await launchUrl(websiteUri, mode: LaunchMode.externalApplication);
+      } else {
+        AppDialog.showError(message: 'cannot_open_website'.tr);
+      }
+    } catch (e) {
+      AppDialog.showError(message: 'cannot_open_website'.tr);
+    }
+  }
+
+  Future<void> _openEmail(String email) async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: email,
+    );
+
+    try {
+      if (await canLaunchUrl(emailUri)) {
+        await launchUrl(emailUri);
+      } else {
+        AppDialog.showError(message: 'cannot_open_email'.tr);
+      }
+    } catch (e) {
+      AppDialog.showError(message: 'cannot_open_email'.tr);
     }
   }
 }

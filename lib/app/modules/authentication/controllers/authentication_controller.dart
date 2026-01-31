@@ -1182,16 +1182,12 @@ class AuthenticationController extends GetxController {
 
     try {
       if (isSignUpMode.value) {
-        // Registration flow - verify OTP with API
+        // Registration flow - verify OTP with the signup verify-otp API
         developer.log('🔢 Verifying OTP for registration...', name: 'AuthController');
 
-        final verifyRequest = VerifyOtpForgetPasswordRequestModel(
+        final response = await authProvider.verifyOtp(
           email: userEmail.value,
           otp: otp,
-        );
-
-        final response = await authProvider.verifyOtpForgetPassword(
-          request: verifyRequest,
         );
 
         developer.log('✅ OTP verified successfully', name: 'AuthController');
@@ -1199,7 +1195,7 @@ class AuthenticationController extends GetxController {
         // Store verified OTP for password creation
         verifiedOtp.value = otp;
 
-        // Save token from OTP verification
+        // Save token from OTP verification (signup flow returns token)
         if (response.token != null) {
           await storageService.saveAuthToken(response.token!);
           apiClient.setToken(response.token!);

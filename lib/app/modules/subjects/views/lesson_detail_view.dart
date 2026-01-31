@@ -184,15 +184,8 @@ class LessonDetailView extends GetView<LessonDetailController> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Back button (right side in RTL)
-            IconButton(
-              onPressed: () => Get.back(),
-              icon: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
+            // Spacer (right side in RTL)
+            const SizedBox(width: 48),
             // Title
             Expanded(
               child: unit != null
@@ -207,8 +200,15 @@ class LessonDetailView extends GetView<LessonDetailController> {
                       textAlign: TextAlign.center,
                     )),
             ),
-            // Spacer (left side in RTL)
-            const SizedBox(width: 48),
+            // Back button (left side in RTL)
+            IconButton(
+              onPressed: () => Get.back(),
+              icon: const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
           ],
         ),
       ),
@@ -271,15 +271,9 @@ class LessonDetailView extends GetView<LessonDetailController> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Back button (right side in RTL)
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: controller.hideVideo,
-                      ),
-                      const Spacer(),
-                      // Favorite button (left side in RTL) - only show for non-YouTube videos
+                      // Favorite button (right side in RTL) - only show for non-YouTube videos
                       Obx(() => controller.isYouTubeVideo.value
-                          ? const SizedBox.shrink()
+                          ? const SizedBox(width: 48)
                           : IconButton(
                               icon: Icon(
                                 controller.isFavorite.value
@@ -300,6 +294,12 @@ class LessonDetailView extends GetView<LessonDetailController> {
                                 }
                               },
                             )),
+                      const Spacer(),
+                      // Back button (left side in RTL)
+                      IconButton(
+                        icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                        onPressed: controller.hideVideo,
+                      ),
                     ],
                   ),
                 ),
