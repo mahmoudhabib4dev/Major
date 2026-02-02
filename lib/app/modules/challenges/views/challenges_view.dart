@@ -7,6 +7,7 @@ import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.da
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../../parent/controllers/parent_controller.dart';
 import '../../profile/controllers/profile_controller.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -163,10 +164,8 @@ class ChallengesView extends StatelessWidget {
                     child: Obx(() {
                       // Show loading while data is being fetched
                       if (profileController.isLoadingLeaderboard.value) {
-                        return Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
+                        return const Center(
+                          child: AppLoader(size: 50),
                         );
                       }
 
@@ -660,14 +659,7 @@ class ChallengesView extends StatelessWidget {
           elevation: 8,
           shape: const CircleBorder(),
           child: Obx(() => profileController.isLoadingLeaderboard.value
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
+              ? const AppLoader(size: 40)
               : Image.asset(
                   AppImages.icon13,
                   width: 22,

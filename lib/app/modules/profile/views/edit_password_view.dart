@@ -6,6 +6,7 @@ import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_dimensions.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/profile_page_header_widget.dart';
@@ -38,14 +39,14 @@ class EditPasswordView extends GetView<ProfileController> {
               FadeInDown(
                 duration: const Duration(milliseconds: 600),
                 child: Align(
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerStart,
                   child: Text(
                     'enter_new_password'.tr,
                     style: AppTextStyles.sectionTitle(context).copyWith(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.start,
                   ),
                 ),
               ),
@@ -55,13 +56,13 @@ class EditPasswordView extends GetView<ProfileController> {
                 duration: const Duration(milliseconds: 600),
                 delay: const Duration(milliseconds: 100),
                 child: Align(
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerStart,
                   child: Text(
                     'password_requirements'.tr,
                     style: AppTextStyles.smallText(context).copyWith(
                       color: AppColors.grey500,
                     ),
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.start,
                   ),
                 ),
               ),
@@ -143,10 +144,11 @@ class EditPasswordView extends GetView<ProfileController> {
     required VoidCallback onToggle,
   }) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label aligned to the right
+        // Label
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             label,
             style: AppTextStyles.inputLabel(context),
@@ -164,7 +166,7 @@ class EditPasswordView extends GetView<ProfileController> {
             child: TextField(
               controller: textController,
               obscureText: isObscured.value,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.start,
               style: AppTextStyles.bodyText(context),
               decoration: InputDecoration(
                 hintText: hintText,
@@ -192,34 +194,27 @@ class EditPasswordView extends GetView<ProfileController> {
 
   Widget _buildSaveButton(BuildContext context, Size screenSize) {
     return Obx(
-      () => SizedBox(
-        width: double.infinity,
-        height: 55,
-        child: ElevatedButton(
-          onPressed: controller.isLoading.value ? null : controller.savePassword,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
-          child: controller.isLoading.value
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      () => controller.isLoading.value
+          ? const Center(child: AppLoader(size: 50))
+          : SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: controller.savePassword,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                )
-              : Text(
+                ),
+                child: Text(
                   'save_changes'.tr,
                   style: AppTextStyles.buttonText(context).copyWith(
                     color: AppColors.white,
                   ),
                 ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 }

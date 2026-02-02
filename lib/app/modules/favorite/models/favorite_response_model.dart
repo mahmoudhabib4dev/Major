@@ -83,7 +83,7 @@ class LessonItem {
   final int? testId;
   final String? name;
   final String? order;
-  final int? isAlive;
+  final bool? isAlive;
   final bool? isFavorite;
 
   LessonItem({
@@ -96,12 +96,21 @@ class LessonItem {
   });
 
   factory LessonItem.fromJson(Map<String, dynamic> json) {
+    // Handle is_alive which can be bool or int from API
+    bool? isAliveValue;
+    final rawIsAlive = json['is_alive'];
+    if (rawIsAlive is bool) {
+      isAliveValue = rawIsAlive;
+    } else if (rawIsAlive is int) {
+      isAliveValue = rawIsAlive == 1;
+    }
+
     return LessonItem(
       id: json['id'] as int?,
       testId: json['test_id'] as int?,
       name: json['name'] as String?,
       order: json['order'] as String?,
-      isAlive: json['is_alive'] as int?,
+      isAlive: isAliveValue,
       isFavorite: json['is_favorite'] as bool?,
     );
   }
@@ -112,7 +121,7 @@ class LessonItem {
       'test_id': testId,
       'name': name,
       'order': order,
-      'is_alive': isAlive,
+      'is_alive': isAlive == true ? 1 : 0,
       'is_favorite': isFavorite,
     };
   }

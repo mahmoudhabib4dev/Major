@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../../../core/widgets/network_avatar.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/profile_country_code_bottom_sheet.dart';
@@ -250,24 +251,24 @@ class EditAccountView extends GetView<ProfileController> {
 
   Widget _buildNameField(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
-          child: RichText(
-            textDirection: TextDirection.rtl,
-            text: TextSpan(
-              children: [
-                const TextSpan(
-                  text: '* ',
-                  style: TextStyle(color: Colors.red, fontSize: 14),
+          alignment: AlignmentDirectional.centerStart,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'username'.tr,
+                style: AppTextStyles.inputLabel(context),
+              ),
+              Text(
+                ' *',
+                style: AppTextStyles.inputLabel(context).copyWith(
+                  color: AppColors.error,
                 ),
-                TextSpan(
-                  text: 'username'.tr,
-                  style: AppTextStyles.inputLabel(context),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -285,7 +286,7 @@ class EditAccountView extends GetView<ProfileController> {
             child: TextField(
               controller: controller.nameController,
               keyboardType: TextInputType.name,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.start,
               style: AppTextStyles.bodyText(context),
               onChanged: (value) {
                 if (controller.nameError.value.isNotEmpty) {
@@ -325,24 +326,24 @@ class EditAccountView extends GetView<ProfileController> {
 
   Widget _buildPhoneField(BuildContext context, {bool enabled = true}) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
-          child: RichText(
-            textDirection: TextDirection.rtl,
-            text: TextSpan(
-              children: [
-                const TextSpan(
-                  text: '* ',
-                  style: TextStyle(color: Colors.red, fontSize: 14),
+          alignment: AlignmentDirectional.centerStart,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'phone_number'.tr,
+                style: AppTextStyles.inputLabel(context),
+              ),
+              Text(
+                ' *',
+                style: AppTextStyles.inputLabel(context).copyWith(
+                  color: AppColors.error,
                 ),
-                TextSpan(
-                  text: 'phone_number'.tr,
-                  style: AppTextStyles.inputLabel(context),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -358,18 +359,17 @@ class EditAccountView extends GetView<ProfileController> {
                   : null,
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Country code selector (on the right in RTL)
+                // Country code selector
                 GestureDetector(
                   onTap: enabled ? () => ProfileCountryCodeBottomSheet.show(context) : null,
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: AppDimensions.spacing(context, 0.03),
+                      vertical: AppDimensions.spacing(context, 0.01),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // Flag icon
                         Obx(
@@ -390,12 +390,12 @@ class EditAccountView extends GetView<ProfileController> {
                     ),
                   ),
                 ),
-                // Phone input (on the left in RTL)
+                // Phone input
                 Expanded(
                   child: TextField(
                     controller: controller.phoneController,
                     keyboardType: TextInputType.phone,
-                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.ltr,
                     enabled: enabled,
                     readOnly: !enabled,
                     style: AppTextStyles.bodyText(context).copyWith(
@@ -446,24 +446,24 @@ class EditAccountView extends GetView<ProfileController> {
 
   Widget _buildEmailField(BuildContext context, {bool enabled = true}) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
-          child: RichText(
-            textDirection: TextDirection.rtl,
-            text: TextSpan(
-              children: [
-                const TextSpan(
-                  text: '* ',
-                  style: TextStyle(color: Colors.red, fontSize: 14),
+          alignment: AlignmentDirectional.centerStart,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'email'.tr,
+                style: AppTextStyles.inputLabel(context),
+              ),
+              Text(
+                ' *',
+                style: AppTextStyles.inputLabel(context).copyWith(
+                  color: AppColors.error,
                 ),
-                TextSpan(
-                  text: 'email'.tr,
-                  style: AppTextStyles.inputLabel(context),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -481,7 +481,7 @@ class EditAccountView extends GetView<ProfileController> {
             child: TextField(
               controller: controller.emailController,
               keyboardType: TextInputType.emailAddress,
-              textAlign: TextAlign.right,
+              textDirection: TextDirection.ltr,
               enabled: enabled,
               readOnly: !enabled,
               style: AppTextStyles.bodyText(context).copyWith(
@@ -529,14 +529,13 @@ class EditAccountView extends GetView<ProfileController> {
 
   Widget _buildDateField(BuildContext context, {bool enabled = true}) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             'birth_date'.tr,
             style: AppTextStyles.inputLabel(context),
-            textAlign: TextAlign.right,
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -547,6 +546,7 @@ class EditAccountView extends GetView<ProfileController> {
               AppDimensions.borderRadius(context, 0.03),
             ),
             child: Container(
+              width: double.infinity,
               padding: EdgeInsets.symmetric(
                 horizontal: AppDimensions.spacing(context, 0.04),
                 vertical: AppDimensions.spacing(context, 0.04),
@@ -558,33 +558,29 @@ class EditAccountView extends GetView<ProfileController> {
                 ),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Expanded(
+                    child: Text(
+                      controller.selectedBirthday.value != null
+                          ? controller.formatBirthday(controller.selectedBirthday.value!)
+                          : 'birth_date'.tr,
+                      textAlign: TextAlign.start,
+                      style: controller.selectedBirthday.value != null
+                          ? AppTextStyles.bodyText(context).copyWith(
+                              color: enabled ? null : AppColors.grey500,
+                            )
+                          : AppTextStyles.inputHint(context).copyWith(
+                              color: enabled ? null : AppColors.grey400,
+                            ),
+                    ),
+                  ),
+                  SizedBox(width: 8),
                   Image.asset(
                     AppImages.icon24,
                     width: 20,
                     height: 20,
                     fit: BoxFit.contain,
                     color: enabled ? null : AppColors.grey400,
-                  ),
-                  SizedBox(width: AppDimensions.spacing(context, 0.02)),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        controller.selectedBirthday.value != null
-                            ? controller.formatBirthday(controller.selectedBirthday.value!)
-                            : 'birth_date'.tr,
-                        style: controller.selectedBirthday.value != null
-                            ? AppTextStyles.bodyText(context).copyWith(
-                                color: enabled ? null : AppColors.grey500,
-                              )
-                            : AppTextStyles.inputHint(context).copyWith(
-                                color: enabled ? null : AppColors.grey400,
-                              ),
-                        textAlign: TextAlign.right,
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -605,14 +601,13 @@ class EditAccountView extends GetView<ProfileController> {
     bool enabled = true,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             label,
             style: AppTextStyles.inputLabel(context),
-            textAlign: TextAlign.right,
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -631,6 +626,7 @@ class EditAccountView extends GetView<ProfileController> {
               AppDimensions.borderRadius(context, 0.03),
             ),
             child: Container(
+              width: double.infinity,
               padding: EdgeInsets.symmetric(
                 horizontal: AppDimensions.spacing(context, 0.04),
                 vertical: AppDimensions.spacing(context, 0.04),
@@ -642,28 +638,24 @@ class EditAccountView extends GetView<ProfileController> {
                 ),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Expanded(
+                    child: Text(
+                      value.value ?? hintText,
+                      textAlign: TextAlign.start,
+                      style: value.value != null
+                          ? AppTextStyles.bodyText(context).copyWith(
+                              color: enabled ? null : AppColors.grey500,
+                            )
+                          : AppTextStyles.inputHint(context).copyWith(
+                              color: enabled ? null : AppColors.grey400,
+                            ),
+                    ),
+                  ),
                   Icon(
                     Icons.keyboard_arrow_down,
                     color: enabled ? AppColors.grey500 : AppColors.grey400,
-                  ),
-                  SizedBox(width: AppDimensions.spacing(context, 0.02)),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        value.value ?? hintText,
-                        style: value.value != null
-                            ? AppTextStyles.bodyText(context).copyWith(
-                                color: enabled ? null : AppColors.grey500,
-                              )
-                            : AppTextStyles.inputHint(context).copyWith(
-                                color: enabled ? null : AppColors.grey400,
-                              ),
-                        textAlign: TextAlign.right,
-                      ),
-                    ),
+                    size: 24,
                   ),
                 ],
               ),
@@ -681,79 +673,174 @@ class EditAccountView extends GetView<ProfileController> {
     required String? selectedValue,
     required Function(String?) onSelected,
   }) {
+    final screenSize = MediaQuery.of(context).size;
+    final notchRadius = screenSize.width * 0.08;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(AppDimensions.borderRadius(context, 0.05)),
-            topRight: Radius.circular(AppDimensions.borderRadius(context, 0.05)),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: EdgeInsets.symmetric(
-                vertical: AppDimensions.spacing(context, 0.02),
-              ),
-              width: AppDimensions.screenWidth(context) * 0.12,
-              height: AppDimensions.spacing(context, 0.01),
-              decoration: BoxDecoration(
-                color: AppColors.grey300,
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.borderRadius(context, 0.01),
+      useSafeArea: false,
+      builder: (context) => Transform.translate(
+        offset: Offset(0, notchRadius * 0.8),
+        child: ClipPath(
+          clipper: _TopCurveClipper(notchRadius: notchRadius),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Transform.translate(
+                offset: Offset(0, -notchRadius * 0.8),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.only(top: notchRadius * 0.8),
+                  decoration: const BoxDecoration(
+                    color: AppColors.white,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Space for wave
+                      SizedBox(height: AppDimensions.spacing(context, 0.02)),
+                      // Header with close button and title
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppDimensions.spacing(context, 0.04),
+                          vertical: AppDimensions.spacing(context, 0.02),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Close button
+                            FadeInLeft(
+                              duration: const Duration(milliseconds: 400),
+                              child: GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.grey100,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: AppColors.grey600,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Title
+                            FadeInDown(
+                              duration: const Duration(milliseconds: 500),
+                              child: Text(
+                                title,
+                                style: AppTextStyles.sectionTitle(context),
+                              ),
+                            ),
+                            // Empty space for balance
+                            const SizedBox(width: 36),
+                          ],
+                        ),
+                      ),
+                      // Divider
+                      Divider(
+                        color: AppColors.grey200,
+                        height: 1,
+                      ),
+                      SizedBox(height: AppDimensions.spacing(context, 0.02)),
+                      // Items list
+                      ...List.generate(
+                        items.length,
+                        (index) {
+                          final item = items[index];
+                          final isSelected = selectedValue == item;
+                          return FadeInUp(
+                            duration: const Duration(milliseconds: 400),
+                            delay: Duration(milliseconds: 100 * index.clamp(0, 5)),
+                            child: Column(
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    onSelected(item);
+                                    Navigator.pop(context);
+                                  },
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: AppDimensions.spacing(context, 0.04),
+                                      vertical: AppDimensions.spacing(context, 0.03),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Item name
+                                        Text(
+                                          item,
+                                          style: AppTextStyles.bodyText(context).copyWith(
+                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                            color: isSelected ? AppColors.primary : null,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        // Radio button
+                                        Container(
+                                          width: 24,
+                                          height: 24,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: isSelected ? AppColors.primary : AppColors.grey400,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: isSelected
+                                              ? Center(
+                                                  child: Container(
+                                                    width: 12,
+                                                    height: 12,
+                                                    decoration: const BoxDecoration(
+                                                      color: AppColors.primary,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                                )
+                                              : null,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (index != items.length - 1)
+                                  Divider(
+                                    color: AppColors.grey200,
+                                    height: 1,
+                                    indent: AppDimensions.spacing(context, 0.04),
+                                    endIndent: AppDimensions.spacing(context, 0.04),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      SizedBox(height: AppDimensions.spacing(context, 0.04)),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            // Title
-            Padding(
-              padding: AppDimensions.paddingAll(context, 0.04),
-              child: Text(
-                title,
-                style: AppTextStyles.sectionTitle(context),
-              ),
-            ),
-            // Items list
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: items.length,
-              separatorBuilder: (context, index) => Divider(
-                color: AppColors.grey200,
-                height: 1,
-              ),
-              itemBuilder: (context, index) {
-                final item = items[index];
-                final isSelected = selectedValue == item;
-                return ListTile(
-                  contentPadding: AppDimensions.paddingHorizontal(context, 0.04),
-                  title: Text(
-                    item,
-                    style: AppTextStyles.bodyText(context).copyWith(
-                      color: isSelected ? AppColors.primary : null,
-                      fontWeight: isSelected ? FontWeight.bold : null,
-                    ),
-                    textAlign: TextAlign.right,
+              // Small dot at top center where curve peaks
+              Positioned(
+                top: -screenSize.width * 0.025 + 5,
+                left: screenSize.width / 2 - screenSize.width * 0.0125,
+                child: Container(
+                  width: screenSize.width * 0.025,
+                  height: screenSize.width * 0.025,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
                   ),
-                  trailing: isSelected
-                      ? const Icon(Icons.check, color: AppColors.primary)
-                      : null,
-                  selected: isSelected,
-                  selectedTileColor: AppColors.grey100,
-                  onTap: () {
-                    onSelected(item);
-                    Navigator.pop(context);
-                  },
-                );
-              },
-            ),
-            SizedBox(height: AppDimensions.screenHeight(context) * 0.02),
-          ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -761,35 +848,87 @@ class EditAccountView extends GetView<ProfileController> {
 
   Widget _buildSaveButton(BuildContext context, Size screenSize) {
     return Obx(
-      () => SizedBox(
-        width: double.infinity,
-        height: 55,
-        child: ElevatedButton(
-          onPressed: controller.isLoading.value ? null : controller.saveAccountChanges,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.6),
-          ),
-          child: controller.isLoading.value
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      () => controller.isLoading.value
+          ? const Center(child: AppLoader(size: 50))
+          : SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: controller.saveAccountChanges,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                )
-              : Text(
+                ),
+                child: Text(
                   'save_changes'.tr,
                   style: AppTextStyles.buttonText(context).copyWith(
                     color: AppColors.white,
                   ),
                 ),
-        ),
-      ),
+              ),
+            ),
     );
   }
+}
+
+// Top curve clipper for wave effect
+class _TopCurveClipper extends CustomClipper<Path> {
+  final double notchRadius;
+
+  _TopCurveClipper({required this.notchRadius});
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final notchWidth = notchRadius * 2.5;
+    final notchCenterX = size.width / 2;
+
+    // Start from top left
+    path.lineTo(0, notchRadius);
+
+    // Left side going down
+    path.lineTo(0, size.height);
+
+    // Bottom
+    path.lineTo(size.width, size.height);
+
+    // Right side going up
+    path.lineTo(size.width, notchRadius);
+
+    // Top right corner curve
+    path.arcToPoint(
+      Offset(size.width - notchRadius, 0),
+      radius: Radius.circular(notchRadius),
+      clockwise: false,
+    );
+
+    // Line to notch start (right side)
+    path.lineTo(notchCenterX + notchWidth / 2, 0);
+
+    // Create ONE wavy curve in the middle
+    path.quadraticBezierTo(
+      notchCenterX, // control point x (center)
+      -notchRadius * 0.5, // control point y (depth of wave)
+      notchCenterX - notchWidth / 2, // end point x
+      0, // end point y
+    );
+
+    // Line to top left corner
+    path.lineTo(notchRadius, 0);
+
+    // Top left corner curve
+    path.arcToPoint(
+      Offset(0, notchRadius),
+      radius: Radius.circular(notchRadius),
+      clockwise: false,
+    );
+
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }

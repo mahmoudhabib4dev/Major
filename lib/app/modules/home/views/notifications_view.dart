@@ -6,6 +6,7 @@ import 'package:animate_do/animate_do.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/notifications_controller.dart';
 import '../widgets/notifications_empty_state_widget.dart';
 import '../widgets/notifications_list_widget.dart';
@@ -87,25 +88,28 @@ class NotificationsView extends GetView<NotificationsController> {
                                   duration: const Duration(milliseconds: 400),
                                   delay: const Duration(milliseconds: 300),
                                   child: Container(
+                                    constraints: const BoxConstraints(
+                                      minWidth: 20,
+                                      minHeight: 20,
+                                    ),
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 3,
+                                      horizontal: 6,
+                                      vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.red,
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: Center(
-                                      child: Text(
-                                        '${controller.unreadCount.value}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          height: 1.0,
-                                        ),
-                                        textAlign: TextAlign.center,
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '${controller.unreadCount.value}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.2,
                                       ),
+                                      textAlign: TextAlign.center,
                                     ),
                                   ),
                                 ),
@@ -153,9 +157,7 @@ class NotificationsView extends GetView<NotificationsController> {
                                     return SizedBox(
                                       height: screenSize.height * 0.5,
                                       child: const Center(
-                                        child: CircularProgressIndicator(
-                                          color: AppColors.primary,
-                                        ),
+                                        child: AppLoader(size: 60),
                                       ),
                                     );
                                   }

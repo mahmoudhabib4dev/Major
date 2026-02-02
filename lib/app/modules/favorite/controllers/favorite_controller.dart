@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/services/video_download_service.dart';
 import '../../../core/services/storage_service.dart';
@@ -34,9 +34,14 @@ class FavoriteController extends GetxController {
   final RxBool isLoadingSummary = false.obs;
   final RxBool isLoadingVideo = false.obs;
 
-  // Video player
-  VideoPlayerController? videoPlayerController;
-  ChewieController? chewieController;
+  // Download state tracking
+  final RxSet<int> downloadingLessons = <int>{}.obs;
+  final RxSet<int> downloadedLessons = <int>{}.obs;
+  final RxMap<int, double> lessonDownloadProgress = <int, double>{}.obs;
+
+  // Video player using media_kit
+  Player? player;
+  VideoController? videoController;
   final RxBool isVideoPlaying = false.obs;
   final RxInt currentPlayingVideoId = 0.obs;
   final RxDouble videoLoadProgress = 0.0.obs;
@@ -80,7 +85,7 @@ class FavoriteController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error loading favorites: $e', name: 'FavoriteController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تحميل المفضلة');
+      AppDialog.showError(message: 'favorite_error_loading'.tr);
     } finally {
       isLoading.value = false;
     }
@@ -91,9 +96,31 @@ class FavoriteController extends GetxController {
       developer.log('📥 Loading downloaded videos...', name: 'FavoriteController');
       final videos = await _downloadService.getAllDownloads();
       downloadedVideos.value = videos;
+
+      // Update downloaded lessons set
+      downloadedLessons.clear();
+      downloadedLessons.addAll(videos.map((v) => v.lessonId).toSet());
+
       developer.log('✅ Downloaded videos loaded: ${videos.length} items', name: 'FavoriteController');
     } catch (e) {
       developer.log('❌ Error loading downloaded videos: $e', name: 'FavoriteController');
+    }
+  }
+
+  // Pull-to-refresh handler for favorite page
+  Future<void> onRefresh() async {
+    try {
+      developer.log('🔄 Pull-to-refresh triggered on favorite page', name: 'FavoriteController');
+
+      // Reload favorites and downloaded videos
+      await Future.wait([
+        loadFavorites(),
+        loadDownloadedVideos(),
+      ]);
+
+      developer.log('✅ Favorite page refreshed successfully', name: 'FavoriteController');
+    } catch (e) {
+      developer.log('❌ Error refreshing favorite page: $e', name: 'FavoriteController');
     }
   }
 
@@ -103,10 +130,10 @@ class FavoriteController extends GetxController {
       await _downloadService.deleteDownload(lessonId);
       await loadDownloadedVideos();
       developer.log('✅ Downloaded video deleted', name: 'FavoriteController');
-      AppDialog.showSuccess(message: 'تم حذف الفيديو المحفوظ');
+      AppDialog.showSuccess(message: 'favorite_video_deleted'.tr);
     } catch (e) {
       developer.log('❌ Error deleting downloaded video: $e', name: 'FavoriteController');
-      AppDialog.showError(message: 'حدث خطأ أثناء حذف الفيديو');
+      AppDialog.showError(message: 'favorite_error_deleting_video'.tr);
     }
   }
 
@@ -136,7 +163,7 @@ class FavoriteController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error toggling favorite: $e', name: 'FavoriteController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تحديث المفضلة');
+      AppDialog.showError(message: 'favorite_error_updating'.tr);
     }
   }
 
@@ -170,9 +197,9 @@ class FavoriteController extends GetxController {
               ),
               const SizedBox(height: 24),
               // Title
-              const Text(
-                'اشتراك مميز مطلوب',
-                style: TextStyle(
+              Text(
+                'premium_subscription_required'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -182,9 +209,9 @@ class FavoriteController extends GetxController {
               ),
               const SizedBox(height: 12),
               // Message
-              const Text(
-                'يجب الاشتراك للوصول إلى المفضلة وجميع المميزات',
-                style: TextStyle(
+              Text(
+                'favorite_subscription_required_lessons'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -207,9 +234,9 @@ class FavoriteController extends GetxController {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'إلغاء',
-                        style: TextStyle(
+                      child: Text(
+                        'cancel'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -235,9 +262,9 @@ class FavoriteController extends GetxController {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'عرض خطط الاشتراك',
-                        style: TextStyle(
+                      child: Text(
+                        'view_subscription_plans'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -286,9 +313,9 @@ class FavoriteController extends GetxController {
               ),
               const SizedBox(height: 24),
               // Title
-              const Text(
-                'تسجيل الدخول مطلوب',
-                style: TextStyle(
+              Text(
+                'login_required'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -298,9 +325,9 @@ class FavoriteController extends GetxController {
               ),
               const SizedBox(height: 12),
               // Message
-              const Text(
-                'يجب عليك تسجيل الدخول للوصول إلى المفضلة',
-                style: TextStyle(
+              Text(
+                'login_to_access_content'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -323,9 +350,9 @@ class FavoriteController extends GetxController {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'إلغاء',
-                        style: TextStyle(
+                      child: Text(
+                        'cancel'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -352,9 +379,9 @@ class FavoriteController extends GetxController {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'تسجيل الدخول',
-                        style: TextStyle(
+                      child: Text(
+                        'login'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -374,10 +401,17 @@ class FavoriteController extends GetxController {
   }
 
   // Load and navigate to test
-  Future<void> openLessonTest(int lessonId) async {
+  Future<void> openLessonTest(int lessonId, int? testId) async {
+    // Check if lesson has a test_id before calling API
+    if (testId == null) {
+      developer.log('ℹ️ No test_id for lesson $lessonId, showing info message', name: 'FavoriteController');
+      AppDialog.showInfo(message: 'no_test_available'.tr);
+      return;
+    }
+
     try {
       isLoadingTest.value = true;
-      developer.log('📝 Loading test for lesson: $lessonId', name: 'FavoriteController');
+      developer.log('📝 Loading test for lesson: $lessonId (testId: $testId)', name: 'FavoriteController');
 
       final response = await _subjectsProvider.getLessonTest(lessonId);
 
@@ -404,14 +438,19 @@ class FavoriteController extends GetxController {
         });
       } else {
         developer.log('❌ No test available', name: 'FavoriteController');
-        AppDialog.showError(message: 'لا يوجد اختبار متاح لهذا الدرس');
+        AppDialog.showInfo(message: 'no_test_available'.tr);
       }
     } on ApiErrorModel catch (error) {
       developer.log('❌ Failed to load test: ${error.displayMessage}', name: 'FavoriteController');
-      AppDialog.showError(message: error.displayMessage);
+      // Show info message for 404 errors (no test available)
+      if (error.statusCode == 404) {
+        AppDialog.showInfo(message: 'no_test_available'.tr);
+      } else {
+        AppDialog.showError(message: error.displayMessage);
+      }
     } catch (e) {
       developer.log('❌ Unexpected error loading test: $e', name: 'FavoriteController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تحميل الاختبار');
+      AppDialog.showError(message: 'favorite_error_loading_test'.tr);
     } finally {
       isLoadingTest.value = false;
     }
@@ -439,14 +478,14 @@ class FavoriteController extends GetxController {
         );
       } else {
         developer.log('❌ No summary available', name: 'FavoriteController');
-        AppDialog.showError(message: 'لا يوجد ملخص متاح لهذا الدرس');
+        AppDialog.showError(message: 'favorite_no_summary_available'.tr);
       }
     } on ApiErrorModel catch (error) {
       developer.log('❌ Failed to load summary: ${error.displayMessage}', name: 'FavoriteController');
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error loading summary: $e', name: 'FavoriteController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تحميل الملخص');
+      AppDialog.showError(message: 'favorite_error_loading_summary'.tr);
     } finally {
       isLoadingSummary.value = false;
     }
@@ -465,26 +504,101 @@ class FavoriteController extends GetxController {
 
         // Navigate to a simple video player or show video
         // For now, just show success message - you can implement video player later
-        AppDialog.showSuccess(message: 'جاري تحميل الفيديو...');
+        AppDialog.showSuccess(message: 'favorite_video_loading_msg'.tr);
 
         // TODO: Implement video player navigation
         // Get.to(() => VideoPlayerView(videoUrl: response.data.videoUrl));
       } else {
         developer.log('❌ No video URL available', name: 'FavoriteController');
-        AppDialog.showError(message: 'لا يوجد فيديو متاح لهذا الدرس');
+        AppDialog.showError(message: 'favorite_no_video_available'.tr);
       }
     } on ApiErrorModel catch (error) {
       developer.log('❌ Failed to load video: ${error.displayMessage}', name: 'FavoriteController');
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error loading video: $e', name: 'FavoriteController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تحميل الفيديو');
+      AppDialog.showError(message: 'favorite_error_loading_video'.tr);
     } finally {
       isLoadingVideo.value = false;
     }
   }
 
-  // Play downloaded video inline
+  // Download lesson video with progress tracking
+  Future<void> downloadLesson(int lessonId) async {
+    // Check if already downloading or downloaded
+    if (downloadingLessons.contains(lessonId)) {
+      developer.log('⚠️ Lesson $lessonId is already downloading', name: 'FavoriteController');
+      return;
+    }
+
+    if (downloadedLessons.contains(lessonId)) {
+      developer.log('✅ Lesson $lessonId is already downloaded', name: 'FavoriteController');
+      AppDialog.showSuccess(message: 'favorite_already_downloaded'.tr);
+      return;
+    }
+
+    try {
+      developer.log('📥 Starting download for lesson: $lessonId', name: 'FavoriteController');
+
+      // Mark as downloading
+      downloadingLessons.add(lessonId);
+      lessonDownloadProgress[lessonId] = 0.0;
+
+      final response = await _subjectsProvider.getLessonVideo(lessonId);
+
+      if (response.status && response.data.videoUrl.isNotEmpty) {
+        developer.log('✅ Video URL for download: ${response.data.videoUrl}', name: 'FavoriteController');
+
+        // Start download using download service with progress callback
+        await _downloadService.downloadVideo(
+          lessonId: lessonId,
+          lessonName: response.data.lessonName,
+          videoUrl: response.data.videoUrl,
+          onProgress: (progress) {
+            lessonDownloadProgress[lessonId] = progress;
+          },
+        );
+
+        // Mark as downloaded
+        downloadingLessons.remove(lessonId);
+        downloadedLessons.add(lessonId);
+        lessonDownloadProgress.remove(lessonId);
+
+        AppDialog.showSuccess(message: 'favorite_download_complete'.tr);
+
+        // Refresh downloaded videos list
+        await loadDownloadedVideos();
+      } else {
+        developer.log('❌ No video URL available for download', name: 'FavoriteController');
+        downloadingLessons.remove(lessonId);
+        lessonDownloadProgress.remove(lessonId);
+        AppDialog.showError(message: 'favorite_no_video_available'.tr);
+      }
+    } on ApiErrorModel catch (error) {
+      developer.log('❌ Failed to get video for download: ${error.displayMessage}', name: 'FavoriteController');
+      downloadingLessons.remove(lessonId);
+      lessonDownloadProgress.remove(lessonId);
+      AppDialog.showError(message: error.displayMessage);
+    } catch (e) {
+      developer.log('❌ Unexpected error downloading lesson: $e', name: 'FavoriteController');
+      downloadingLessons.remove(lessonId);
+      lessonDownloadProgress.remove(lessonId);
+      AppDialog.showError(message: 'favorite_error_downloading'.tr);
+    }
+  }
+
+  // Cancel ongoing download
+  void cancelDownload(int lessonId) {
+    if (downloadingLessons.contains(lessonId)) {
+      developer.log('🛑 Cancelling download for lesson: $lessonId', name: 'FavoriteController');
+      _downloadService.cancelDownload(lessonId);
+      downloadingLessons.remove(lessonId);
+      lessonDownloadProgress.remove(lessonId);
+      AppDialog.showSuccess(message: 'favorite_download_cancelled'.tr);
+    }
+  }
+
+  // Play downloaded video inline using media_kit
   Future<void> playDownloadedVideo(DownloadedVideoModel video) async {
     try {
       isLoadingVideo.value = true;
@@ -500,71 +614,38 @@ class FavoriteController extends GetxController {
       final file = File(video.localPath);
       if (!await file.exists()) {
         developer.log('❌ Video file not found: ${video.localPath}', name: 'FavoriteController');
-        AppDialog.showError(message: 'الملف غير موجود. قد يكون تم حذفه.');
+        AppDialog.showError(message: 'favorite_file_not_found'.tr);
         isLoadingVideo.value = false;
         return;
       }
 
-      // Initialize video player from local file
-      videoPlayerController = VideoPlayerController.file(file);
+      // Initialize media_kit player
+      player = Player();
+      videoController = VideoController(player!);
 
-      // Listen to buffering progress
-      videoPlayerController!.addListener(() {
-        if (videoPlayerController!.value.isBuffering) {
-          videoLoadProgress.value = 0.5;
-        } else if (videoPlayerController!.value.isInitialized) {
+      // Listen for errors
+      player!.stream.error.listen((error) {
+        developer.log('❌ Video error: $error', name: 'FavoriteController');
+      });
+
+      // Listen for playing state
+      player!.stream.playing.listen((playing) {
+        if (playing) {
           videoLoadProgress.value = 1.0;
           isLoadingVideo.value = false;
         }
       });
 
-      await videoPlayerController!.initialize();
-
-      // Create Chewie controller
-      chewieController = ChewieController(
-        videoPlayerController: videoPlayerController!,
-        autoPlay: true,
-        looping: false,
-        allowFullScreen: true,
-        allowMuting: true,
-        showControls: true,
-        materialProgressColors: ChewieProgressColors(
-          playedColor: const Color(0xFF6B7FFF),
-          handleColor: const Color(0xFF6B7FFF),
-          backgroundColor: const Color(0xFFE0E0E0),
-          bufferedColor: const Color(0xFFB0B0B0),
-        ),
-        placeholder: Container(
-          color: Colors.black,
-          child: const Center(
-            child: CircularProgressIndicator(
-              color: Color(0xFF6B7FFF),
-            ),
-          ),
-        ),
-        errorBuilder: (context, errorMessage) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error, color: Colors.red, size: 48),
-                const SizedBox(height: 16),
-                Text(
-                  'خطأ في تشغيل الفيديو',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
-            ),
-          );
-        },
-      );
+      // Open and play video from local file
+      await player!.open(Media(file.path));
+      await player!.play();
 
       isVideoPlaying.value = true;
       videoLoadProgress.value = 1.0;
       developer.log('✅ Video player initialized successfully', name: 'FavoriteController');
     } catch (e) {
       developer.log('❌ Error playing video: $e', name: 'FavoriteController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تشغيل الفيديو');
+      AppDialog.showError(message: 'favorite_error_playing_video'.tr);
       await _disposeVideoPlayer();
     } finally {
       isLoadingVideo.value = false;
@@ -581,10 +662,9 @@ class FavoriteController extends GetxController {
 
   Future<void> _disposeVideoPlayer() async {
     try {
-      chewieController?.dispose();
-      chewieController = null;
-      await videoPlayerController?.dispose();
-      videoPlayerController = null;
+      videoController = null;
+      await player?.dispose();
+      player = null;
     } catch (e) {
       developer.log('⚠️ Error disposing video player: $e', name: 'FavoriteController');
     }

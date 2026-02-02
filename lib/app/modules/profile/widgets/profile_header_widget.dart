@@ -30,9 +30,9 @@ class ProfileHeaderWidget extends GetView<ProfileController> {
             delay: const Duration(milliseconds: 300),
             from: 20,
             child: controller.isGuest
-                ? const Text(
-                    'مستخدم ضيف',
-                    style: TextStyle(
+                ? Text(
+                    'guest_user'.tr,
+                    style: const TextStyle(
                       fontFamily: 'Tajawal',
                       fontSize: 18,
                       fontWeight: FontWeight.w600,

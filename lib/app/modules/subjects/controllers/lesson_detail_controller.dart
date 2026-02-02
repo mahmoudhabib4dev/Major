@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Video;
 import 'package:dio/dio.dart';
 import 'dart:developer' as developer;
 import '../providers/subjects_provider.dart';
@@ -34,7 +34,6 @@ class LessonDetailController extends GetxController {
 
   // YouTube video state
   final RxBool isYouTubeVideo = false.obs;
-  YoutubePlayerController? youtubePlayerController;
 
   // Download state (for current playing video)
   final RxBool isDownloading = false.obs;
@@ -43,7 +42,6 @@ class LessonDetailController extends GetxController {
   String _currentVideoUrl = '';
 
   // Download state for lesson list - use global service state for persistence
-  // These getters delegate to VideoDownloadService singleton for cross-page persistence
   RxMap<int, double> get lessonDownloadProgress => _downloadService.downloadProgress;
   RxSet<int> get downloadingLessons => _downloadService.activeDownloads;
 
@@ -56,13 +54,28 @@ class LessonDetailController extends GetxController {
   final RxString teacherName = ''.obs;
   final RxString liveAt = ''.obs;
   final RxInt lessonsCount = 0.obs;
-  final RxBool hasLiveLesson = false.obs; // Track if any lesson is currently live
+  final RxBool hasLiveLesson = false.obs;
 
   // Track favorite lessons
   final RxSet<int> favoriteLessons = <int>{}.obs;
 
-  VideoPlayerController? videoPlayerController;
-  ChewieController? chewieController;
+  // Media Kit player and controller
+  Player? player;
+  VideoController? videoController;
+
+  // YouTube explode for extracting direct URLs
+  final YoutubeExplode _youtubeExplode = YoutubeExplode();
+
+  @override
+  void onInit() {
+    super.onInit();
+    _initializePlayer();
+  }
+
+  void _initializePlayer() {
+    player = Player();
+    videoController = VideoController(player!);
+  }
 
   // Load lessons for a unit
   Future<void> loadLessons(int unitId) async {
@@ -71,7 +84,6 @@ class LessonDetailController extends GetxController {
 
       developer.log('📚 Loading lessons for unit: $unitId', name: 'LessonDetailController');
 
-      // Get storage service to check subscription status
       final storageService = Get.find<StorageService>();
       final user = storageService.currentUser;
       developer.log('   User plan_status: ${user?.planStatus}', name: 'LessonDetailController');
@@ -85,10 +97,8 @@ class LessonDetailController extends GetxController {
         liveAt.value = response.data.liveAt;
         lessonsCount.value = response.data.lessonsCount;
 
-        // Check if any lesson is currently live
         hasLiveLesson.value = lessons.any((lesson) => lesson.isAlive == 1);
 
-        // Populate favorite lessons from API data
         favoriteLessons.clear();
         for (final lesson in lessons) {
           if (lesson.isFavorite == true) {
@@ -96,20 +106,15 @@ class LessonDetailController extends GetxController {
           }
         }
 
-        // Check which lessons are already downloaded
         await _checkDownloadedLessons();
 
         developer.log('✅ Lessons loaded: ${lessons.length} lessons', name: 'LessonDetailController');
-        developer.log('   Has live lesson: ${hasLiveLesson.value}', name: 'LessonDetailController');
-        developer.log('   Favorite lessons: ${favoriteLessons.length}', name: 'LessonDetailController');
-        developer.log('   Downloaded lessons: ${downloadedLessons.length}', name: 'LessonDetailController');
       } else {
         developer.log('❌ Failed to load lessons', name: 'LessonDetailController');
       }
     } catch (e) {
       developer.log('❌ Error loading lessons: $e', name: 'LessonDetailController');
 
-      // Show error message to user
       if (e is ApiErrorModel) {
         AppDialog.showError(message: e.displayMessage);
       } else {
@@ -127,7 +132,6 @@ class LessonDetailController extends GetxController {
 
       developer.log('🔍 Loading single lesson from search: $lessonId', name: 'LessonDetailController');
 
-      // Create a temporary lesson object for the search result
       final tempLesson = LessonModel(
         id: lessonId,
         name: lessonName,
@@ -142,7 +146,6 @@ class LessonDetailController extends GetxController {
 
       developer.log('✅ Single lesson loaded, preparing to play video', name: 'LessonDetailController');
 
-      // Automatically play the lesson video
       await playLessonVideo(lessonId);
     } catch (e) {
       developer.log('❌ Error loading single lesson: $e', name: 'LessonDetailController');
@@ -184,7 +187,6 @@ class LessonDetailController extends GetxController {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 8),
-              // Icon
               Container(
                 width: 80,
                 height: 80,
@@ -199,7 +201,6 @@ class LessonDetailController extends GetxController {
                 ),
               ),
               const SizedBox(height: 24),
-              // Title
               Text(
                 isGuestMode ? 'تسجيل الدخول مطلوب' : 'اشتراك مميز مطلوب',
                 style: const TextStyle(
@@ -211,7 +212,6 @@ class LessonDetailController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              // Message
               Text(
                 isGuestMode
                     ? 'يجب عليك إنشاء حساب للوصول إلى محتوى الدروس'
@@ -225,10 +225,8 @@ class LessonDetailController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              // Buttons
               Row(
                 children: [
-                  // Cancel button
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Get.back(),
@@ -251,12 +249,11 @@ class LessonDetailController extends GetxController {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Action button
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
                       onPressed: () async {
-                        Get.back(); // Close dialog
+                        Get.back();
                         if (isGuestMode) {
                           final storage = Get.find<StorageService>();
                           await storage.clearGuestData();
@@ -294,14 +291,44 @@ class LessonDetailController extends GetxController {
     );
   }
 
-  // Check if a URL is a YouTube URL
-  bool _isYouTubeUrl(String url) {
-    return url.contains('youtube.com') || url.contains('youtu.be');
-  }
-
   // Extract YouTube video ID from URL
   String? _extractYouTubeId(String url) {
-    return YoutubePlayer.convertUrlToId(url);
+    final regExp = RegExp(
+      r'(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})',
+      caseSensitive: false,
+    );
+    final match = regExp.firstMatch(url);
+    return match?.group(1);
+  }
+
+  // Get direct video URL from YouTube
+  Future<String?> _getYouTubeDirectUrl(String videoId) async {
+    try {
+      developer.log('🔍 Extracting YouTube direct URL for: $videoId', name: 'LessonDetailController');
+
+      final manifest = await _youtubeExplode.videos.streamsClient.getManifest(videoId);
+
+      // Get the best quality muxed stream (video + audio)
+      final muxedStreams = manifest.muxed.sortByVideoQuality();
+      if (muxedStreams.isNotEmpty) {
+        final streamUrl = muxedStreams.last.url.toString();
+        developer.log('✅ Got YouTube direct URL (muxed): ${muxedStreams.last.qualityLabel}', name: 'LessonDetailController');
+        return streamUrl;
+      }
+
+      // Fallback to video-only stream if no muxed available
+      final videoStreams = manifest.videoOnly.sortByVideoQuality();
+      if (videoStreams.isNotEmpty) {
+        final streamUrl = videoStreams.last.url.toString();
+        developer.log('✅ Got YouTube direct URL (video-only): ${videoStreams.last.qualityLabel}', name: 'LessonDetailController');
+        return streamUrl;
+      }
+
+      return null;
+    } catch (e) {
+      developer.log('❌ Error extracting YouTube URL: $e', name: 'LessonDetailController');
+      return null;
+    }
   }
 
   // Load and play video for a lesson
@@ -311,7 +338,6 @@ class LessonDetailController extends GetxController {
       currentLessonId.value = lessonId;
       developer.log('🎥 Loading video for lesson: $lessonId', name: 'LessonDetailController');
 
-      // Check if lesson is favorite
       final lesson = lessons.firstWhereOrNull((l) => l.id == lessonId);
       if (lesson != null) {
         isFavorite.value = lesson.isFavorite ?? false;
@@ -325,9 +351,17 @@ class LessonDetailController extends GetxController {
         if (videoId != null) {
           isYouTubeVideo.value = true;
           isVideoDownloaded.value = false;
-          isVideoPlaying.value = true;
-          _initializeYouTubePlayer(videoId);
-          return;
+
+          // Get direct URL from YouTube
+          final directUrl = await _getYouTubeDirectUrl(videoId);
+          if (directUrl != null) {
+            await _playVideo(directUrl);
+            return;
+          } else {
+            developer.log('❌ Could not get YouTube direct URL', name: 'LessonDetailController');
+            AppDialog.showError(message: 'رابط البث غير صالح');
+            return;
+          }
         } else {
           developer.log('❌ Could not extract YouTube video ID', name: 'LessonDetailController');
           AppDialog.showError(message: 'رابط البث غير صالح');
@@ -342,39 +376,31 @@ class LessonDetailController extends GetxController {
       final localPath = await _downloadService.getLocalVideoPath(lessonId);
 
       if (localPath != null) {
-        // Play from local storage
         developer.log('✅ Playing video from local storage: $localPath', name: 'LessonDetailController');
         isVideoDownloaded.value = true;
-        isVideoPlaying.value = true;
-        await _initializeVideoPlayerFromFile(localPath);
+        await _playVideoFromFile(localPath);
       } else if (lesson != null && lesson.videoUrl != null && lesson.videoUrl!.isNotEmpty) {
-        // Use video URL from lesson data
         _currentVideoUrl = lesson.videoUrl!;
         developer.log('✅ Using video URL from lesson: ${lesson.videoUrl}', name: 'LessonDetailController');
         isVideoDownloaded.value = false;
-        isVideoPlaying.value = true;
-        await _initializeVideoPlayer(lesson.videoUrl!);
+        await _playVideo(lesson.videoUrl!);
       } else {
-        // Check if user is a guest (not logged in or using guest mode)
         final storageService = Get.find<StorageService>();
         final isGuestMode = !storageService.isLoggedIn || storageService.currentUser == null;
 
         if (isGuestMode) {
-          // Guest user - video URL is missing, show login dialog
           developer.log('❌ Video not available for guest, showing login dialog', name: 'LessonDetailController');
           _showSubscriptionDialog(true);
           return;
         }
 
-        // Authenticated user - try to load from API
         final response = await subjectsProvider.getLessonVideo(lessonId);
 
         if (response.status && response.data.videoUrl.isNotEmpty) {
           _currentVideoUrl = response.data.videoUrl;
           developer.log('✅ Video URL loaded from API: ${response.data.videoUrl}', name: 'LessonDetailController');
           isVideoDownloaded.value = false;
-          isVideoPlaying.value = true;
-          await _initializeVideoPlayer(response.data.videoUrl);
+          await _playVideo(response.data.videoUrl);
         } else {
           developer.log('❌ No video URL available', name: 'LessonDetailController');
           AppDialog.showError(message: 'video_not_available'.tr);
@@ -383,7 +409,6 @@ class LessonDetailController extends GetxController {
     } catch (e) {
       developer.log('❌ Error loading video: $e', name: 'LessonDetailController');
 
-      // Check if user is guest and show login dialog instead of error
       final storageService = Get.find<StorageService>();
       final isGuestMode = !storageService.isLoggedIn || storageService.currentUser == null;
 
@@ -398,17 +423,53 @@ class LessonDetailController extends GetxController {
     }
   }
 
+  // Play video from URL using media_kit
+  Future<void> _playVideo(String videoUrl) async {
+    try {
+      developer.log('▶️ Playing video: $videoUrl', name: 'LessonDetailController');
+
+      // Open the media - this starts buffering immediately
+      await player?.open(Media(videoUrl));
+
+      // Start playback
+      await player?.play();
+
+      isVideoPlaying.value = true;
+      update();
+    } catch (e) {
+      developer.log('❌ Error playing video: $e', name: 'LessonDetailController');
+      AppDialog.showError(message: 'video_not_available'.tr);
+      isVideoPlaying.value = false;
+    }
+  }
+
+  // Play video from local file using media_kit
+  Future<void> _playVideoFromFile(String filePath) async {
+    try {
+      developer.log('▶️ Playing local video: $filePath', name: 'LessonDetailController');
+
+      await player?.open(Media(filePath));
+      await player?.play();
+
+      isVideoPlaying.value = true;
+      update();
+    } catch (e) {
+      developer.log('❌ Error playing local video: $e', name: 'LessonDetailController');
+      AppDialog.showError(message: 'video_not_available'.tr);
+      isVideoPlaying.value = false;
+    }
+  }
+
   void showVideo() {
     isVideoPlaying.value = true;
   }
 
   void hideVideo() {
     isVideoPlaying.value = false;
-    _disposeVideoPlayer();
+    player?.stop();
   }
 
   Future<void> toggleFavorite(int lessonId) async {
-    // Check subscription access first
     if (!_checkSubscriptionAccess()) {
       return;
     }
@@ -417,14 +478,12 @@ class LessonDetailController extends GetxController {
       final response = await _favoriteProvider.toggleFavorite(id: lessonId, type: 'lesson');
       isFavorite.value = response.isFavorite ?? !isFavorite.value;
 
-      // Update favoriteLessons set
       if (response.isFavorite == true) {
         favoriteLessons.add(lessonId);
       } else {
         favoriteLessons.remove(lessonId);
       }
 
-      // Update FavoriteController to refresh the favorites list
       try {
         final favoriteController = Get.find<FavoriteController>();
         favoriteController.loadFavorites();
@@ -443,12 +502,8 @@ class LessonDetailController extends GetxController {
     }
   }
 
-  // Check if lesson is favorite
   Future<void> checkIfFavorite(int lessonId) async {
     try {
-      // This would require an API endpoint to check if a lesson is favorite
-      // For now, we'll assume it's not favorite by default
-      // You can implement this based on your API
       isFavorite.value = false;
     } catch (e) {
       developer.log('❌ Error checking favorite status: $e', name: 'LessonDetailController');
@@ -457,7 +512,6 @@ class LessonDetailController extends GetxController {
 
   // Load and navigate to test
   Future<void> openLessonTest(int lessonId) async {
-    // Check subscription access first
     if (!_checkSubscriptionAccess()) {
       return;
     }
@@ -466,23 +520,19 @@ class LessonDetailController extends GetxController {
       isLoadingTest.value = true;
       developer.log('📝 Loading test for lesson: $lessonId', name: 'LessonDetailController');
 
-      // Find the lesson to check if it has a test_id
       final lesson = lessons.firstWhereOrNull((l) => l.id == lessonId);
 
-      // NEW FLOW: If lesson has a test_id, use the new test start API
       if (lesson != null && lesson.testId != null) {
         developer.log('✅ Lesson has test_id: ${lesson.testId}, using new test API', name: 'LessonDetailController');
 
-        // Delete any existing quiz controller to ensure fresh start
         Get.delete<QuizController>();
 
-        // Navigate to quiz screen with testId to start the test via API
         Get.to(
           () => const QuizView(),
           binding: BindingsBuilder(() {
             Get.put(QuizController(
               lessonTitle: lesson.name,
-              testId: lesson.testId, // Use the new test API
+              testId: lesson.testId,
             ));
           }),
           transition: Transition.rightToLeft,
@@ -495,13 +545,11 @@ class LessonDetailController extends GetxController {
         return;
       }
 
-      // No test_id means no test available for this lesson
       developer.log('ℹ️ No test_id for lesson, showing info message', name: 'LessonDetailController');
       AppDialog.showInfo(
         message: 'no_test_available'.tr,
       );
     } on ApiErrorModel catch (e) {
-      // Handle 404 as "no test available"
       if (e.statusCode == 404) {
         developer.log('ℹ️ No test found (404)', name: 'LessonDetailController');
         AppDialog.showInfo(
@@ -525,7 +573,6 @@ class LessonDetailController extends GetxController {
 
   // Load and open lesson summary PDF
   Future<void> openLessonSummary(int lessonId) async {
-    // Check subscription access first
     if (!_checkSubscriptionAccess()) {
       return;
     }
@@ -538,7 +585,6 @@ class LessonDetailController extends GetxController {
       if (response.status && response.data.fileUrl.isNotEmpty) {
         developer.log('✅ Summary loaded: ${response.data.fileUrl}', name: 'LessonDetailController');
 
-        // Navigate to PDF viewer
         Get.to(
           () => PdfViewerScreen(
             pdfUrl: response.data.fileUrl,
@@ -563,91 +609,8 @@ class LessonDetailController extends GetxController {
     }
   }
 
-  Future<void> _initializeVideoPlayer(String videoUrl) async {
-    videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
-
-    // Initialize with timeout to prevent indefinite waiting
-    try {
-      await videoPlayerController!.initialize().timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          developer.log('⚠️ Video initialization timeout', name: 'LessonDetailController');
-        },
-      );
-
-      chewieController = ChewieController(
-        videoPlayerController: videoPlayerController!,
-        autoPlay: true,
-        looping: false,
-        showControls: true,
-        showOptions: false,
-        // Start playing immediately, don't wait for buffering
-        autoInitialize: true,
-        materialProgressColors: ChewieProgressColors(
-          playedColor: const Color(0xFFFB2B3A),
-          handleColor: const Color(0xFFFB2B3A),
-          backgroundColor: const Color(0xFF666666),
-          bufferedColor: const Color(0xFF999999),
-        ),
-        placeholder: const Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFFFB2B3A),
-          ),
-        ),
-      );
-      update();
-    } catch (e) {
-      developer.log('❌ Error initializing video: $e', name: 'LessonDetailController');
-      AppDialog.showError(message: 'video_not_available'.tr);
-      isVideoPlaying.value = false;
-    }
-  }
-
-  Future<void> _initializeVideoPlayerFromFile(String filePath) async {
-    videoPlayerController = VideoPlayerController.file(File(filePath));
-
-    try {
-      await videoPlayerController!.initialize();
-
-      chewieController = ChewieController(
-        videoPlayerController: videoPlayerController!,
-        autoPlay: true,
-        looping: false,
-        showControls: true,
-        showOptions: false,
-        autoInitialize: true,
-        materialProgressColors: ChewieProgressColors(
-          playedColor: const Color(0xFFFB2B3A),
-          handleColor: const Color(0xFFFB2B3A),
-          backgroundColor: const Color(0xFF666666),
-          bufferedColor: const Color(0xFF999999),
-        ),
-      );
-      update();
-    } catch (e) {
-      developer.log('❌ Error initializing local video: $e', name: 'LessonDetailController');
-      AppDialog.showError(message: 'video_not_available'.tr);
-      isVideoPlaying.value = false;
-    }
-  }
-
-  void _initializeYouTubePlayer(String videoId) {
-    youtubePlayerController = YoutubePlayerController(
-      initialVideoId: videoId,
-      flags: const YoutubePlayerFlags(
-        autoPlay: true,
-        mute: false,
-        enableCaption: false,
-        hideControls: false,
-        controlsVisibleAtStart: true,
-      ),
-    );
-    update();
-  }
-
   // Download current video
   Future<void> downloadCurrentVideo() async {
-    // Check subscription access first
     if (!_checkSubscriptionAccess()) {
       return;
     }
@@ -688,7 +651,6 @@ class LessonDetailController extends GetxController {
       developer.log('✅ Video downloaded successfully', name: 'LessonDetailController');
       AppDialog.showSuccess(message: 'تم تنزيل الفيديو بنجاح');
 
-      // Reload downloaded videos in FavoriteController if it exists
       try {
         final favoriteController = Get.find<FavoriteController>();
         favoriteController.loadDownloadedVideos();
@@ -708,7 +670,6 @@ class LessonDetailController extends GetxController {
     try {
       developer.log('🗑️ Deleting video for lesson: ${currentLessonId.value}', name: 'LessonDetailController');
 
-      // Show confirmation dialog
       Get.dialog(
         AlertDialog(
           title: const Text('حذف الفيديو'),
@@ -728,7 +689,6 @@ class LessonDetailController extends GetxController {
                 developer.log('✅ Video deleted successfully', name: 'LessonDetailController');
                 AppDialog.showSuccess(message: 'تم حذف الفيديو بنجاح');
 
-                // Reload downloaded videos in FavoriteController if it exists
                 try {
                   final favoriteController = Get.find<FavoriteController>();
                   favoriteController.loadDownloadedVideos();
@@ -762,19 +722,16 @@ class LessonDetailController extends GetxController {
   Future<void> downloadLessonVideo(int lessonId) async {
     developer.log('📥 Download requested for lesson: $lessonId', name: 'LessonDetailController');
 
-    // Check subscription access first
     if (!_checkSubscriptionAccess()) {
       developer.log('❌ Subscription check failed', name: 'LessonDetailController');
       return;
     }
 
-    // If already downloading this lesson, do nothing (check global state)
     if (_downloadService.isDownloading(lessonId)) {
       developer.log('⚠️ Already downloading lesson: $lessonId', name: 'LessonDetailController');
       return;
     }
 
-    // If already downloaded, show delete confirmation
     if (downloadedLessons.contains(lessonId)) {
       developer.log('📦 Lesson already downloaded, showing delete dialog', name: 'LessonDetailController');
       _showDeleteLessonVideoDialog(lessonId);
@@ -788,15 +745,6 @@ class LessonDetailController extends GetxController {
       return;
     }
 
-    developer.log('📋 Lesson data:', name: 'LessonDetailController');
-    developer.log('   - id: ${lesson.id}', name: 'LessonDetailController');
-    developer.log('   - name: ${lesson.name}', name: 'LessonDetailController');
-    developer.log('   - videoUrl: ${lesson.videoUrl}', name: 'LessonDetailController');
-    developer.log('   - liveUrl: ${lesson.liveUrl}', name: 'LessonDetailController');
-    developer.log('   - pdfFile: ${lesson.pdfFile}', name: 'LessonDetailController');
-    developer.log('   - isAlive: ${lesson.isAlive}', name: 'LessonDetailController');
-
-    // Get video URL from lesson model or fetch from API
     String? videoUrl = lesson.videoUrl;
 
     if (videoUrl == null || videoUrl.isEmpty) {
@@ -822,20 +770,17 @@ class LessonDetailController extends GetxController {
     try {
       developer.log('📥 Starting video download for lesson: $lessonId', name: 'LessonDetailController');
 
-      // Download using service (global state is managed by service)
       await _downloadService.downloadVideo(
         lessonId: lessonId,
         videoUrl: videoUrl,
         lessonName: lesson.name,
       );
 
-      // Download completed successfully - add to downloaded list
       downloadedLessons.add(lessonId);
 
       developer.log('✅ Lesson video downloaded successfully', name: 'LessonDetailController');
       AppDialog.showSuccess(message: 'تم تنزيل الفيديو بنجاح');
 
-      // Reload downloaded videos in FavoriteController if it exists
       try {
         final favoriteController = Get.find<FavoriteController>();
         favoriteController.loadDownloadedVideos();
@@ -856,7 +801,7 @@ class LessonDetailController extends GetxController {
     }
   }
 
-  // Cancel a download in progress (delegates to service)
+  // Cancel a download in progress
   void cancelDownload(int lessonId) {
     _downloadService.cancelDownload(lessonId);
   }
@@ -876,7 +821,6 @@ class LessonDetailController extends GetxController {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icon
               Container(
                 width: 80,
                 height: 80,
@@ -900,7 +844,6 @@ class LessonDetailController extends GetxController {
                 ),
               ),
               const SizedBox(height: 24),
-              // Title
               const Text(
                 'حذف الفيديو',
                 style: TextStyle(
@@ -912,7 +855,6 @@ class LessonDetailController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              // Subtitle
               const Text(
                 'هل أنت متأكد من حذف هذا الفيديو المحمل؟\nيمكنك تنزيله مرة أخرى لاحقاً',
                 style: TextStyle(
@@ -924,10 +866,8 @@ class LessonDetailController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              // Buttons
               Row(
                 children: [
-                  // Cancel button
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Get.back(),
@@ -950,7 +890,6 @@ class LessonDetailController extends GetxController {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Delete button
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
@@ -963,7 +902,6 @@ class LessonDetailController extends GetxController {
                         developer.log('✅ Lesson video deleted successfully', name: 'LessonDetailController');
                         AppDialog.showSuccess(message: 'تم حذف الفيديو بنجاح');
 
-                        // Reload downloaded videos in FavoriteController if it exists
                         try {
                           final favoriteController = Get.find<FavoriteController>();
                           favoriteController.loadDownloadedVideos();
@@ -1000,19 +938,10 @@ class LessonDetailController extends GetxController {
     );
   }
 
-  void _disposeVideoPlayer() {
-    chewieController?.dispose();
-    videoPlayerController?.dispose();
-    youtubePlayerController?.dispose();
-    chewieController = null;
-    videoPlayerController = null;
-    youtubePlayerController = null;
-    isYouTubeVideo.value = false;
-  }
-
   @override
   void onClose() {
-    _disposeVideoPlayer();
+    player?.dispose();
+    _youtubeExplode.close();
     super.onClose();
   }
 }

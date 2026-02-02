@@ -18,6 +18,7 @@ class ProfileView extends GetView<ProfileController> {
     return AppScaffold(
       backgroundImage: AppImages.image3,
       showContentContainer: true,
+      onRefresh: controller.onRefresh,
       headerChildren: [
         SafeArea(
           child: FadeInDown(

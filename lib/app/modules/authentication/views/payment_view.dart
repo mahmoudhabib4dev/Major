@@ -8,6 +8,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/widgets/api_image.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/authentication_controller.dart';
 
 class PaymentView extends GetView<AuthenticationController> {
@@ -312,9 +313,7 @@ class PaymentView extends GetView<AuthenticationController> {
             return Container(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                ),
+                child: AppLoader(size: 60),
               ),
             );
           }
@@ -613,13 +612,7 @@ class PaymentView extends GetView<AuthenticationController> {
             padding: EdgeInsets.zero,
           ),
           child: controller.isLoading.value
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
+              ? const AppLoader(size: 20, showLogo: false,
                 )
               : Text(
                   'apply'.tr,
@@ -878,14 +871,7 @@ class PaymentView extends GetView<AuthenticationController> {
             ),
           ),
           child: controller.isLoading.value
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
+              ? const AppLoader(size: 24, showLogo: false)
               : Text(
                   'complete_payment'.tr,
                   style: AppTextStyles.buttonText(context).copyWith(

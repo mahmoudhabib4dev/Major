@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Video;
+
+import '../../../core/widgets/app_loader.dart';
 
 class YoutubeFullscreenPlayer extends StatefulWidget {
   final String videoId;
@@ -18,7 +22,11 @@ class YoutubeFullscreenPlayer extends StatefulWidget {
 }
 
 class _YoutubeFullscreenPlayerState extends State<YoutubeFullscreenPlayer> {
-  late YoutubePlayerController _controller;
+  late Player _player;
+  late VideoController _videoController;
+  final YoutubeExplode _youtubeExplode = YoutubeExplode();
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -33,17 +41,84 @@ class _YoutubeFullscreenPlayerState extends State<YoutubeFullscreenPlayer> {
     // Hide system UI for immersive mode
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-    _controller = YoutubePlayerController(
-      initialVideoId: widget.videoId,
-      flags: const YoutubePlayerFlags(
-        autoPlay: true,
-        mute: false,
-        enableCaption: false,
-        hideControls: false,
-        controlsVisibleAtStart: true,
-        isLive: true,
-      ),
-    );
+    _initializePlayer();
+  }
+
+  Future<void> _initializePlayer() async {
+    try {
+      _player = Player();
+      _videoController = VideoController(_player);
+
+      // Get direct YouTube URL
+      final directUrl = await _getYouTubeDirectUrl(widget.videoId);
+      if (directUrl == null) {
+        setState(() {
+          _errorMessage = 'فشل في الحصول على رابط الفيديو';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Listen for errors
+      _player.stream.error.listen((error) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = error;
+            _isLoading = false;
+          });
+        }
+      });
+
+      // Listen for when video is ready
+      _player.stream.playing.listen((playing) {
+        if (mounted && playing && _isLoading) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+
+      // Open and play video
+      await _player.open(Media(directUrl));
+      await _player.play();
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString();
+        });
+      }
+    }
+  }
+
+  Future<String?> _getYouTubeDirectUrl(String videoId) async {
+    try {
+      final manifest = await _youtubeExplode.videos.streamsClient.getManifest(videoId);
+
+      // Try to get muxed stream (video + audio) first
+      final muxedStreams = manifest.muxed.sortByVideoQuality();
+      if (muxedStreams.isNotEmpty) {
+        // Get highest quality muxed stream
+        return muxedStreams.last.url.toString();
+      }
+
+      // Fallback to video-only stream
+      final videoStreams = manifest.video.sortByVideoQuality();
+      if (videoStreams.isNotEmpty) {
+        return videoStreams.last.url.toString();
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('Error getting YouTube URL: $e');
+      return null;
+    }
   }
 
   @override
@@ -57,7 +132,8 @@ class _YoutubeFullscreenPlayerState extends State<YoutubeFullscreenPlayer> {
     // Restore system UI
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-    _controller.dispose();
+    _player.dispose();
+    _youtubeExplode.close();
     super.dispose();
   }
 
@@ -71,17 +147,36 @@ class _YoutubeFullscreenPlayerState extends State<YoutubeFullscreenPlayer> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // YouTube Player - fill entire screen
+          // Video Player - fill entire screen
           Center(
-            child: YoutubePlayer(
-              controller: _controller,
-              showVideoProgressIndicator: true,
-              progressIndicatorColor: const Color(0xFFFB2B3A),
-              progressColors: const ProgressBarColors(
-                playedColor: Color(0xFFFB2B3A),
-                handleColor: Color(0xFFFB2B3A),
-              ),
-            ),
+            child: _isLoading
+                ? const AppLoader(size: 60)
+                : _errorMessage != null
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 64,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      )
+                    : Video(
+                        controller: _videoController,
+                        controls: MaterialVideoControls,
+                        fill: Colors.black,
+                      ),
           ),
           // Exit fullscreen button (top right)
           Positioned(

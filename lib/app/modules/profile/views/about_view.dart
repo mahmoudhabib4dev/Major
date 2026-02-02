@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/profile_page_header_widget.dart';
@@ -82,9 +83,7 @@ class AboutView extends GetView<ProfileController> {
                 child: Obx(
                   () => controller.isLoadingAbout.value
                       ? const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
-                          ),
+                          child: AppLoader(size: 50),
                         )
                       : Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -108,12 +107,9 @@ class AboutView extends GetView<ProfileController> {
                 child: Obx(() {
                   if (controller.isLoadingSocialLinks.value) {
                     return const SizedBox(
-                      height: 40,
+                      height: 50,
                       child: Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        ),
+                        child: AppLoader(size: 40),
                       ),
                     );
                   }

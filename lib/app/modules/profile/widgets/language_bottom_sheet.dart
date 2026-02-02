@@ -74,6 +74,7 @@ class LanguageBottomSheet extends GetView<ProfileController> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: false,
       builder: (context) => const LanguageBottomSheet(),
     );
   }
@@ -83,132 +84,137 @@ class LanguageBottomSheet extends GetView<ProfileController> {
     final screenSize = MediaQuery.of(context).size;
     final notchRadius = screenSize.width * 0.08;
 
-    return ClipPath(
-      clipper: _TopCurveClipper(notchRadius: notchRadius),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Transform.translate(
-            offset: Offset(0, -notchRadius * 0.8),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(top: notchRadius * 0.8),
-              color: AppColors.white,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Space for wave
-                  SizedBox(height: AppDimensions.spacing(context, 0.02)),
-                  // Header with close button and title
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppDimensions.spacing(context, 0.04),
-                      vertical: AppDimensions.spacing(context, 0.02),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Close button
-                        FadeInLeft(
-                          duration: const Duration(milliseconds: 400),
-                          child: GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: AppColors.grey100,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                color: AppColors.grey600,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Title
-                        FadeInDown(
-                          duration: const Duration(milliseconds: 500),
-                          child: Text(
-                            'select_language'.tr,
-                            style: AppTextStyles.sectionTitle(context),
-                          ),
-                        ),
-                        // Empty space for balance
-                        const SizedBox(width: 36),
-                      ],
-                    ),
-                  ),
-                  // Divider
-                  Divider(
-                    color: AppColors.grey200,
-                    height: 1,
-                  ),
-                  SizedBox(height: AppDimensions.spacing(context, 0.02)),
-                  // Language options
-                  ...List.generate(
-                    controller.languages.length,
-                    (index) => FadeInUp(
-                      duration: const Duration(milliseconds: 400),
-                      delay: Duration(milliseconds: 100 * index),
-                      child: _buildLanguageOption(
-                        context: context,
-                        language: controller.languages[index],
-                        isLast: index == controller.languages.length - 1,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: AppDimensions.spacing(context, 0.04)),
-                  // Confirm button
-                  ElasticIn(
-                    duration: const Duration(milliseconds: 800),
-                    delay: const Duration(milliseconds: 400),
-                    child: Padding(
+    return Transform.translate(
+      offset: Offset(0, notchRadius * 0.8),
+      child: ClipPath(
+        clipper: _TopCurveClipper(notchRadius: notchRadius),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Transform.translate(
+              offset: Offset(0, -notchRadius * 0.8),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(top: notchRadius * 0.8),
+                decoration: const BoxDecoration(
+                  color: AppColors.white,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Space for wave
+                    SizedBox(height: AppDimensions.spacing(context, 0.02)),
+                    // Header with close button and title
+                    Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: AppDimensions.spacing(context, 0.04),
+                        vertical: AppDimensions.spacing(context, 0.02),
                       ),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton(
-                          onPressed: controller.confirmLanguageSelection,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Close button
+                          FadeInLeft(
+                            duration: const Duration(milliseconds: 400),
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: AppColors.grey100,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: AppColors.grey600,
+                                  size: 20,
+                                ),
+                              ),
                             ),
                           ),
-                          child: Text(
-                            'confirm'.tr,
-                            style: AppTextStyles.buttonText(context).copyWith(
-                              color: AppColors.white,
+                          // Title
+                          FadeInDown(
+                            duration: const Duration(milliseconds: 500),
+                            child: Text(
+                              'select_language'.tr,
+                              style: AppTextStyles.sectionTitle(context),
+                            ),
+                          ),
+                          // Empty space for balance
+                          const SizedBox(width: 36),
+                        ],
+                      ),
+                    ),
+                    // Divider
+                    Divider(
+                      color: AppColors.grey200,
+                      height: 1,
+                    ),
+                    SizedBox(height: AppDimensions.spacing(context, 0.02)),
+                    // Language options
+                    ...List.generate(
+                      controller.languages.length,
+                      (index) => FadeInUp(
+                        duration: const Duration(milliseconds: 400),
+                        delay: Duration(milliseconds: 100 * index),
+                        child: _buildLanguageOption(
+                          context: context,
+                          language: controller.languages[index],
+                          isLast: index == controller.languages.length - 1,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: AppDimensions.spacing(context, 0.04)),
+                    // Confirm button
+                    ElasticIn(
+                      duration: const Duration(milliseconds: 800),
+                      delay: const Duration(milliseconds: 400),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppDimensions.spacing(context, 0.04),
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            onPressed: controller.confirmLanguageSelection,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                            child: Text(
+                              'confirm'.tr,
+                              style: AppTextStyles.buttonText(context).copyWith(
+                                color: AppColors.white,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: AppDimensions.spacing(context, 0.04)),
-                ],
+                    SizedBox(height: AppDimensions.spacing(context, 0.04)),
+                  ],
+                ),
               ),
             ),
-          ),
-          // Small dot at top center where curve peaks
-          Positioned(
-            top: -screenSize.width * 0.025 + 5,
-            left: screenSize.width / 2 - screenSize.width * 0.0125,
-            child: Container(
-              width: screenSize.width * 0.025,
-              height: screenSize.width * 0.025,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
+            // Small dot at top center where curve peaks
+            Positioned(
+              top: -screenSize.width * 0.025 + 5,
+              left: screenSize.width / 2 - screenSize.width * 0.0125,
+              child: Container(
+                width: screenSize.width * 0.025,
+                height: screenSize.width * 0.025,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

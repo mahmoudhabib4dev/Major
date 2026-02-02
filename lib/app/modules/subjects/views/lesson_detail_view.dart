@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:chewie/chewie.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/api_image.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/lesson_detail_controller.dart';
 import '../models/unit_model.dart';
 
@@ -19,7 +19,7 @@ class LessonDetailView extends GetView<LessonDetailController> {
     this.unit,
   });
 
-  // Format time from 24h to 12h with Arabic AM/PM
+  // Format time from 24h to 12h with translated AM/PM
   String _formatTime(String time24) {
     try {
       final parts = time24.split(':');
@@ -28,7 +28,7 @@ class LessonDetailView extends GetView<LessonDetailController> {
       int hour = int.parse(parts[0]);
       final minute = parts[1];
 
-      String period = hour >= 12 ? 'م' : 'ص'; // م for PM (مساءً), ص for AM (صباحاً)
+      String period = hour >= 12 ? 'pm'.tr : 'am'.tr;
 
       if (hour == 0) {
         hour = 12;
@@ -64,57 +64,12 @@ class LessonDetailView extends GetView<LessonDetailController> {
 
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Obx(() {
-        // Use YoutubePlayerBuilder when YouTube video is playing for proper fullscreen handling
-        if (controller.isYouTubeVideo.value && controller.youtubePlayerController != null) {
-          return YoutubePlayerBuilder(
-            onExitFullScreen: () {
-              // Restore portrait orientation when exiting fullscreen
-              SystemChrome.setPreferredOrientations([
-                DeviceOrientation.portraitUp,
-                DeviceOrientation.portraitDown,
-              ]);
-              SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-              // Reset status bar style
-              SystemChrome.setSystemUIOverlayStyle(
-                const SystemUiOverlayStyle(
-                  statusBarColor: Colors.transparent,
-                  statusBarIconBrightness: Brightness.light,
-                  statusBarBrightness: Brightness.dark,
-                ),
-              );
-            },
-            onEnterFullScreen: () {
-              // Allow landscape for fullscreen
-              SystemChrome.setPreferredOrientations([
-                DeviceOrientation.landscapeLeft,
-                DeviceOrientation.landscapeRight,
-              ]);
-              SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-            },
-            player: YoutubePlayer(
-              controller: controller.youtubePlayerController!,
-              showVideoProgressIndicator: true,
-              progressIndicatorColor: const Color(0xFFFB2B3A),
-              progressColors: const ProgressBarColors(
-                playedColor: Color(0xFFFB2B3A),
-                handleColor: Color(0xFFFB2B3A),
-              ),
-            ),
-            builder: (context, player) {
-              return _buildMainScaffold(context, screenSize, youtubePlayer: player);
-            },
-          );
-        }
-
-        // Normal scaffold without YouTube player builder
-        return _buildMainScaffold(context, screenSize);
-      }),
+      child: _buildMainScaffold(context, screenSize),
     );
   }
 
   // Build the main scaffold content
-  Widget _buildMainScaffold(BuildContext context, Size screenSize, {Widget? youtubePlayer}) {
+  Widget _buildMainScaffold(BuildContext context, Size screenSize) {
     return Scaffold(
       extendBody: true,
       body: Container(
@@ -130,7 +85,7 @@ class LessonDetailView extends GetView<LessonDetailController> {
           children: [
             // Video player or header - behind everything
             Obx(() => controller.isVideoPlaying.value
-                ? _buildVideoPlayer(context, screenSize, youtubePlayer: youtubePlayer)
+                ? _buildVideoPlayer(context, screenSize)
                 : SafeArea(child: _buildHeader(context, screenSize))),
             // Loading overlay for video
             Obx(() => controller.isLoadingVideo.value
@@ -139,9 +94,7 @@ class LessonDetailView extends GetView<LessonDetailController> {
                     height: double.infinity,
                     color: Colors.black54,
                     child: const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFFB2B3A),
-                      ),
+                      child: AppLoader(size: 60),
                     ),
                   )
                 : const SizedBox.shrink()),
@@ -265,8 +218,8 @@ class LessonDetailView extends GetView<LessonDetailController> {
     );
   }
 
-  // Build video player
-  Widget _buildVideoPlayer(BuildContext context, Size screenSize, {Widget? youtubePlayer}) {
+  // Build video player using media_kit
+  Widget _buildVideoPlayer(BuildContext context, Size screenSize) {
     final statusBarHeight = MediaQuery.of(context).padding.top;
     return SizedBox(
       width: double.infinity,
@@ -285,22 +238,15 @@ class LessonDetailView extends GetView<LessonDetailController> {
                   decoration: const BoxDecoration(
                     color: Colors.black,
                   ),
-                  child: Obx(() {
-                    // YouTube player for live lessons - use the player from YoutubePlayerBuilder
-                    if (ctrl.isYouTubeVideo.value && youtubePlayer != null) {
-                      return youtubePlayer;
-                    }
-                    // Regular video player
-                    if (ctrl.chewieController != null &&
-                        ctrl.chewieController!.videoPlayerController.value.isInitialized) {
-                      return Chewie(controller: ctrl.chewieController!);
-                    }
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFFB2B3A),
-                      ),
-                    );
-                  }),
+                  child: ctrl.videoController != null
+                      ? Video(
+                          controller: ctrl.videoController!,
+                          controls: MaterialVideoControls,
+                          fill: Colors.black,
+                        )
+                      : const Center(
+                          child: AppLoader(size: 60),
+                        ),
                 ),
               ),
               // Top controls (favorite and back) - with status bar padding
@@ -327,7 +273,6 @@ class LessonDetailView extends GetView<LessonDetailController> {
                                 size: 28,
                               ),
                               onPressed: () {
-                                // Get current lesson ID from the playing lesson
                                 final currentLesson = controller.lessons.firstWhereOrNull(
                                   (lesson) => lesson.id == controller.currentLessonId.value
                                 );
@@ -379,7 +324,6 @@ class LessonDetailView extends GetView<LessonDetailController> {
                 context,
                 'live_time'.tr,
                 Text(
-                  // Show "جاري" (ongoing) if any lesson is live, otherwise show scheduled time
                   controller.hasLiveLesson.value
                       ? 'ongoing'.tr
                       : (controller.liveAt.value.isNotEmpty
@@ -394,7 +338,7 @@ class LessonDetailView extends GetView<LessonDetailController> {
                   textAlign: TextAlign.center,
                 ),
                 AppImages.icon24,
-                true, // Always white mode
+                true,
               ),
             ),
             const SizedBox(
@@ -407,18 +351,21 @@ class LessonDetailView extends GetView<LessonDetailController> {
               child: _buildInfoItem(
                 context,
                 'number_of_lessons'.tr,
-                Text(
-                  'lessons_count'.tr.replaceAll('@count', '${controller.lessonsCount.value}'),
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Directionality(
+                  textDirection: Get.locale?.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+                  child: Text(
+                    'lessons_count'.tr.replaceAll('@count', '${controller.lessonsCount.value}'),
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 AppImages.icon25,
-                true, // Always white mode
+                true,
               ),
             ),
             const SizedBox(
@@ -444,7 +391,7 @@ class LessonDetailView extends GetView<LessonDetailController> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 AppImages.icon26,
-                true, // Always white mode
+                true,
               ),
             ),
           ],
@@ -478,7 +425,11 @@ class LessonDetailView extends GetView<LessonDetailController> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 4),
-        value,
+        // Use SizedBox with fixed height to ensure alignment across all info items
+        SizedBox(
+          height: 36,
+          child: Center(child: value),
+        ),
       ],
     );
   }
@@ -491,9 +442,7 @@ class LessonDetailView extends GetView<LessonDetailController> {
         return Padding(
           padding: EdgeInsets.only(top: screenSize.height * 0.1),
           child: const Center(
-            child: CircularProgressIndicator(
-              color: Color(0xFF000D47),
-            ),
+            child: AppLoader(size: 60),
           ),
         );
       }
@@ -517,10 +466,8 @@ class LessonDetailView extends GetView<LessonDetailController> {
       // Sort lessons: live lessons first (isAlive == 1), then by order
       final sortedLessons = controller.lessons.toList()
         ..sort((a, b) {
-          // Live lessons come first
           if (a.isAlive == 1 && b.isAlive != 1) return -1;
           if (b.isAlive == 1 && a.isAlive != 1) return 1;
-          // Then sort by order if available
           final orderA = int.tryParse(a.order ?? '') ?? 999;
           final orderB = int.tryParse(b.order ?? '') ?? 999;
           return orderA.compareTo(orderB);
@@ -528,8 +475,6 @@ class LessonDetailView extends GetView<LessonDetailController> {
 
       return Column(
         children: sortedLessons.map((lesson) {
-          // All lessons are shown as available
-          // Access control (subscription/login checks) is handled in playLessonVideo()
           const status = 'available';
 
           return Padding(
@@ -586,10 +531,7 @@ class LessonDetailView extends GetView<LessonDetailController> {
                             ? const Color(0xFFE8D4D4)
                             : const Color(0xFFD4D8E8),
                         child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF000D47),
-                          ),
+                          child: AppLoader(size: 30),
                         ),
                       ),
                       errorWidget: Container(
@@ -602,8 +544,8 @@ class LessonDetailView extends GetView<LessonDetailController> {
                     Container(
                       decoration: BoxDecoration(
                         color: isLive
-                            ? const Color(0xFFE8D4D4) // Light pink/beige for live
-                            : const Color(0xFFD4D8E8), // Light blue/gray for regular
+                            ? const Color(0xFFE8D4D4)
+                            : const Color(0xFFD4D8E8),
                       ),
                     ),
                   // Play button in center (37x37)
@@ -736,10 +678,8 @@ class LessonDetailView extends GetView<LessonDetailController> {
                     onTap: !isLocked
                         ? () {
                             if (isDownloading) {
-                              // Cancel download
                               controller.cancelDownload(lesson.id);
                             } else {
-                              // Start download
                               controller.downloadLessonVideo(lesson.id);
                             }
                           }
@@ -750,76 +690,75 @@ class LessonDetailView extends GetView<LessonDetailController> {
                         color: isLocked
                             ? Colors.grey[300]
                             : isDownloading
-                                ? const Color(0xFFE53935) // Red for cancel
+                                ? const Color(0xFFE53935)
                                 : isDownloaded
-                                    ? const Color(0xFF4CAF50) // Green for downloaded
+                                    ? const Color(0xFF4CAF50)
                                     : const Color(0xFF000D47),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: isDownloading
-                          // Show progress while downloading with cancel option
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  progress > 0 ? 'إلغاء ${(progress * 100).toInt()}%' : 'إلغاء',
-                                  style: const TextStyle(
-                                    fontFamily: 'Tajawal',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                      child: Center(
+                        child: isDownloading
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.close,
                                     color: Colors.white,
-                                    height: 1.0,
+                                    size: 16,
                                   ),
-                                ),
-                              ],
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                isLocked
-                                    ? Icon(
-                                        Icons.download,
-                                        color: Colors.grey[500],
-                                        size: 20,
-                                      )
-                                    : isDownloaded
-                                        ? const Icon(
-                                            Icons.download_done,
-                                            color: Colors.white,
-                                            size: 20,
-                                          )
-                                        : Image.asset(
-                                            AppImages.icon78,
-                                            width: 20,
-                                            height: 20,
-                                          ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  isDownloaded ? 'تم التنزيل' : 'تنزيل الدرس',
-                                  style: TextStyle(
-                                    fontFamily: 'Tajawal',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: isLocked ? Colors.grey[500] : Colors.white,
-                                    height: 1.0,
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    progress > 0
+                                        ? 'cancel_download_progress'.tr.replaceAll('@progress', '${(progress * 100).toInt()}')
+                                        : 'cancel_download'.tr,
+                                    style: const TextStyle(
+                                      fontFamily: 'Tajawal',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              )
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  isLocked
+                                      ? Icon(
+                                          Icons.download,
+                                          color: Colors.grey[500],
+                                          size: 16,
+                                        )
+                                      : isDownloaded
+                                          ? const Icon(
+                                              Icons.download_done,
+                                              color: Colors.white,
+                                              size: 16,
+                                            )
+                                          : Image.asset(
+                                              AppImages.icon78,
+                                              width: 16,
+                                              height: 16,
+                                            ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    isDownloaded ? 'downloaded'.tr : 'download_lesson'.tr,
+                                    style: TextStyle(
+                                      fontFamily: 'Tajawal',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: isLocked ? Colors.grey[500] : Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
                     ),
                   );
                 }),
               ),
               const SizedBox(width: 12),
-              // Test button (left in RTL) - same dark blue background as download button
+              // Test button (left in RTL)
               Expanded(
                 child: GestureDetector(
                   onTap: !isLocked
@@ -831,33 +770,33 @@ class LessonDetailView extends GetView<LessonDetailController> {
                       color: isLocked ? Colors.grey[300] : const Color(0xFF000D47),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        isLocked
-                            ? Icon(
-                                Icons.help_outline,
-                                color: Colors.grey[500],
-                                size: 20,
-                              )
-                            : Image.asset(
-                                AppImages.icon77,
-                                width: 20,
-                                height: 20,
-                              ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'اختبار الدرس',
-                          style: TextStyle(
-                            fontFamily: 'Tajawal',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isLocked ? Colors.grey[500] : Colors.white,
-                            height: 1.0,
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          isLocked
+                              ? Icon(
+                                  Icons.help_outline,
+                                  color: Colors.grey[500],
+                                  size: 16,
+                                )
+                              : Image.asset(
+                                  AppImages.icon77,
+                                  width: 16,
+                                  height: 16,
+                                ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'lesson_test'.tr,
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: isLocked ? Colors.grey[500] : Colors.white,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -870,7 +809,7 @@ class LessonDetailView extends GetView<LessonDetailController> {
   }
 }
 
-// Custom clipper for the wavy top edge (same as subjects view)
+// Custom clipper for the wavy top edge
 class _TopCurveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
@@ -879,40 +818,28 @@ class _TopCurveClipper extends CustomClipper<Path> {
     final notchWidth = notchRadius * 2.5;
     final notchCenterX = size.width / 2;
 
-    // Start from top left
     path.lineTo(0, notchRadius);
-
-    // Left side going down
     path.lineTo(0, size.height);
-
-    // Bottom
     path.lineTo(size.width, size.height);
-
-    // Right side going up
     path.lineTo(size.width, notchRadius);
 
-    // Top right corner curve
     path.arcToPoint(
       Offset(size.width - notchRadius, 0),
       radius: Radius.circular(notchRadius),
       clockwise: false,
     );
 
-    // Line to notch start (right side)
     path.lineTo(notchCenterX + notchWidth / 2, 0);
 
-    // Create ONE wavy curve in the middle
     path.quadraticBezierTo(
-      notchCenterX, // control point x (center)
-      -notchRadius * 0.5, // control point y (depth of wave)
-      notchCenterX - notchWidth / 2, // end point x
-      0, // end point y
+      notchCenterX,
+      -notchRadius * 0.5,
+      notchCenterX - notchWidth / 2,
+      0,
     );
 
-    // Line to top left corner
     path.lineTo(notchRadius, 0);
 
-    // Top left corner curve
     path.arcToPoint(
       Offset(0, notchRadius),
       radius: Radius.circular(notchRadius),

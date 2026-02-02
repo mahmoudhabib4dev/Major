@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:intl/intl.dart';
-import 'package:chewie/chewie.dart';
+import 'package:intl/intl.dart' hide TextDirection;
+import 'package:media_kit_video/media_kit_video.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../../../data/models/downloaded_video_model.dart';
 import '../controllers/favorite_controller.dart';
 
@@ -23,7 +24,7 @@ class FavoriteView extends GetView<FavoriteController> {
     return AppScaffold(
       backgroundImage: AppImages.image3,
       showContentContainer: true,
-      onRefresh: () => controller.loadFavorites(),
+      onRefresh: controller.onRefresh,
       headerChildren: [
         SafeArea(
           child: Padding(
@@ -34,7 +35,7 @@ class FavoriteView extends GetView<FavoriteController> {
             child: FadeIn(
               duration: const Duration(milliseconds: 800),
               child: Text(
-                'المفضلة',
+                'favorite_title'.tr,
                 style: AppTextStyles.notificationPageTitle(context),
               ),
             ),
@@ -51,9 +52,7 @@ class FavoriteView extends GetView<FavoriteController> {
             return Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.2),
-                child: const CircularProgressIndicator(
-                  color: AppColors.primary,
-                ),
+                child: const AppLoader(size: 60),
               ),
             );
           }
@@ -86,7 +85,7 @@ class FavoriteView extends GetView<FavoriteController> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'الفيديوهات المحفوظة',
+                      'favorite_saved_videos'.tr,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.buttonText(context).copyWith(
                         color: controller.selectedTabIndex.value == 0
@@ -111,7 +110,7 @@ class FavoriteView extends GetView<FavoriteController> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'الدروس المفضلة',
+                      'favorite_lessons'.tr,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.buttonText(context).copyWith(
                         color: controller.selectedTabIndex.value == 1
@@ -173,7 +172,7 @@ class FavoriteView extends GetView<FavoriteController> {
                   SizedBox(height: screenSize.height * 0.03),
                   // Title
                   Text(
-                    'اشتراك مميز مطلوب',
+                    'premium_subscription_required'.tr,
                     style: AppTextStyles.sectionTitle(context).copyWith(
                       fontSize: 18,
                       color: AppColors.primary,
@@ -183,7 +182,7 @@ class FavoriteView extends GetView<FavoriteController> {
                   SizedBox(height: screenSize.height * 0.015),
                   // Message
                   Text(
-                    'يجب الاشتراك للوصول إلى الفيديوهات المحفوظة وجميع المميزات',
+                    'favorite_subscription_required_videos'.tr,
                     style: AppTextStyles.bodyText(context).copyWith(
                       color: AppColors.textGrey,
                       fontSize: 14,
@@ -207,9 +206,9 @@ class FavoriteView extends GetView<FavoriteController> {
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'عرض خطط الاشتراك',
-                        style: TextStyle(
+                      child: Text(
+                        'view_subscription_plans'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -239,7 +238,7 @@ class FavoriteView extends GetView<FavoriteController> {
                 ),
                 SizedBox(height: screenSize.height * 0.02),
                 Text(
-                  'لا توجد فيديوهات محفوظة',
+                  'favorite_no_saved_videos'.tr,
                   style: AppTextStyles.inputLabel(context).copyWith(
                     color: AppColors.textGrey,
                   ),
@@ -258,7 +257,7 @@ class FavoriteView extends GetView<FavoriteController> {
               return _buildVideoLoadingIndicator(context, screenSize);
             }
 
-            if (controller.isVideoPlaying.value && controller.chewieController != null) {
+            if (controller.isVideoPlaying.value && controller.videoController != null) {
               return _buildVideoPlayer(context, screenSize);
             }
 
@@ -323,7 +322,7 @@ class FavoriteView extends GetView<FavoriteController> {
                   SizedBox(height: screenSize.height * 0.03),
                   // Title
                   Text(
-                    'اشتراك مميز مطلوب',
+                    'premium_subscription_required'.tr,
                     style: AppTextStyles.sectionTitle(context).copyWith(
                       fontSize: 18,
                       color: AppColors.primary,
@@ -333,7 +332,7 @@ class FavoriteView extends GetView<FavoriteController> {
                   SizedBox(height: screenSize.height * 0.015),
                   // Message
                   Text(
-                    'يجب الاشتراك للوصول إلى المفضلة وجميع المميزات',
+                    'favorite_subscription_required_lessons'.tr,
                     style: AppTextStyles.bodyText(context).copyWith(
                       color: AppColors.textGrey,
                       fontSize: 14,
@@ -357,9 +356,9 @@ class FavoriteView extends GetView<FavoriteController> {
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'عرض خطط الاشتراك',
-                        style: TextStyle(
+                      child: Text(
+                        'view_subscription_plans'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -389,7 +388,7 @@ class FavoriteView extends GetView<FavoriteController> {
                 ),
                 SizedBox(height: screenSize.height * 0.02),
                 Text(
-                  'لا توجد دروس مفضلة',
+                  'favorite_no_lessons'.tr,
                   style: AppTextStyles.inputLabel(context).copyWith(
                     color: AppColors.textGrey,
                   ),
@@ -431,138 +430,187 @@ class FavoriteView extends GetView<FavoriteController> {
   }) {
     final lesson = favoriteItem.asLesson;
     final title = lesson?.name ?? '';
-    final subtitle = lesson?.order ?? 'درس';
+    final lessonId = lesson?.id;
 
-    return Slidable(
-      key: ValueKey(lesson?.id ?? 0),
-      endActionPane: ActionPane(
-        motion: const DrawerMotion(),
-        extentRatio: 0.25,
-        children: [
-          SlidableAction(
-            onPressed: (context) {
-              if (lesson?.id != null) {
-                controller.toggleFavorite(
-                  id: lesson!.id!,
-                  type: 'lesson',
-                );
-              }
-            },
-            backgroundColor: const Color(0xFFFF6B6B),
-            foregroundColor: Colors.white,
-            icon: Icons.delete_outline,
-            label: 'حذف',
-            borderRadius: BorderRadius.circular(20),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFEFEEFC),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: GestureDetector(
-        onTap: () {
-          if (lesson?.id != null) {
-            controller.playLessonVideo(lesson!.id!);
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F7FF),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              // Status icon (right side in RTL)
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E6F5),
-                  borderRadius: BorderRadius.circular(36),
-                ),
-                child: Center(
-                  child: Image.asset(
-                    AppImages.icon27,
-                    width: 30,
-                    height: 30,
+      child: Directionality(
+        textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top row: Play button, Title, Heart icon
+            Row(
+              children: [
+                // Play button with gradient - tappable to play video
+                GestureDetector(
+                  onTap: () {
+                    if (lessonId != null) {
+                      controller.playLessonVideo(lessonId);
+                    }
+                  },
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.primary, Color(0xFF6B7FFF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow_rounded,
+                      color: Colors.white,
+                      size: 32,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              // Center text
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Title
-                    Text(
-                      title,
-                      style: AppTextStyles.lessonTitle(context),
-                      textAlign: TextAlign.right,
+                const SizedBox(width: 12),
+                // Lesson title
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppTextStyles.lessonTitle(context).copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 4),
-                    // Subtitle
-                    Text(
-                      subtitle,
-                      style: AppTextStyles.lessonSubtitle(context),
-                      textAlign: TextAlign.right,
-                    ),
-                  ],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              // Buttons (left side in RTL)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Test button
-                    GestureDetector(
+                const SizedBox(width: 8),
+                // Heart icon - tappable to remove from favorites
+                GestureDetector(
+                  onTap: () {
+                    if (lessonId != null) {
+                      controller.toggleFavorite(
+                        id: lessonId,
+                        type: 'lesson',
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF0F0),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.favorite,
+                      color: Color(0xFFFF6B6B),
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Bottom row: Action buttons - matching LessonDetailView design
+            Obx(() {
+              final isDownloading = lessonId != null && controller.downloadingLessons.contains(lessonId);
+              final isDownloaded = lessonId != null && controller.downloadedLessons.contains(lessonId);
+              final progress = lessonId != null ? (controller.lessonDownloadProgress[lessonId] ?? 0.0) : 0.0;
+
+              return Row(
+                children: [
+                  // Download Lesson button - matching LessonDetailView style
+                  Expanded(
+                    child: GestureDetector(
                       onTap: () {
-                        if (lesson?.id != null) {
-                          controller.openLessonTest(lesson!.id!);
+                        if (lessonId != null) {
+                          if (isDownloading) {
+                            controller.cancelDownload(lessonId);
+                          } else {
+                            controller.downloadLesson(lessonId);
+                          }
                         }
                       },
                       child: Container(
-                        width: 78,
-                        height: 30,
-                        alignment: Alignment.center,
+                        height: 45,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD4D9F7),
+                          color: isDownloading
+                              ? const Color(0xFFE53935) // Red when downloading
+                              : isDownloaded
+                                  ? const Color(0xFF4CAF50) // Green when downloaded
+                                  : const Color(0xFF000D47), // Dark blue normal
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
-                          'اختبار الدرس',
-                          style: AppTextStyles.lessonButtonActive(context),
+                        child: Center(
+                          child: Text(
+                            isDownloading
+                                ? (progress > 0
+                                    ? 'cancel_download_progress'.tr.replaceAll('@progress', '${(progress * 100).toInt()}')
+                                    : 'cancel_download'.tr)
+                                : (isDownloaded ? 'downloaded'.tr : 'download_lesson'.tr),
+                            style: const TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    // Summary button
-                    GestureDetector(
+                  ),
+                  const SizedBox(width: 12),
+                  // Lesson Test button - matching LessonDetailView style
+                  Expanded(
+                    child: GestureDetector(
                       onTap: () {
-                        if (lesson?.id != null) {
-                          controller.openLessonSummary(lesson!.id!);
+                        if (lessonId != null) {
+                          controller.openLessonTest(lessonId, lesson?.testId);
                         }
                       },
                       child: Container(
-                        width: 78,
-                        height: 30,
-                        alignment: Alignment.center,
+                        height: 45,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD4D9F7),
+                          color: const Color(0xFF000D47),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
-                          'ملخص الدرس',
-                          style: AppTextStyles.lessonButtonActive(context),
+                        child: Center(
+                          child: Text(
+                            'lesson_test'.tr,
+                            style: const TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+                  ),
+                ],
+              );
+            }),
+          ],
         ),
       ),
     );
@@ -589,7 +637,7 @@ class FavoriteView extends GetView<FavoriteController> {
             backgroundColor: const Color(0xFFFF6B6B),
             foregroundColor: Colors.white,
             icon: Icons.delete_outline,
-            label: 'حذف',
+            label: 'delete'.tr,
             borderRadius: BorderRadius.circular(20),
           ),
         ],
@@ -688,29 +736,12 @@ class FavoriteView extends GetView<FavoriteController> {
             SizedBox(
               width: 60,
               height: 60,
-              child: Obx(() => Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    value: controller.videoLoadProgress.value,
-                    color: AppColors.primary,
-                    strokeWidth: 4,
-                  ),
-                  Text(
-                    '${(controller.videoLoadProgress.value * 100).toInt()}%',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              )),
+              child: const AppLoader(size: 60),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'جاري تحميل الفيديو...',
-              style: TextStyle(
+            Text(
+              'favorite_loading_video'.tr,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
               ),
@@ -733,9 +764,13 @@ class FavoriteView extends GetView<FavoriteController> {
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-            // Video player
-            if (controller.chewieController != null)
-              Chewie(controller: controller.chewieController!),
+            // Video player using media_kit
+            if (controller.videoController != null)
+              Video(
+                controller: controller.videoController!,
+                controls: MaterialVideoControls,
+                fill: Colors.black,
+              ),
 
             // Close button
             Positioned(

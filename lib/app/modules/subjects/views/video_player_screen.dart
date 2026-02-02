@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
+
+import '../../../core/widgets/app_loader.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
@@ -19,8 +21,8 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  late VideoPlayerController _videoPlayerController;
-  ChewieController? _chewieController;
+  late Player _player;
+  late VideoController _videoController;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -28,7 +30,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void initState() {
     super.initState();
     _initializePlayer();
-    
+
     // Set status bar to dark icons
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -41,83 +43,50 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Future<void> _initializePlayer() async {
     try {
-      _videoPlayerController = VideoPlayerController.networkUrl(
-        Uri.parse(widget.videoUrl),
-      );
+      _player = Player();
+      _videoController = VideoController(_player);
 
-      await _videoPlayerController.initialize();
-
-      _chewieController = ChewieController(
-        videoPlayerController: _videoPlayerController,
-        autoPlay: true,
-        looping: false,
-        allowFullScreen: true,
-        allowMuting: true,
-        showControls: true,
-        materialProgressColors: ChewieProgressColors(
-          playedColor: const Color(0xFF00A8A8),
-          handleColor: const Color(0xFF00A8A8),
-          backgroundColor: Colors.grey,
-          bufferedColor: const Color(0xFF00A8A8).withAlpha(50),
-        ),
-        placeholder: Container(
-          color: Colors.black,
-          child: const Center(
-            child: CircularProgressIndicator(
-              color: Color(0xFF00A8A8),
-            ),
-          ),
-        ),
-        errorBuilder: (context, errorMessage) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                  size: 48,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'خطأ في تشغيل الفيديو',
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  errorMessage,
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          );
-        },
-      );
-
-      setState(() {
-        _isLoading = false;
+      // Listen for errors
+      _player.stream.error.listen((error) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = error;
+            _isLoading = false;
+          });
+        }
       });
+
+      // Listen for when video is ready
+      _player.stream.playing.listen((playing) {
+        if (mounted && playing && _isLoading) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+
+      // Open and play video
+      await _player.open(Media(widget.videoUrl));
+      await _player.play();
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString();
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString();
+        });
+      }
     }
   }
 
   @override
   void dispose() {
-    _videoPlayerController.dispose();
-    _chewieController?.dispose();
+    _player.dispose();
     super.dispose();
   }
 
@@ -156,9 +125,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         ),
         body: Center(
           child: _isLoading
-              ? const CircularProgressIndicator(
-                  color: Color(0xFF00A8A8),
-                )
+              ? const AppLoader(size: 60)
               : _errorMessage != null
                   ? Padding(
                       padding: const EdgeInsets.all(24),
@@ -212,11 +179,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                         ],
                       ),
                     )
-                  : _chewieController != null &&
-                          _chewieController!
-                              .videoPlayerController.value.isInitialized
-                      ? Chewie(controller: _chewieController!)
-                      : const SizedBox.shrink(),
+                  : Video(
+                      controller: _videoController,
+                      controls: MaterialVideoControls,
+                      fill: Colors.black,
+                    ),
         ),
       ),
     );

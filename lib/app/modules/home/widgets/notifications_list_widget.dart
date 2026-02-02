@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../controllers/notifications_controller.dart';
+import '../../../core/widgets/app_loader.dart';
 import 'notification_card_widget.dart';
 
 class NotificationsListWidget extends GetView<NotificationsController> {
@@ -62,14 +63,7 @@ class NotificationsListWidget extends GetView<NotificationsController> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: isLoading
                   ? const Center(
-                      child: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary,
-                        ),
-                      ),
+                      child: const AppLoader(size: 50),
                     )
                   : TextButton(
                       onPressed: controller.loadMoreNotifications,

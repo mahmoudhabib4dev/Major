@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
+import 'dart:developer' as developer;
 import '../theme/app_colors.dart';
+import 'app_loader.dart';
 
 /// Custom network image widget that handles HTTP 206 (Partial Content) responses
 /// which are commonly returned by media servers for range requests.
@@ -50,10 +52,12 @@ class _NetworkAvatarState extends State<NetworkAvatar> {
     });
 
     try {
+      developer.log('🖼️ Loading network avatar from: ${widget.imageUrl}', name: 'NetworkAvatar');
       final response = await http.get(Uri.parse(widget.imageUrl));
 
       // Accept both 200 (OK) and 206 (Partial Content) as successful responses
       if (response.statusCode == 200 || response.statusCode == 206) {
+        developer.log('✅ Avatar loaded successfully (${response.statusCode})', name: 'NetworkAvatar');
         if (mounted) {
           setState(() {
             _imageData = response.bodyBytes;
@@ -61,6 +65,8 @@ class _NetworkAvatarState extends State<NetworkAvatar> {
           });
         }
       } else {
+        developer.log('❌ Avatar load failed - Status: ${response.statusCode}', name: 'NetworkAvatar');
+        developer.log('   Response body: ${response.body}', name: 'NetworkAvatar');
         if (mounted) {
           setState(() {
             _hasError = true;
@@ -69,6 +75,7 @@ class _NetworkAvatarState extends State<NetworkAvatar> {
         }
       }
     } catch (e) {
+      developer.log('❌ Avatar load error: $e', name: 'NetworkAvatar');
       if (mounted) {
         setState(() {
           _hasError = true;
@@ -87,10 +94,7 @@ class _NetworkAvatarState extends State<NetworkAvatar> {
         child: Container(
           color: AppColors.grey200,
           child: const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
+            child: AppLoader(size: 40),
           ),
         ),
       );

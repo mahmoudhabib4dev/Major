@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/quiz_controller.dart';
 import '../models/self_test_question_model.dart';
 import '../models/test_start_response_model.dart';
@@ -110,9 +111,7 @@ class QuizView extends GetView<QuizController> {
             return Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.2),
-                child: const CircularProgressIndicator(
-                  color: Color(0xFF000D47),
-                ),
+                child: const AppLoader(size: 60),
               ),
             );
           }

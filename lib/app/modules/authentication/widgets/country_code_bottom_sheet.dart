@@ -74,6 +74,7 @@ class CountryCodeBottomSheet extends GetView<AuthenticationController> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: false,
       builder: (context) => const CountryCodeBottomSheet(),
     );
   }
@@ -87,50 +88,78 @@ class CountryCodeBottomSheet extends GetView<AuthenticationController> {
       {'name': 'موريتانيا', 'code': '+222', 'flag': '🇲🇷'},
     ];
 
-    return ClipPath(
-      clipper: _TopCurveClipper(notchRadius: notchRadius),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Transform.translate(
-            offset: Offset(0, -notchRadius * 0.8),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(top: notchRadius * 0.8),
-              color: AppColors.white,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Space for wave
-                  SizedBox(height: AppDimensions.spacing(context, 0.02)),
-                  // Title
-                  FadeInDown(
-                    duration: const Duration(milliseconds: 500),
-                    child: Padding(
-                      padding: AppDimensions.paddingAll(context, 0.04),
-                      child: Text(
-                        'اختر كود الدولة',
-                        style: AppTextStyles.sectionTitle(context),
+    return Transform.translate(
+      offset: Offset(0, notchRadius * 0.8),
+      child: ClipPath(
+        clipper: _TopCurveClipper(notchRadius: notchRadius),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Transform.translate(
+              offset: Offset(0, -notchRadius * 0.8),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(top: notchRadius * 0.8),
+                decoration: const BoxDecoration(
+                  color: AppColors.white,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Space for wave
+                    SizedBox(height: AppDimensions.spacing(context, 0.02)),
+                    // Header with close button and title
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppDimensions.spacing(context, 0.04),
+                        vertical: AppDimensions.spacing(context, 0.02),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Close button
+                          FadeInLeft(
+                            duration: const Duration(milliseconds: 400),
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: AppColors.grey100,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: AppColors.grey600,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Title
+                          FadeInDown(
+                            duration: const Duration(milliseconds: 500),
+                            child: Text(
+                              'select_country_code'.tr,
+                              style: AppTextStyles.sectionTitle(context),
+                            ),
+                          ),
+                          // Empty space for balance
+                          const SizedBox(width: 36),
+                        ],
                       ),
                     ),
-                  ),
-                  // Divider
-                  Divider(
-                    color: AppColors.grey200,
-                    height: 1,
-                  ),
-                  // Countries list
-                  Flexible(
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: countries.length,
-                      separatorBuilder: (context, index) => Divider(
-                        color: AppColors.grey200,
-                        height: 1,
-                        indent: AppDimensions.spacing(context, 0.04),
-                        endIndent: AppDimensions.spacing(context, 0.04),
-                      ),
-                      itemBuilder: (context, index) {
+                    // Divider
+                    Divider(
+                      color: AppColors.grey200,
+                      height: 1,
+                    ),
+                    SizedBox(height: AppDimensions.spacing(context, 0.02)),
+                    // Countries list
+                    ...List.generate(
+                      countries.length,
+                      (index) {
                         final country = countries[index];
                         return FadeInUp(
                           duration: const Duration(milliseconds: 400),
@@ -138,58 +167,107 @@ class CountryCodeBottomSheet extends GetView<AuthenticationController> {
                           child: Obx(
                             () {
                               final isSelected = controller.selectedCountryCode.value == country['code'];
-                              return ListTile(
-                                contentPadding: AppDimensions.paddingHorizontal(context, 0.04),
-                                leading: Text(
-                                  country['flag']!,
-                                  style: const TextStyle(fontSize: 32),
-                                ),
-                                title: Text(
-                                  country['name']!,
-                                  style: AppTextStyles.bodyText(context).copyWith(
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected ? AppColors.primary : null,
+                              return Column(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      controller.updateCountryCode(country['code']!);
+                                      Navigator.pop(context);
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: AppDimensions.spacing(context, 0.04),
+                                        vertical: AppDimensions.spacing(context, 0.03),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          // Flag
+                                          Text(
+                                            country['flag']!,
+                                            style: const TextStyle(fontSize: 24),
+                                          ),
+                                          SizedBox(width: AppDimensions.spacing(context, 0.03)),
+                                          // Country name
+                                          Expanded(
+                                            child: Text(
+                                              country['name']!,
+                                              style: AppTextStyles.bodyText(context).copyWith(
+                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                color: isSelected ? AppColors.primary : null,
+                                              ),
+                                            ),
+                                          ),
+                                          // Country code
+                                          Text(
+                                            country['code']!,
+                                            style: AppTextStyles.bodyText(context).copyWith(
+                                              color: isSelected ? AppColors.primary : AppColors.grey600,
+                                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                            ),
+                                          ),
+                                          SizedBox(width: AppDimensions.spacing(context, 0.03)),
+                                          // Radio button
+                                          Container(
+                                            width: 24,
+                                            height: 24,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: isSelected ? AppColors.primary : AppColors.grey400,
+                                                width: 2,
+                                              ),
+                                            ),
+                                            child: isSelected
+                                                ? Center(
+                                                    child: Container(
+                                                      width: 12,
+                                                      height: 12,
+                                                      decoration: const BoxDecoration(
+                                                        color: AppColors.primary,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                  )
+                                                : null,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                trailing: Text(
-                                  country['code']!,
-                                  style: AppTextStyles.bodyText(context).copyWith(
-                                    color: isSelected ? AppColors.primary : AppColors.grey600,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  ),
-                                ),
-                                selected: isSelected,
-                                selectedTileColor: AppColors.grey100,
-                                onTap: () {
-                                  controller.updateCountryCode(country['code']!);
-                                  Navigator.pop(context);
-                                },
+                                  if (index != countries.length - 1)
+                                    Divider(
+                                      color: AppColors.grey200,
+                                      height: 1,
+                                      indent: AppDimensions.spacing(context, 0.04),
+                                      endIndent: AppDimensions.spacing(context, 0.04),
+                                    ),
+                                ],
                               );
                             },
                           ),
                         );
                       },
                     ),
-                  ),
-                  SizedBox(height: AppDimensions.spacing(context, 0.04)),
-                ],
+                    SizedBox(height: AppDimensions.spacing(context, 0.04)),
+                  ],
+                ),
               ),
             ),
-          ),
-          // Small dot at top center where curve peaks
-          Positioned(
-            top: -screenSize.width * 0.025 + 5,
-            left: screenSize.width / 2 - screenSize.width * 0.0125,
-            child: Container(
-              width: screenSize.width * 0.025,
-              height: screenSize.width * 0.025,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
+            // Small dot at top center where curve peaks
+            Positioned(
+              top: -screenSize.width * 0.025 + 5,
+              left: screenSize.width / 2 - screenSize.width * 0.0125,
+              child: Container(
+                width: screenSize.width * 0.025,
+                height: screenSize.width * 0.025,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

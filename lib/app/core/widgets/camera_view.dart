@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../theme/app_colors.dart';
+import 'app_loader.dart';
 
 class CameraView extends StatefulWidget {
   const CameraView({super.key});
@@ -203,9 +204,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               )
             else
               const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                ),
+                child: AppLoader(size: 60),
               ),
 
             // Top controls
@@ -267,14 +266,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                           ),
                           child: _isCapturing
                               ? const Center(
-                                  child: SizedBox(
-                                    width: 30,
-                                    height: 30,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 3,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                                  child: AppLoader(size: 40),
                                 )
                               : null,
                         ),

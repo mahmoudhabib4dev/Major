@@ -1,12 +1,14 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:get/get.dart';
 
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_dimensions.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../controllers/authentication_controller.dart';
 import '../widgets/country_code_bottom_sheet.dart';
@@ -116,7 +118,7 @@ class SignUpView extends GetView<AuthenticationController> {
                           vertical: AppDimensions.spacing(context, 0.04),
                         ),
                         child: const Center(
-                          child: CircularProgressIndicator(),
+                          child: AppLoader(size: 50),
                         ),
                       )
                     : controller.divisions.isNotEmpty
@@ -235,10 +237,10 @@ class SignUpView extends GetView<AuthenticationController> {
 
   Widget _buildGenderField(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             'gender'.tr,
             style: AppTextStyles.inputLabel(context),
@@ -264,11 +266,6 @@ class SignUpView extends GetView<AuthenticationController> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  color: AppColors.grey500,
-                  size: 24,
-                ),
                 Expanded(
                   child: Obx(
                     () => Text(
@@ -277,12 +274,17 @@ class SignUpView extends GetView<AuthenticationController> {
                           : controller.selectedGender.value == 'male'
                               ? 'male'.tr
                               : 'female'.tr,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       style: controller.selectedGender.value.isEmpty
                           ? AppTextStyles.inputHint(context)
                           : AppTextStyles.bodyText(context),
                     ),
                   ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: AppColors.grey500,
+                  size: 24,
                 ),
               ],
             ),
@@ -294,26 +296,24 @@ class SignUpView extends GetView<AuthenticationController> {
 
   Widget _buildUsernameField(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
-          child: RichText(
-            textDirection: TextDirection.rtl,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'username'.tr,
-                  style: AppTextStyles.inputLabel(context),
+          alignment: AlignmentDirectional.centerStart,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'username'.tr,
+                style: AppTextStyles.inputLabel(context),
+              ),
+              Text(
+                ' *',
+                style: AppTextStyles.inputLabel(context).copyWith(
+                  color: AppColors.error,
                 ),
-                TextSpan(
-                  text: ' *',
-                  style: AppTextStyles.inputLabel(context).copyWith(
-                    color: AppColors.error,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -330,7 +330,7 @@ class SignUpView extends GetView<AuthenticationController> {
             ),
             child: TextField(
               controller: controller.usernameController,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.start,
               style: AppTextStyles.bodyText(context),
               textInputAction: TextInputAction.next,
               onChanged: (_) {
@@ -371,26 +371,24 @@ class SignUpView extends GetView<AuthenticationController> {
 
   Widget _buildPhoneField(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
-          child: RichText(
-            textDirection: TextDirection.rtl,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'phone_number'.tr,
-                  style: AppTextStyles.inputLabel(context),
+          alignment: AlignmentDirectional.centerStart,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'phone_number'.tr,
+                style: AppTextStyles.inputLabel(context),
+              ),
+              Text(
+                ' *',
+                style: AppTextStyles.inputLabel(context).copyWith(
+                  color: AppColors.error,
                 ),
-                TextSpan(
-                  text: ' *',
-                  style: AppTextStyles.inputLabel(context).copyWith(
-                    color: AppColors.error,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -443,7 +441,7 @@ class SignUpView extends GetView<AuthenticationController> {
                   child: TextField(
                     controller: controller.signUpPhoneController,
                     keyboardType: TextInputType.phone,
-                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.ltr,
                     style: AppTextStyles.bodyText(context),
                     textInputAction: TextInputAction.next,
                     onChanged: (_) {
@@ -487,26 +485,24 @@ class SignUpView extends GetView<AuthenticationController> {
 
   Widget _buildEmailField(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
-          child: RichText(
-            textDirection: TextDirection.rtl,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'email'.tr,
-                  style: AppTextStyles.inputLabel(context),
+          alignment: AlignmentDirectional.centerStart,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'email'.tr,
+                style: AppTextStyles.inputLabel(context),
+              ),
+              Text(
+                ' *',
+                style: AppTextStyles.inputLabel(context).copyWith(
+                  color: AppColors.error,
                 ),
-                TextSpan(
-                  text: ' *',
-                  style: AppTextStyles.inputLabel(context).copyWith(
-                    color: AppColors.error,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -524,7 +520,7 @@ class SignUpView extends GetView<AuthenticationController> {
             child: TextField(
               controller: controller.signUpEmailController,
               keyboardType: TextInputType.emailAddress,
-              textAlign: TextAlign.right,
+              textDirection: TextDirection.ltr,
               style: AppTextStyles.bodyText(context),
               textInputAction: TextInputAction.done,
               onChanged: (_) {
@@ -568,10 +564,10 @@ class SignUpView extends GetView<AuthenticationController> {
 
   Widget _buildBirthDateField(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             'birth_date'.tr,
             style: AppTextStyles.inputLabel(context),
@@ -596,26 +592,25 @@ class SignUpView extends GetView<AuthenticationController> {
               ),
             ),
             child: Row(
-              textDirection: TextDirection.rtl,
               children: [
-                Image.asset(
-                  AppImages.icon24,
-                  width: 20,
-                  height: 20,
-                ),
-                SizedBox(width: 8),
                 Expanded(
                   child: Obx(
                     () => Text(
                       controller.formattedBirthDate.isEmpty
                           ? 'birth_date'.tr
                           : controller.formattedBirthDate,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       style: controller.formattedBirthDate.isEmpty
                           ? AppTextStyles.inputHint(context)
                           : AppTextStyles.bodyText(context),
                     ),
                   ),
+                ),
+                SizedBox(width: 8),
+                Image.asset(
+                  AppImages.icon24,
+                  width: 20,
+                  height: 20,
                 ),
               ],
             ),
@@ -627,10 +622,10 @@ class SignUpView extends GetView<AuthenticationController> {
 
   Widget _buildEducationalStageField(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             'educational_stage'.tr,
             style: AppTextStyles.inputLabel(context),
@@ -656,23 +651,23 @@ class SignUpView extends GetView<AuthenticationController> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  color: AppColors.grey500,
-                  size: 24,
-                ),
                 Expanded(
                   child: Obx(
                     () => Text(
                       controller.selectedEducationalStage.value.isEmpty
                           ? 'select_educational_stage'.tr
                           : controller.selectedEducationalStage.value,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       style: controller.selectedEducationalStage.value.isEmpty
                           ? AppTextStyles.inputHint(context)
                           : AppTextStyles.bodyText(context),
                     ),
                   ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: AppColors.grey500,
+                  size: 24,
                 ),
               ],
             ),
@@ -684,10 +679,10 @@ class SignUpView extends GetView<AuthenticationController> {
 
   Widget _buildBranchField(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             'division'.tr,
             style: AppTextStyles.inputLabel(context),
@@ -713,23 +708,23 @@ class SignUpView extends GetView<AuthenticationController> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  color: AppColors.grey500,
-                  size: 24,
-                ),
                 Expanded(
                   child: Obx(
                     () => Text(
                       controller.selectedBranch.value.isEmpty
                           ? 'select_division'.tr
                           : controller.selectedBranch.value,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       style: controller.selectedBranch.value.isEmpty
                           ? AppTextStyles.inputHint(context)
                           : AppTextStyles.bodyText(context),
                     ),
                   ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: AppColors.grey500,
+                  size: 24,
                 ),
               ],
             ),
@@ -741,10 +736,10 @@ class SignUpView extends GetView<AuthenticationController> {
 
   Widget _buildWilayaField(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             'wilaya'.tr,
             style: AppTextStyles.inputLabel(context),
@@ -770,21 +765,86 @@ class SignUpView extends GetView<AuthenticationController> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  color: AppColors.grey500,
-                  size: 24,
-                ),
                 Expanded(
                   child: Obx(
                     () => Text(
                       controller.selectedWilaya.value.isEmpty
                           ? 'select_wilaya'.tr
                           : controller.selectedWilaya.value,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       style: controller.selectedWilaya.value.isEmpty
                           ? AppTextStyles.inputHint(context)
                           : AppTextStyles.bodyText(context),
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: AppColors.grey500,
+                  size: 24,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTermsCheckbox(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Obx(
+          () => GestureDetector(
+            onTap: controller.toggleTermsAgreement,
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: controller.agreedToTerms.value
+                    ? AppColors.primary
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: controller.agreedToTerms.value
+                      ? AppColors.primary
+                      : AppColors.grey400,
+                  width: 1.5,
+                ),
+              ),
+              child: controller.agreedToTerms.value
+                  ? const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : null,
+            ),
+          ),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: AppTextStyles.smallText(context).copyWith(
+                color: AppColors.grey600,
+              ),
+              children: [
+                TextSpan(
+                  text: 'i_agree_to'.tr,
+                ),
+                WidgetSpan(
+                  child: GestureDetector(
+                    onTap: () {
+                      Get.toNamed('/terms');
+                    },
+                    child: Text(
+                      'terms_and_conditions'.tr,
+                      style: AppTextStyles.smallText(context).copyWith(
+                        color: AppColors.primary,
+                        decoration: TextDecoration.underline,
+                      ),
                     ),
                   ),
                 ),
@@ -796,168 +856,84 @@ class SignUpView extends GetView<AuthenticationController> {
     );
   }
 
-  Widget _buildTermsCheckbox(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Obx(
-            () => GestureDetector(
-              onTap: controller.toggleTermsAgreement,
-              child: Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: controller.agreedToTerms.value
-                      ? AppColors.primary
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: controller.agreedToTerms.value
-                        ? AppColors.primary
-                        : AppColors.grey400,
-                    width: 1.5,
-                  ),
-                ),
-                child: controller.agreedToTerms.value
-                    ? const Icon(
-                        Icons.check,
-                        size: 16,
-                        color: Colors.white,
-                      )
-                    : null,
-              ),
-            ),
-          ),
-          SizedBox(width: 8),
-          Expanded(
-            child: RichText(
-              textDirection: TextDirection.rtl,
-              text: TextSpan(
-                style: AppTextStyles.smallText(context).copyWith(
-                  color: AppColors.grey600,
-                ),
-                children: [
-                  TextSpan(
-                    text: 'i_agree_to'.tr,
-                  ),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () {
-                        Get.toNamed('/terms');
-                      },
-                      child: Text(
-                        'terms_and_conditions'.tr,
-                        style: AppTextStyles.smallText(context).copyWith(
-                          color: AppColors.primary,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildNextButton(BuildContext context) {
     return Obx(
-      () => SizedBox(
-        width: double.infinity,
-        height: 55,
-        child: ElevatedButton(
-          onPressed: controller.isLoading.value
-              ? null
-              : controller.completeSignUp,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            disabledBackgroundColor: AppColors.grey300,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
-          child: controller.isLoading.value
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      () => controller.isLoading.value
+          ? const Center(child: AppLoader(size: 50))
+          : SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: controller.completeSignUp,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                )
-              : Text(
+                ),
+                child: Text(
                   'create_account'.tr,
                   style: AppTextStyles.buttonText(context).copyWith(
                     color: Colors.white,
                   ),
                 ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 
   Widget _buildLoginLink(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'have_account'.tr,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'have_account'.tr,
+          style: AppTextStyles.bodyText(context).copyWith(
+            color: AppColors.grey600,
+          ),
+        ),
+        GestureDetector(
+          onTap: controller.backToLoginFromSignUp,
+          child: Text(
+            'login'.tr,
             style: AppTextStyles.bodyText(context).copyWith(
-              color: AppColors.grey600,
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          GestureDetector(
-            onTap: controller.backToLoginFromSignUp,
-            child: Text(
-              'login'.tr,
-              style: AppTextStyles.bodyText(context).copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   void _showDatePicker(BuildContext context) async {
-    // Get focus scope before async operation
-    final focusScope = FocusScope.of(context);
+    // Dismiss keyboard before showing bottom sheet
+    FocusScope.of(context).unfocus();
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
 
-    final DateTime? picked = await showDatePicker(
+    DateTime? selectedDate = controller.selectedBirthDate.value;
+
+    await showModalBottomSheet(
       context: context,
-      initialDate: controller.selectedBirthDate.value ?? DateTime(2000),
-      firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.textDark,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useSafeArea: false,
+      builder: (context) => _DatePickerBottomSheet(
+        initialDate: controller.selectedBirthDate.value ?? DateTime(2000),
+        onDateChanged: (date) {
+          selectedDate = date;
+        },
+        onConfirm: () {
+          if (selectedDate != null) {
+            controller.selectBirthDate(selectedDate!);
+          }
+          Get.back();
+        },
+      ),
     );
 
-    // Ensure keyboard stays dismissed after date picker closes
-    focusScope.unfocus();
-
-    if (picked != null) {
-      controller.selectBirthDate(picked);
-    }
+    // Forcefully hide keyboard after bottom sheet closes
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
   }
 
   void _showEducationalStageBottomSheet(BuildContext context) async {
@@ -1260,6 +1236,15 @@ class _SelectionBottomSheet extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
+                    // Item name
+                    Text(
+                      item,
+                      style: AppTextStyles.bodyText(context).copyWith(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? AppColors.primary : null,
+                      ),
+                    ),
+                    const Spacer(),
                     // Radio button
                     Container(
                       width: 24,
@@ -1283,15 +1268,6 @@ class _SelectionBottomSheet extends StatelessWidget {
                               ),
                             )
                           : null,
-                    ),
-                    const Spacer(),
-                    // Item name
-                    Text(
-                      item,
-                      style: AppTextStyles.bodyText(context).copyWith(
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? AppColors.primary : null,
-                      ),
                     ),
                   ],
                 ),
@@ -1454,6 +1430,12 @@ class _GenderSelectionBottomSheet extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // Gender name
+            Text(
+              genderKey.tr,
+              style: AppTextStyles.bodyText(context),
+            ),
+            const Spacer(),
             // Gender icon
             Container(
               width: 40,
@@ -1469,11 +1451,194 @@ class _GenderSelectionBottomSheet extends StatelessWidget {
                 ),
               ),
             ),
-            const Spacer(),
-            // Gender name
-            Text(
-              genderKey.tr,
-              style: AppTextStyles.bodyText(context),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Date picker bottom sheet widget
+class _DatePickerBottomSheet extends StatefulWidget {
+  final DateTime initialDate;
+  final Function(DateTime) onDateChanged;
+  final VoidCallback onConfirm;
+
+  const _DatePickerBottomSheet({
+    required this.initialDate,
+    required this.onDateChanged,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_DatePickerBottomSheet> createState() => _DatePickerBottomSheetState();
+}
+
+class _DatePickerBottomSheetState extends State<_DatePickerBottomSheet> {
+  late DateTime _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.initialDate;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final notchRadius = screenSize.width * 0.08;
+    final locale = Get.locale?.languageCode ?? 'ar';
+
+    return Transform.translate(
+      offset: Offset(0, notchRadius * 0.8),
+      child: ClipPath(
+        clipper: _TopCurveClipper(notchRadius: notchRadius),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Transform.translate(
+              offset: Offset(0, -notchRadius * 0.8),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(top: notchRadius * 0.8),
+                decoration: const BoxDecoration(
+                  color: AppColors.white,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: AppDimensions.spacing(context, 0.02)),
+                    // Header with close button and title
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppDimensions.spacing(context, 0.04),
+                        vertical: AppDimensions.spacing(context, 0.02),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Close button
+                          FadeInLeft(
+                            duration: const Duration(milliseconds: 400),
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: AppColors.grey100,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: AppColors.grey600,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Title
+                          FadeInDown(
+                            duration: const Duration(milliseconds: 500),
+                            child: Text(
+                              'birth_date'.tr,
+                              style: AppTextStyles.sectionTitle(context),
+                            ),
+                          ),
+                          // Empty space for balance
+                          const SizedBox(width: 36),
+                        ],
+                      ),
+                    ),
+                    // Divider
+                    Divider(
+                      color: AppColors.grey200,
+                      height: 1,
+                    ),
+                    SizedBox(height: AppDimensions.spacing(context, 0.03)),
+                    // Date Picker
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 400),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppDimensions.spacing(context, 0.04),
+                        ),
+                        child: DatePickerWidget(
+                          looping: false,
+                          firstDate: DateTime(1950),
+                          lastDate: DateTime.now(),
+                          initialDate: _selectedDate,
+                          dateFormat: 'dd-MMMM-yyyy',
+                          locale: locale == 'ar'
+                              ? DateTimePickerLocale.ar
+                              : locale == 'fr'
+                                  ? DateTimePickerLocale.fr
+                                  : DateTimePickerLocale.en_us,
+                          pickerTheme: DateTimePickerTheme(
+                            backgroundColor: AppColors.white,
+                            itemTextStyle: AppTextStyles.bodyText(context).copyWith(
+                              color: AppColors.textDark,
+                              fontSize: 18,
+                            ),
+                            dividerColor: AppColors.primary,
+                            itemHeight: 50,
+                          ),
+                          onChange: (DateTime newDate, _) {
+                            setState(() {
+                              _selectedDate = newDate;
+                            });
+                            widget.onDateChanged(newDate);
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: AppDimensions.spacing(context, 0.03)),
+                    // Confirm button
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 500),
+                      delay: const Duration(milliseconds: 100),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppDimensions.spacing(context, 0.04),
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: widget.onConfirm,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
+                            child: Text(
+                              'confirm'.tr,
+                              style: AppTextStyles.buttonText(context).copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: AppDimensions.spacing(context, 0.04)),
+                  ],
+                ),
+              ),
+            ),
+            // Small dot at top center where curve peaks
+            Positioned(
+              top: -screenSize.width * 0.025 + 5,
+              left: screenSize.width / 2 - screenSize.width * 0.0125,
+              child: Container(
+                width: screenSize.width * 0.025,
+                height: screenSize.width * 0.025,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
             ),
           ],
         ),

@@ -1,3 +1,5 @@
+import 'package:get/get.dart';
+
 class NotificationModel {
   final int id;
   final int notificationId;
@@ -51,7 +53,7 @@ class NotificationModel {
     };
   }
 
-  /// Get formatted time string (e.g., "الآن", "5 دقائق", "1 ساعة", etc.)
+  /// Get formatted time string (e.g., "now", "5 minutes", "1 hour", etc.)
   String get formattedTime {
     try {
       final createdDate = DateTime.parse(createdAt);
@@ -59,19 +61,19 @@ class NotificationModel {
       final difference = now.difference(createdDate);
 
       if (difference.inMinutes < 1) {
-        return 'الآن';
+        return 'time_now'.tr;
       } else if (difference.inMinutes < 60) {
-        return '${difference.inMinutes} دقيقة';
+        return 'time_minutes'.trParams({'count': '${difference.inMinutes}'});
       } else if (difference.inHours < 24) {
-        return '${difference.inHours} ساعة';
+        return 'time_hours'.trParams({'count': '${difference.inHours}'});
       } else if (difference.inDays < 7) {
-        return '${difference.inDays} يوم';
+        return 'time_days'.trParams({'count': '${difference.inDays}'});
       } else if (difference.inDays < 30) {
         final weeks = (difference.inDays / 7).floor();
-        return '$weeks أسبوع';
+        return 'time_weeks'.trParams({'count': '$weeks'});
       } else {
         final months = (difference.inDays / 30).floor();
-        return '$months شهر';
+        return 'time_months'.trParams({'count': '$months'});
       }
     } catch (e) {
       return '';

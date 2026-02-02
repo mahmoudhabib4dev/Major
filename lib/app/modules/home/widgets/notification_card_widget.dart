@@ -52,23 +52,26 @@ class NotificationCardWidget extends GetView<NotificationsController> {
             Expanded(
               child: FadeIn(
                 duration: const Duration(milliseconds: 500),
-                child: Column(
-                  crossAxisAlignment: isRtl ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      notification.title,
-                      style: AppTextStyles.notificationCardText(context).copyWith(
-                        fontWeight: FontWeight.bold,
+                child: Directionality(
+                  textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        notification.title,
+                        style: AppTextStyles.notificationCardText(context).copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: isRtl ? TextAlign.right : TextAlign.left,
                       ),
-                      textAlign: isRtl ? TextAlign.right : TextAlign.left,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      notification.body,
-                      style: AppTextStyles.notificationCardText(context),
-                      textAlign: isRtl ? TextAlign.right : TextAlign.left,
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        notification.body,
+                        style: AppTextStyles.notificationCardText(context),
+                        textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

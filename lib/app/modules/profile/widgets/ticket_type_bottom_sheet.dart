@@ -8,7 +8,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/profile_controller.dart';
+import '../models/complaint_types_response_model.dart';
 
 class _TopCurveClipper extends CustomClipper<Path> {
   final double notchRadius;
@@ -77,6 +79,7 @@ class TicketTypeBottomSheet extends StatefulWidget {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: false,
       builder: (context) => const TicketTypeBottomSheet(),
     );
   }
@@ -86,16 +89,22 @@ class TicketTypeBottomSheet extends StatefulWidget {
 }
 
 class _TicketTypeBottomSheetState extends State<TicketTypeBottomSheet> {
-  int selectedTicketTypeId = 1;
+  final ProfileController controller = Get.find<ProfileController>();
+  int? selectedTicketTypeId;
 
-  List<Map<String, dynamic>> get ticketTypes => [
-    {'id': 1, 'name': 'technical_issue'.tr},
-    {'id': 2, 'name': 'academic_issue'.tr},
-    {'id': 3, 'name': 'educational_issue'.tr},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Load complaint types from API
+    controller.loadComplaintTypes();
+  }
 
   void _showProblemDialog() {
-    final ticketTypeId = selectedTicketTypeId; // Capture value before closing
+    if (selectedTicketTypeId == null) {
+      AppDialog.showError(message: 'please_select_ticket_type'.tr);
+      return;
+    }
+    final ticketTypeId = selectedTicketTypeId!; // Capture value before closing
     Navigator.pop(context); // Close bottom sheet first
     // Use Get.context to ensure a valid context after bottom sheet is closed
     _showWriteProblemDialog(Get.context!, ticketTypeId);
@@ -106,148 +115,194 @@ class _TicketTypeBottomSheetState extends State<TicketTypeBottomSheet> {
     final screenSize = MediaQuery.of(context).size;
     final notchRadius = screenSize.width * 0.08;
 
-    return ClipPath(
-      clipper: _TopCurveClipper(notchRadius: notchRadius),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Transform.translate(
-            offset: Offset(0, -notchRadius * 0.8),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(top: notchRadius * 0.8),
-              color: AppColors.white,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Space for wave
-                  SizedBox(height: AppDimensions.spacing(context, 0.02)),
-                  // Header with close button and title
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppDimensions.spacing(context, 0.04),
-                      vertical: AppDimensions.spacing(context, 0.02),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Close button
-                        FadeInLeft(
-                          duration: const Duration(milliseconds: 400),
-                          child: GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: AppColors.grey100,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                color: AppColors.grey600,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Title
-                        FadeInDown(
-                          duration: const Duration(milliseconds: 500),
-                          child: Text(
-                            'choose_ticket_type'.tr,
-                            style: AppTextStyles.sectionTitle(context),
-                          ),
-                        ),
-                        // Empty space for balance
-                        const SizedBox(width: 36),
-                      ],
-                    ),
-                  ),
-                  // Divider
-                  Divider(
-                    color: AppColors.grey200,
-                    height: 1,
-                  ),
-                  SizedBox(height: AppDimensions.spacing(context, 0.02)),
-                  // Ticket type options
-                  ...List.generate(
-                    ticketTypes.length,
-                    (index) => FadeInUp(
-                      duration: const Duration(milliseconds: 400),
-                      delay: Duration(milliseconds: 100 * index),
-                      child: _buildTicketTypeOption(
-                        context: context,
-                        ticketType: ticketTypes[index],
-                        isLast: index == ticketTypes.length - 1,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: AppDimensions.spacing(context, 0.04)),
-                  // Confirm button
-                  ElasticIn(
-                    duration: const Duration(milliseconds: 800),
-                    delay: const Duration(milliseconds: 400),
-                    child: Padding(
+    return Transform.translate(
+      offset: Offset(0, notchRadius * 0.8),
+      child: ClipPath(
+        clipper: _TopCurveClipper(notchRadius: notchRadius),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Transform.translate(
+              offset: Offset(0, -notchRadius * 0.8),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(top: notchRadius * 0.8),
+                decoration: const BoxDecoration(
+                  color: AppColors.white,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Space for wave
+                    SizedBox(height: AppDimensions.spacing(context, 0.02)),
+                    // Header with close button and title
+                    Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: AppDimensions.spacing(context, 0.04),
+                        vertical: AppDimensions.spacing(context, 0.02),
                       ),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton(
-                          onPressed: _showProblemDialog,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Close button
+                          FadeInLeft(
+                            duration: const Duration(milliseconds: 400),
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: AppColors.grey100,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: AppColors.grey600,
+                                  size: 20,
+                                ),
+                              ),
                             ),
                           ),
-                          child: Text(
-                            'confirm'.tr,
-                            style: AppTextStyles.buttonText(context).copyWith(
-                              color: AppColors.white,
+                          // Title
+                          FadeInDown(
+                            duration: const Duration(milliseconds: 500),
+                            child: Text(
+                              'choose_ticket_type'.tr,
+                              style: AppTextStyles.sectionTitle(context),
+                            ),
+                          ),
+                          // Empty space for balance
+                          const SizedBox(width: 36),
+                        ],
+                      ),
+                    ),
+                    // Divider
+                    Divider(
+                      color: AppColors.grey200,
+                      height: 1,
+                    ),
+                    SizedBox(height: AppDimensions.spacing(context, 0.02)),
+                    // Ticket type options
+                    Obx(() {
+                      if (controller.isLoadingComplaintTypes.value) {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppDimensions.spacing(context, 0.04),
+                          ),
+                          child: const Center(child: AppLoader(size: 40)),
+                        );
+                      }
+
+                      final types = controller.complaintTypes;
+                      if (types.isEmpty) {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppDimensions.spacing(context, 0.04),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'no_complaint_types'.tr,
+                              style: AppTextStyles.bodyText(context).copyWith(
+                                color: AppColors.grey500,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Auto-select first type if none selected
+                      if (selectedTicketTypeId == null && types.isNotEmpty) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          setState(() {
+                            selectedTicketTypeId = types.first.id;
+                          });
+                        });
+                      }
+
+                      return Column(
+                        children: List.generate(
+                          types.length,
+                          (index) => FadeInUp(
+                            duration: const Duration(milliseconds: 400),
+                            delay: Duration(milliseconds: 100 * index),
+                            child: _buildTicketTypeOption(
+                              context: context,
+                              ticketType: types[index],
+                              isLast: index == types.length - 1,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                    SizedBox(height: AppDimensions.spacing(context, 0.04)),
+                    // Confirm button
+                    ElasticIn(
+                      duration: const Duration(milliseconds: 800),
+                      delay: const Duration(milliseconds: 400),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppDimensions.spacing(context, 0.04),
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            onPressed: _showProblemDialog,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                            child: Text(
+                              'confirm'.tr,
+                              style: AppTextStyles.buttonText(context).copyWith(
+                                color: AppColors.white,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: AppDimensions.spacing(context, 0.04)),
-                ],
+                    SizedBox(height: AppDimensions.spacing(context, 0.04)),
+                  ],
+                ),
               ),
             ),
-          ),
-          // Small dot at top center where curve peaks
-          Positioned(
-            top: -screenSize.width * 0.025 + 5,
-            left: screenSize.width / 2 - screenSize.width * 0.0125,
-            child: Container(
-              width: screenSize.width * 0.025,
-              height: screenSize.width * 0.025,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
+            // Small dot at top center where curve peaks
+            Positioned(
+              top: -screenSize.width * 0.025 + 5,
+              left: screenSize.width / 2 - screenSize.width * 0.0125,
+              child: Container(
+                width: screenSize.width * 0.025,
+                height: screenSize.width * 0.025,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildTicketTypeOption({
     required BuildContext context,
-    required Map<String, dynamic> ticketType,
+    required ComplaintType ticketType,
     required bool isLast,
   }) {
-    final isSelected = selectedTicketTypeId == ticketType['id'];
+    final isSelected = selectedTicketTypeId == ticketType.id;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+
     return Column(
       children: [
         InkWell(
           onTap: () {
             setState(() {
-              selectedTicketTypeId = ticketType['id'] as int;
+              selectedTicketTypeId = ticketType.id;
             });
           },
           child: Padding(
@@ -256,7 +311,20 @@ class _TicketTypeBottomSheetState extends State<TicketTypeBottomSheet> {
               vertical: AppDimensions.spacing(context, 0.03),
             ),
             child: Row(
+              textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
               children: [
+                // Ticket type name
+                Expanded(
+                  child: Text(
+                    ticketType.name,
+                    style: AppTextStyles.bodyText(context).copyWith(
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? AppColors.primary : null,
+                    ),
+                    textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 // Radio button
                 Container(
                   width: 24,
@@ -280,15 +348,6 @@ class _TicketTypeBottomSheetState extends State<TicketTypeBottomSheet> {
                           ),
                         )
                       : null,
-                ),
-                const Spacer(),
-                // Ticket type name
-                Text(
-                  ticketType['name']!,
-                  style: AppTextStyles.bodyText(context).copyWith(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected ? AppColors.primary : null,
-                  ),
                 ),
               ],
             ),
@@ -440,6 +499,7 @@ void showRatingDialog(BuildContext context) {
   final TextEditingController notesController = TextEditingController();
   final iconSize = 70.0;
   final iconRadius = iconSize / 2;
+  final isRtl = Directionality.of(context) == TextDirection.rtl;
 
   showDialog(
     context: context,
@@ -523,7 +583,8 @@ void showRatingDialog(BuildContext context) {
                       child: TextField(
                         controller: notesController,
                         maxLines: 4,
-                        textAlign: TextAlign.right,
+                        textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
                         decoration: InputDecoration(
                           hintText: 'your_notes'.tr,
                           hintStyle: const TextStyle(
@@ -643,6 +704,7 @@ void _showWriteProblemDialog(BuildContext context, int complaintTypeId) {
   final TextEditingController problemController = TextEditingController();
   final iconSize = 70.0;
   final iconRadius = iconSize / 2;
+  final isRtl = Directionality.of(context) == TextDirection.rtl;
 
   showDialog(
     context: context,
@@ -706,7 +768,8 @@ void _showWriteProblemDialog(BuildContext context, int complaintTypeId) {
                   child: TextField(
                     controller: problemController,
                     maxLines: 6,
-                    textAlign: TextAlign.right,
+                    textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                    textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
                     decoration: InputDecoration(
                       hintText: 'problem_description'.tr,
                       hintStyle: const TextStyle(

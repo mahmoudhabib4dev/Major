@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/authentication_controller.dart';
 
 class SubscriptionView extends GetView<AuthenticationController> {
@@ -44,9 +45,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
             return const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 50),
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                ),
+                child: AppLoader(size: 60),
               ),
             );
           }
@@ -128,6 +127,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: AppDimensions.spacing(context, 0.04),
@@ -135,7 +135,18 @@ class SubscriptionView extends GetView<AuthenticationController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const SizedBox(width: 40),
+          // Back button (appears on the left in LTR, right in RTL)
+          if (!isRtl)
+            GestureDetector(
+              onTap: () => Get.back(),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppColors.white,
+                size: 28,
+              ),
+            )
+          else
+            const SizedBox(width: 40),
           Text(
             'subscription_details'.tr,
             style: AppTextStyles.sectionTitle(context).copyWith(
@@ -143,14 +154,18 @@ class SubscriptionView extends GetView<AuthenticationController> {
               fontSize: 18,
             ),
           ),
-          GestureDetector(
-            onTap: () => Get.back(),
-            child: const Icon(
-              Icons.arrow_forward,
-              color: AppColors.white,
-              size: 28,
-            ),
-          ),
+          // Back button (appears on the right in RTL, spacer in LTR)
+          if (isRtl)
+            GestureDetector(
+              onTap: () => Get.back(),
+              child: const Icon(
+                Icons.arrow_forward,
+                color: AppColors.white,
+                size: 28,
+              ),
+            )
+          else
+            const SizedBox(width: 40),
         ],
       ),
     );
@@ -227,62 +242,40 @@ class SubscriptionView extends GetView<AuthenticationController> {
   }
 
   Widget _buildBenefitItem(BuildContext context, String text) {
-    final isArabic = Get.locale?.languageCode == 'ar';
     return Padding(
       padding: EdgeInsets.symmetric(
         vertical: AppDimensions.spacing(context, 0.01),
       ),
       child: Row(
-        crossAxisAlignment:   CrossAxisAlignment.start,
-        children: !isArabic
-            ? [
-                Expanded(
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.white,
-                      height: 1.4,
-                    ),
-                    textAlign: TextAlign.right,
-                  ),
-                ),
-                SizedBox(width: AppDimensions.spacing(context, 0.02)),
-                Text(
-                  '✨',
-                  style: TextStyle(fontSize: 12),
-                ),
-              ]
-            : [
-                Text(
-                  '✨',
-                  style: TextStyle(fontSize: 12),
-                ),
-                SizedBox(width: AppDimensions.spacing(context, 0.02)),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.white,
-                      height: 1.4,
-                    ),
-                    textAlign: TextAlign.left,
-                  ),
-                ),
-              ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '✨',
+            style: TextStyle(fontSize: 12),
+          ),
+          SizedBox(width: AppDimensions.spacing(context, 0.02)),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.white,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.start,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSubscriptionPlansSection(BuildContext context) {
-    final isArabic = Get.locale?.languageCode == 'ar';
     return Column(
       children: [
         Align(
-          alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -291,7 +284,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
                 width: 22,
                 height: 22,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 'subscription_plans'.tr,
                 style: AppTextStyles.inputLabel(context),
@@ -318,13 +311,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
             child: Obx(() {
               if (controller.isLoadingPlans.value) {
                 return const Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                    ),
+                  child: AppLoader(size: 20, showLogo: false,
                   ),
                 );
               }
@@ -380,11 +367,10 @@ class SubscriptionView extends GetView<AuthenticationController> {
   }
 
   Widget _buildPaymentMethodSection(BuildContext context) {
-    final isArabic = Get.locale?.languageCode == 'ar';
     return Column(
       children: [
         Align(
-          alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             'payment_method'.tr,
             style: AppTextStyles.inputLabel(context),
@@ -406,51 +392,25 @@ class SubscriptionView extends GetView<AuthenticationController> {
               ),
             ),
             child: Obx(() {
-              final isArabic = Get.locale?.languageCode == 'ar';
               return Row(
-                children: isArabic
-                    ? [
-                        Expanded(
-                          child: Text(
-                            controller.selectedPaymentMethod.value.isEmpty
-                                ? 'select_payment_method'.tr
-                                : controller.selectedPaymentMethod.value,
-                            textAlign: TextAlign.right,
-                            style: controller.selectedPaymentMethod.value.isEmpty
-                                ? AppTextStyles.inputHint(context)
-                                : AppTextStyles.bodyText(context),
-                          ),
-                        ),
-                        Transform.rotate(
-                          angle: 1.5708,
-                          child: Icon(
-                            Icons.keyboard_arrow_down,
-                            color: AppColors.grey500,
-                            size: 24,
-                          ),
-                        ),
-                      ]
-                    : [
-                        Transform.rotate(
-                          angle: -1.5708,
-                          child: Icon(
-                            Icons.keyboard_arrow_down,
-                            color: AppColors.grey500,
-                            size: 24,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            controller.selectedPaymentMethod.value.isEmpty
-                                ? 'select_payment_method'.tr
-                                : controller.selectedPaymentMethod.value,
-                            textAlign: TextAlign.left,
-                            style: controller.selectedPaymentMethod.value.isEmpty
-                                ? AppTextStyles.inputHint(context)
-                                : AppTextStyles.bodyText(context),
-                          ),
-                        ),
-                      ],
+                children: [
+                  Expanded(
+                    child: Text(
+                      controller.selectedPaymentMethod.value.isEmpty
+                          ? 'select_payment_method'.tr
+                          : controller.selectedPaymentMethod.value,
+                      textAlign: TextAlign.start,
+                      style: controller.selectedPaymentMethod.value.isEmpty
+                          ? AppTextStyles.inputHint(context)
+                          : AppTextStyles.bodyText(context),
+                    ),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    color: AppColors.grey500,
+                    size: 24,
+                  ),
+                ],
               );
             }),
           ),
@@ -476,14 +436,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
             ),
           ),
           child: controller.isLoading.value
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
+              ? const AppLoader(size: 24, showLogo: false)
               : Text(
                   'next'.tr,
                   style: AppTextStyles.buttonText(context).copyWith(
@@ -553,9 +506,9 @@ class SubscriptionView extends GetView<AuthenticationController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'اشتراكك الحالي',
-                style: TextStyle(
+              Text(
+                'your_current_subscription'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -569,7 +522,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  subscription.isExpired ? 'منتهية' : 'فعالة',
+                  subscription.isExpired ? 'subscription_expired'.tr : 'subscription_active'.tr,
                   style: const TextStyle(
                     fontFamily: 'Tajawal',
                     fontSize: 12,
@@ -584,19 +537,19 @@ class SubscriptionView extends GetView<AuthenticationController> {
           if (subscription.planName != null && subscription.planName!.isNotEmpty)
             _buildSubscriptionInfoRow(
               icon: Icons.card_membership,
-              label: 'الخطة',
+              label: 'subscription_plan_label'.tr,
               value: subscription.planName!,
             ),
           if (subscription.startDate != null && subscription.startDate!.isNotEmpty)
             _buildSubscriptionInfoRow(
               icon: Icons.calendar_today,
-              label: 'تاريخ البدء',
+              label: 'subscription_start_date'.tr,
               value: subscription.startDate!,
             ),
           if (subscription.endDate != null && subscription.endDate!.isNotEmpty)
             _buildSubscriptionInfoRow(
               icon: Icons.event,
-              label: 'تاريخ الانتهاء',
+              label: 'subscription_end_date'.tr,
               value: subscription.endDate!,
             ),
         ],
@@ -672,15 +625,15 @@ class SubscriptionView extends GetView<AuthenticationController> {
       ),
       child: Column(
         children: [
-          Icon(
+          const Icon(
             Icons.hourglass_empty,
             color: Colors.white,
             size: 48,
           ),
           const SizedBox(height: 16),
-          const Text(
-            'طلب اشتراك قيد المراجعة',
-            style: TextStyle(
+          Text(
+            'subscription_pending_title'.tr,
+            style: const TextStyle(
               fontFamily: 'Tajawal',
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -690,7 +643,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
           ),
           const SizedBox(height: 12),
           Text(
-            'لديك طلب اشتراك قيد المراجعة من قبل الإدارة. سيتم تفعيل اشتراكك بمجرد الموافقة عليه.',
+            'subscription_pending_message'.tr,
             style: TextStyle(
               fontFamily: 'Tajawal',
               fontSize: 14,
@@ -710,15 +663,15 @@ class SubscriptionView extends GetView<AuthenticationController> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
+                const Icon(
                   Icons.info_outline,
                   color: Colors.white,
                   size: 16,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'لا يمكنك تقديم طلب جديد حاليًا',
-                  style: TextStyle(
+                Text(
+                  'subscription_pending_note'.tr,
+                  style: const TextStyle(
                     fontFamily: 'Tajawal',
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -1056,9 +1009,7 @@ class _SubscriptionPlansBottomSheet extends GetView<AuthenticationController> {
                           vertical: AppDimensions.spacing(context, 0.08),
                         ),
                         child: const Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                          ),
+                          child: AppLoader(size: 60),
                         ),
                       );
                     }

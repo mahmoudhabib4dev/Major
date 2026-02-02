@@ -5,6 +5,7 @@ import 'package:animate_do/animate_do.dart';
 
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/subjects_controller.dart';
 import '../widgets/subject_card_widget.dart';
 
@@ -69,54 +70,59 @@ class SubjectsView extends GetView<SubjectsController> {
                         width: double.infinity,
                         padding: EdgeInsets.only(top: (screenSize.width * 0.08) * 0.8),
                         color: Colors.white,
-                        child: SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: screenSize.width * 0.05,
-                            ),
-                            child: Column(
-                              children: [
-                                SizedBox(height: screenSize.height * 0.03),
-                                // Subjects grid
-                                FadeInUp(
-                                  duration: const Duration(milliseconds: 800),
-                                  delay: const Duration(milliseconds: 200),
-                                  child: Obx(
-                                    () {
-                                      if (controller.isLoading.value) {
-                                        return const Center(
-                                          child: Padding(
-                                            padding: EdgeInsets.symmetric(vertical: 100),
-                                            child: CircularProgressIndicator(
-                                              color: Color(0xFF000D47),
+                        child: RefreshIndicator(
+                          onRefresh: controller.onRefresh,
+                          displacement: 40.0,
+                          backgroundColor: Colors.white,
+                          color: const Color(0xFF000D47),
+                          strokeWidth: 3.0,
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: screenSize.width * 0.05,
+                              ),
+                              child: Column(
+                                children: [
+                                  SizedBox(height: screenSize.height * 0.03),
+                                  // Subjects grid
+                                  FadeInUp(
+                                    duration: const Duration(milliseconds: 800),
+                                    delay: const Duration(milliseconds: 200),
+                                    child: Obx(
+                                      () {
+                                        if (controller.isLoading.value) {
+                                          return const Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(vertical: 100),
+                                              child: AppLoader(size: 60),
                                             ),
-                                          ),
-                                        );
-                                      }
-
-                                      return GridView.builder(
-                                        shrinkWrap: true,
-                                        physics: const NeverScrollableScrollPhysics(),
-                                        padding: const EdgeInsets.only(top: 15),
-                                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 3,
-                                          crossAxisSpacing: 12,
-                                          mainAxisSpacing: 16,
-                                          childAspectRatio: 110 / 138,
-                                        ),
-                                        itemCount: controller.subjects.length,
-                                        itemBuilder: (context, index) {
-                                          return SubjectCardWidget(
-                                            subject: controller.subjects[index],
                                           );
-                                        },
-                                      );
-                                    },
+                                        }
+
+                                        return GridView.builder(
+                                          shrinkWrap: true,
+                                          physics: const NeverScrollableScrollPhysics(),
+                                          padding: const EdgeInsets.only(top: 15),
+                                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 3,
+                                            crossAxisSpacing: 12,
+                                            mainAxisSpacing: 16,
+                                            childAspectRatio: 110 / 138,
+                                          ),
+                                          itemCount: controller.subjects.length,
+                                          itemBuilder: (context, index) {
+                                            return SubjectCardWidget(
+                                              subject: controller.subjects[index],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
-                                SizedBox(height: screenSize.height * 0.35),
-                              ],
+                                  SizedBox(height: screenSize.height * 0.35),
+                                ],
+                              ),
                             ),
                           ),
                         ),

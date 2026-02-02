@@ -6,6 +6,7 @@ import 'package:animate_do/animate_do.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/api_image.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/lesson_detail_controller.dart';
 import '../controllers/subjects_controller.dart';
 import 'lesson_detail_view.dart';
@@ -105,9 +106,7 @@ class SectionDetailView extends GetView<SubjectsController> {
                             return Center(
                               child: Padding(
                                 padding: EdgeInsets.only(top: screenSize.height * 0.2),
-                                child: const CircularProgressIndicator(
-                                  color: Color(0xFF000D47),
-                                ),
+                                child: const AppLoader(size: 60),
                               ),
                             );
                           }
@@ -220,6 +219,8 @@ class SectionDetailView extends GetView<SubjectsController> {
 
   // Build individual stat item - white mode for dark background
   Widget _buildStatItem(BuildContext context, String label, String value, String iconPath) {
+    final isArabic = Get.locale?.languageCode == 'ar';
+
     return Column(
       children: [
         // Icon - white
@@ -243,15 +244,19 @@ class SectionDetailView extends GetView<SubjectsController> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontFamily: 'Tajawal',
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        // Wrap in Directionality to fix text order for English/French
+        Directionality(
+          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Tajawal',
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
         ),
       ],
     );

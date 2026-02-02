@@ -22,36 +22,40 @@ class ProfilePageHeaderWidget extends StatelessWidget {
       height: screenSize.height * 0.08,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.05),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Empty space for balance
-            const SizedBox(width: 24),
-            // Title in center
-            Expanded(
-              child: FadeInDown(
-                duration: const Duration(milliseconds: 500),
-                child: Text(
-                  title,
-                  style: AppTextStyles.notificationPageTitle(context),
-                  textAlign: TextAlign.center,
+        // Keep RTL direction so back button stays on left for all languages
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Empty space for balance
+              const SizedBox(width: 24),
+              // Title in center
+              Expanded(
+                child: FadeInDown(
+                  duration: const Duration(milliseconds: 500),
+                  child: Text(
+                    title,
+                    style: AppTextStyles.notificationPageTitle(context),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-            ),
-            // Back button (RTL - on the left)
-            FadeInRight(
-              duration: const Duration(milliseconds: 400),
-              child: GestureDetector(
-                onTap: onBack,
-                child: const Icon(
-                  Icons.arrow_forward,
-                  color: AppColors.white,
-                  size: 24,
+              // Back button (always on the left visually)
+              FadeInRight(
+                duration: const Duration(milliseconds: 400),
+                child: GestureDetector(
+                  onTap: onBack,
+                  child: const Icon(
+                    Icons.arrow_forward,
+                    color: AppColors.white,
+                    size: 24,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

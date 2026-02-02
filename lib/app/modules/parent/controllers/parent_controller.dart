@@ -5,6 +5,8 @@ import '../../challenges/views/challenges_view.dart';
 import '../../challenges/bindings/challenges_binding.dart';
 import '../../subjects/controllers/subjects_controller.dart';
 import '../../favorite/controllers/favorite_controller.dart';
+import '../../home/controllers/home_controller.dart';
+import '../../profile/controllers/profile_controller.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../routes/app_pages.dart';
@@ -59,6 +61,34 @@ class ParentController extends GetxController {
 
   // Change current page
   void changePage(int index) {
+    // Refresh profile data when switching to Home tab
+    final homeIndex = isArabic ? 0 : 3;
+    if (index == homeIndex) {
+      currentIndex.value = index;
+      try {
+        final homeController = Get.find<HomeController>();
+        // Refresh user data to get fresh profile image URL
+        homeController.refreshUserDataFromApi();
+      } catch (e) {
+        // Controller might not be initialized yet
+      }
+      return;
+    }
+
+    // Refresh profile data when switching to Profile tab
+    final profileIndex = isArabic ? 3 : 0;
+    if (index == profileIndex) {
+      currentIndex.value = index;
+      try {
+        final profileController = Get.find<ProfileController>();
+        // Refresh profile data to get fresh profile image URL
+        profileController.refreshProfileData();
+      } catch (e) {
+        // Controller might not be initialized yet
+      }
+      return;
+    }
+
     // Load subjects when subjects tab is selected
     final subjectsIndex = isArabic ? 1 : 2;
     if (index == subjectsIndex) {

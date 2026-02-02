@@ -8,6 +8,7 @@ import 'package:hive/hive.dart';
 
 import '../../../core/constants/app_images.dart';
 import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../../../core/widgets/guest_selection_dialog.dart';
 import '../../../core/widgets/camera_view.dart';
 import '../../../core/services/storage_service.dart';
@@ -49,28 +50,25 @@ class AuthenticationController extends GetxController {
   // Total number of onboarding pages
   final int totalPages = 3;
 
-  // Onboarding data
+  // Onboarding data (using translation keys)
   final List<OnboardingData> onboardingPages = [
     OnboardingData(
       icon: AppImages.icon1,
-      title: 'تعلم بذكاء، لا بجهد',
+      titleKey: 'onboarding_title_1',
       emoji: '🎓',
-      description:
-          'ابدأ رحلتك مع ماجور كلاس، المنصة التي تبني معرفتك خطوة بخطوة باستخدام أدوات ذكية وتجربة تعلم مصممة خصيصاً لك.',
+      descriptionKey: 'onboarding_desc_1',
     ),
     OnboardingData(
       icon: AppImages.icon2,
-      title: 'تعليم تفاعلي يشبهك',
+      titleKey: 'onboarding_title_2',
       emoji: '⚡',
-      description:
-          'تعلم بالطريقة التي تفضلها – فيديوهات، اختبارات، أو مهارات تفاعلية – ماجور كلاس يجعل كل درس تجربة ممتعة وسهلة الفهم.',
+      descriptionKey: 'onboarding_desc_2',
     ),
     OnboardingData(
       icon: AppImages.icon3,
-      title: 'نمو مع مجتمع ماجور كلاس',
+      titleKey: 'onboarding_title_3',
       emoji: '🌍',
-      description:
-          'انضم إلى مجتمع من المتعلمين والمعلمين حول العالم، تبادل الخبرات، وشارك إنجازاتك وخذ خطوة نحو مستقبلك المهني.',
+      descriptionKey: 'onboarding_desc_3',
     ),
   ];
 
@@ -180,15 +178,8 @@ class AuthenticationController extends GetxController {
 
     // Show loading dialog
     Get.dialog(
-      Center(
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const CircularProgressIndicator(),
-        ),
+      const Center(
+        child: AppLoader(size: 60),
       ),
       barrierDismissible: false,
     );
@@ -235,7 +226,7 @@ class AuthenticationController extends GetxController {
       // Close loading dialog if error occurs
       Get.back();
       developer.log('❌ Error loading stages: $e', name: 'AuthController');
-      AppDialog.showError(message: 'فشل تحميل البيانات. يرجى المحاولة مرة أخرى.');
+      AppDialog.showError(message: 'failed_to_load_data'.tr);
     }
   }
 
@@ -293,9 +284,9 @@ class AuthenticationController extends GetxController {
               const SizedBox(height: 20),
 
               // Title
-              const Text(
-                'مرحباً بك في ماجور كلاس!',
-                style: TextStyle(
+              Text(
+                'welcome_to_maajor_class'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -306,9 +297,9 @@ class AuthenticationController extends GetxController {
               const SizedBox(height: 12),
 
               // Message
-              const Text(
-                'للاستفادة الكاملة من جميع المحتويات التعليمية والميزات الحصرية، يرجى اختيار خطة الاشتراك المناسبة لك.',
-                style: TextStyle(
+              Text(
+                'subscribe_to_access_full_content'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -337,9 +328,9 @@ class AuthenticationController extends GetxController {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'عرض خطط الاشتراك',
-                    style: TextStyle(
+                  child: Text(
+                    'view_subscription_plans_button'.tr,
+                    style: const TextStyle(
                       fontFamily: 'Tajawal',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -452,8 +443,8 @@ class AuthenticationController extends GetxController {
   final RxString selectedPlan = 'yearly'.obs;
   final RxString selectedPaymentMethod = ''.obs;
   final RxBool showPaymentPage = false.obs;
-  final List<String> paymentMethods = [
-    'دفع محلي',
+  List<String> get paymentMethods => [
+    'local_payment'.tr,
   ];
 
   // Subscription plans from API
@@ -533,17 +524,17 @@ class AuthenticationController extends GetxController {
     final phone = phoneController.text.trim();
 
     if (phone.isEmpty) {
-      phoneError.value = 'من فضلك أدخل رقم الجوال';
+      phoneError.value = 'please_enter_phone_number'.tr;
       return false;
     }
 
     if (phone.length < 8) {
-      phoneError.value = 'رقم الجوال يجب أن يكون 8 أرقام على الأقل';
+      phoneError.value = 'phone_must_be_8_digits'.tr;
       return false;
     }
 
     if (!RegExp(r'^[0-9]+$').hasMatch(phone)) {
-      phoneError.value = 'رقم الجوال يجب أن يحتوي على أرقام فقط';
+      phoneError.value = 'phone_numbers_only'.tr;
       return false;
     }
 
@@ -556,12 +547,12 @@ class AuthenticationController extends GetxController {
     final password = passwordController.text.trim();
 
     if (password.isEmpty) {
-      passwordError.value = 'من فضلك أدخل كلمة المرور';
+      passwordError.value = 'please_enter_password'.tr;
       return false;
     }
 
     if (password.length < 6) {
-      passwordError.value = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+      passwordError.value = 'password_must_be_6_chars'.tr;
       return false;
     }
 
@@ -643,8 +634,8 @@ class AuthenticationController extends GetxController {
 
       // Show success dialog
       AppDialog.showSuccess(
-        message: response.message ?? 'تم تسجيل الدخول بنجاح',
-        buttonText: 'متابعة',
+        message: response.message ?? 'login_success'.tr,
+        buttonText: 'continue_button'.tr,
         onButtonPressed: () {
           Get.back();
           // Navigate directly to home without checking subscription
@@ -656,7 +647,7 @@ class AuthenticationController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error: $e', name: 'AuthController');
-      AppDialog.showError(message: 'حدث خطأ غير متوقع');
+      AppDialog.showError(message: 'unexpected_error'.tr);
     } finally {
       isLoading.value = false;
     }
@@ -716,10 +707,10 @@ class AuthenticationController extends GetxController {
       developer.log('✅ Stages loaded successfully: ${stages.length} stages', name: 'AuthController');
     } on ApiErrorModel catch (error) {
       developer.log('❌ Failed to load stages: ${error.displayMessage}', name: 'AuthController');
-      AppDialog.showError(message: 'فشل تحميل المراحل الدراسية');
+      AppDialog.showError(message: 'failed_to_load_stages'.tr);
     } catch (e) {
       developer.log('❌ Unexpected error loading stages: $e', name: 'AuthController');
-      AppDialog.showError(message: 'فشل تحميل المراحل الدراسية');
+      AppDialog.showError(message: 'failed_to_load_stages'.tr);
     } finally {
       isLoadingOptions.value = false;
     }
@@ -777,11 +768,11 @@ class AuthenticationController extends GetxController {
   bool validateUsername() {
     final username = usernameController.text.trim();
     if (username.isEmpty) {
-      usernameError.value = 'من فضلك أدخل اسم المستخدم';
+      usernameError.value = 'please_enter_username'.tr;
       return false;
     }
     if (username.length < 3) {
-      usernameError.value = 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
+      usernameError.value = 'username_must_be_3_chars'.tr;
       return false;
     }
     usernameError.value = '';
@@ -792,15 +783,15 @@ class AuthenticationController extends GetxController {
   bool validateSignUpPhone() {
     final phone = signUpPhoneController.text.trim();
     if (phone.isEmpty) {
-      phoneError.value = 'من فضلك أدخل رقم الجوال';
+      phoneError.value = 'please_enter_phone_number'.tr;
       return false;
     }
     if (phone.length < 8) {
-      phoneError.value = 'رقم الجوال يجب أن يكون 8 أرقام على الأقل';
+      phoneError.value = 'phone_must_be_8_digits'.tr;
       return false;
     }
     if (!RegExp(r'^[0-9]+$').hasMatch(phone)) {
-      phoneError.value = 'رقم الجوال يجب أن يحتوي على أرقام فقط';
+      phoneError.value = 'phone_numbers_only'.tr;
       return false;
     }
     phoneError.value = '';
@@ -811,14 +802,14 @@ class AuthenticationController extends GetxController {
   bool validateSignUpEmail() {
     final email = signUpEmailController.text.trim();
     if (email.isEmpty) {
-      emailError.value = 'من فضلك أدخل البريد الالكتروني';
+      emailError.value = 'please_enter_email'.tr;
       return false;
     }
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
     if (!emailRegex.hasMatch(email)) {
-      emailError.value = 'البريد الالكتروني غير صحيح';
+      emailError.value = 'invalid_email'.tr;
       return false;
     }
     emailError.value = '';
@@ -969,7 +960,7 @@ class AuthenticationController extends GetxController {
       }
     } catch (e) {
       developer.log('❌ Error picking image: $e', name: 'AuthController');
-      AppDialog.showError(message: 'حدث خطأ أثناء اختيار الصورة');
+      AppDialog.showError(message: 'error_picking_image'.tr);
     }
   }
 
@@ -997,12 +988,12 @@ class AuthenticationController extends GetxController {
     }
 
     if (selectedGender.value.isEmpty) {
-      AppDialog.showError(message: 'من فضلك اختر الجنس');
+      AppDialog.showError(message: 'please_select_gender'.tr);
       return;
     }
 
     if (!agreedToTerms.value) {
-      AppDialog.showError(message: 'يجب الموافقة على الشروط والأحكام');
+      AppDialog.showError(message: 'must_agree_to_terms'.tr);
       return;
     }
 
@@ -1067,7 +1058,7 @@ class AuthenticationController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error: $e', name: 'AuthController');
-      AppDialog.showError(message: 'حدث خطأ أثناء إنشاء الحساب');
+      AppDialog.showError(message: 'error_creating_account'.tr);
     } finally {
       isLoading.value = false;
     }
@@ -1078,7 +1069,7 @@ class AuthenticationController extends GetxController {
     final email = emailController.text.trim();
 
     if (email.isEmpty) {
-      emailError.value = 'من فضلك أدخل البريد الالكتروني';
+      emailError.value = 'please_enter_email'.tr;
       return false;
     }
 
@@ -1087,7 +1078,7 @@ class AuthenticationController extends GetxController {
     );
 
     if (!emailRegex.hasMatch(email)) {
-      emailError.value = 'البريد الالكتروني غير صحيح';
+      emailError.value = 'invalid_email'.tr;
       return false;
     }
 
@@ -1136,7 +1127,7 @@ class AuthenticationController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error: $e', name: 'AuthController');
-      AppDialog.showError(message: 'حدث خطأ أثناء إرسال الرمز');
+      AppDialog.showError(message: 'error_sending_code'.tr);
     } finally {
       isLoading.value = false;
     }
@@ -1150,7 +1141,7 @@ class AuthenticationController extends GetxController {
     final otp4 = otp4Controller.text.trim();
 
     if (otp1.isEmpty || otp2.isEmpty || otp3.isEmpty || otp4.isEmpty) {
-      otpError.value = 'من فضلك أدخل الرمز كاملاً';
+      otpError.value = 'please_enter_full_otp'.tr;
       return false;
     }
 
@@ -1200,8 +1191,8 @@ class AuthenticationController extends GetxController {
         }
 
         AppDialog.showSuccess(
-          message: response.message ?? 'تم التحقق من الرمز بنجاح',
-          buttonText: 'متابعة',
+          message: response.message ?? 'otp_verified_success'.tr,
+          buttonText: 'continue_button'.tr,
           onButtonPressed: () {
             Get.back();
             // Navigate to password creation page
@@ -1237,8 +1228,8 @@ class AuthenticationController extends GetxController {
       }
 
       AppDialog.showSuccess(
-        message: response.message ?? 'تم التحقق من الرمز بنجاح',
-        buttonText: 'متابعة',
+        message: response.message ?? 'otp_verified_success'.tr,
+        buttonText: 'continue_button'.tr,
         onButtonPressed: () {
           Get.back();
           // Navigate to new password page
@@ -1252,8 +1243,8 @@ class AuthenticationController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error: $e', name: 'AuthController');
-      otpError.value = 'الرمز غير صحيح';
-      AppDialog.showError(message: 'الرمز غير صحيح');
+      otpError.value = 'invalid_otp'.tr;
+      AppDialog.showError(message: 'invalid_otp'.tr);
     } finally {
       isLoading.value = false;
     }
@@ -1389,7 +1380,7 @@ class AuthenticationController extends GetxController {
           developer.log('🔑 Token loaded and set for authentication: ${token.substring(0, 10)}...', name: 'AuthController');
         } else {
           developer.log('❌ No token found in storage!', name: 'AuthController');
-          AppDialog.showError(message: 'حدث خطأ في التحقق، الرجاء المحاولة مرة أخرى');
+          AppDialog.showError(message: 'verification_error_retry'.tr);
           isLoading.value = false;
           return;
         }
@@ -1462,8 +1453,8 @@ class AuthenticationController extends GetxController {
         developer.log('🗑️ Registration data cleared after successful signup', name: 'AuthController');
 
         AppDialog.showSuccess(
-          message: response.message ?? 'تم إنشاء كلمة المرور بنجاح',
-          buttonText: 'متابعة',
+          message: response.message ?? 'password_created_success'.tr,
+          buttonText: 'continue_button'.tr,
           onButtonPressed: () {
             Get.back();
             _resetNewPasswordState();
@@ -1483,7 +1474,7 @@ class AuthenticationController extends GetxController {
           apiClient.setToken(token);
           developer.log('🔑 Token loaded and set for authentication', name: 'AuthController');
         } else {
-          AppDialog.showError(message: 'حدث خطأ في التحقق، الرجاء المحاولة مرة أخرى');
+          AppDialog.showError(message: 'verification_error_retry'.tr);
           isLoading.value = false;
           return;
         }
@@ -1500,8 +1491,8 @@ class AuthenticationController extends GetxController {
         developer.log('✅ Password reset successful', name: 'AuthController');
 
         AppDialog.showSuccess(
-          message: response.message ?? 'تم تغيير كلمة المرور بنجاح',
-          buttonText: 'تسجيل الدخول',
+          message: response.message ?? 'password_changed_success_auth'.tr,
+          buttonText: 'login_button'.tr,
           onButtonPressed: () {
             Get.back();
             _resetNewPasswordState();
@@ -1516,8 +1507,8 @@ class AuthenticationController extends GetxController {
     } catch (e) {
       developer.log('❌ Unexpected error: $e', name: 'AuthController');
       AppDialog.showError(message: isSignUpMode.value
-          ? 'حدث خطأ أثناء التحقق من الحساب'
-          : 'حدث خطأ أثناء تغيير كلمة المرور');
+          ? 'error_verifying_account'.tr
+          : 'error_changing_password'.tr);
     } finally {
       isLoading.value = false;
     }
@@ -1655,17 +1646,17 @@ class AuthenticationController extends GetxController {
       transferReceiptFile.value = imageFile;
       transferReceiptFileName.value = imageFile.path.split('/').last;
       developer.log('✅ Image saved: ${imageFile.path}', name: 'AuthController');
-      AppDialog.showSuccess(message: 'تم اختيار الصورة بنجاح');
+      AppDialog.showSuccess(message: 'image_selected_success'.tr);
     } catch (e) {
       developer.log('❌ Error picking image: $e', name: 'AuthController');
-      AppDialog.showError(message: 'حدث خطأ أثناء اختيار الصورة');
+      AppDialog.showError(message: 'error_picking_image'.tr);
     }
   }
 
   // Apply coupon code
   Future<void> applyCoupon() async {
     if (couponCodeController.text.trim().isEmpty) {
-      AppDialog.showError(message: 'من فضلك أدخل كود الخصم');
+      AppDialog.showError(message: 'please_enter_coupon_code'.tr);
       return;
     }
 
@@ -1676,7 +1667,7 @@ class AuthenticationController extends GetxController {
 
       final planId = selectedSubscriptionPlan.value?.id;
       if (planId == null) {
-        throw ApiErrorModel(message: 'يرجى اختيار خطة الاشتراك أولاً');
+        throw ApiErrorModel(message: 'please_select_plan_first'.tr);
       }
 
       final response = await authProvider.applyCoupon(
@@ -1693,7 +1684,7 @@ class AuthenticationController extends GetxController {
       isCouponApplied.value = true;
 
       AppDialog.showSuccess(
-        message: response.message ?? 'تم تطبيق كود الخصم بنجاح',
+        message: response.message ?? 'coupon_applied_success'.tr,
       );
     } on ApiErrorModel catch (error) {
       developer.log('❌ Apply coupon error: ${error.displayMessage}', name: 'AuthController');
@@ -1701,7 +1692,7 @@ class AuthenticationController extends GetxController {
       isCouponApplied.value = false;
     } catch (e) {
       developer.log('❌ Unexpected error: $e', name: 'AuthController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تطبيق كود الخصم');
+      AppDialog.showError(message: 'error_applying_coupon'.tr);
       isCouponApplied.value = false;
     } finally {
       isLoading.value = false;
@@ -1712,19 +1703,19 @@ class AuthenticationController extends GetxController {
   Future<void> completePayment() async {
     // Validate bank account selection
     if (selectedBankAccount.value == null) {
-      AppDialog.showError(message: 'من فضلك اختر حساب الدفع');
+      AppDialog.showError(message: 'please_select_payment_account'.tr);
       return;
     }
 
     // Validate transfer receipt
     if (transferReceiptFile.value == null) {
-      AppDialog.showError(message: 'من فضلك قم بإرفاق صورة الحوالة');
+      AppDialog.showError(message: 'please_attach_receipt'.tr);
       return;
     }
 
     // Validate reference number
     if (referenceNumberController.text.trim().isEmpty) {
-      AppDialog.showError(message: 'من فضلك أدخل رقم المرجع');
+      AppDialog.showError(message: 'please_enter_reference_number'.tr);
       return;
     }
 
@@ -1747,8 +1738,8 @@ class AuthenticationController extends GetxController {
       developer.log('✅ Payment submitted successfully', name: 'AuthController');
 
       AppDialog.showSuccess(
-        message: response.message ?? 'تم إرسال طلبك بنجاح\nعليك الانتظار حتى يتم قبول حسابك',
-        buttonText: 'الذهاب للصفحة الرئيسية',
+        message: response.message ?? 'payment_request_sent_success'.tr,
+        buttonText: 'go_to_home'.tr,
         onButtonPressed: () {
           Get.back();
           _resetSubscriptionState();
@@ -1760,7 +1751,7 @@ class AuthenticationController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error: $e', name: 'AuthController');
-      AppDialog.showError(message: 'حدث خطأ أثناء إتمام الدفع');
+      AppDialog.showError(message: 'error_completing_payment'.tr);
     } finally {
       isLoading.value = false;
     }
@@ -1788,7 +1779,7 @@ class AuthenticationController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error loading subscription plans: $e', name: 'AuthController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تحميل خطط الاشتراك');
+      AppDialog.showError(message: 'error_loading_subscription_plans'.tr);
     } finally {
       isLoadingPlans.value = false;
     }
@@ -1879,7 +1870,7 @@ class AuthenticationController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error loading bank accounts: $e', name: 'AuthController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تحميل حسابات البنوك');
+      AppDialog.showError(message: 'error_loading_bank_accounts'.tr);
     } finally {
       isLoadingBankAccounts.value = false;
     }
@@ -1912,8 +1903,8 @@ class _ImageSourceBottomSheet extends StatelessWidget {
     final notchRadius = screenSize.width * 0.08;
 
     final sources = [
-      {'name': 'الكاميرا', 'source': ImageSource.camera},
-      {'name': 'المعرض', 'source': ImageSource.gallery},
+      {'name': 'camera_source'.tr, 'source': ImageSource.camera},
+      {'name': 'gallery_source'.tr, 'source': ImageSource.gallery},
     ];
 
     return Transform.translate(
@@ -1942,7 +1933,7 @@ class _ImageSourceBottomSheet extends StatelessWidget {
                     child: Padding(
                       padding: AppDimensions.paddingAll(context, 0.04),
                       child: Text(
-                        'اختر مصدر الصورة',
+                        'select_image_source'.tr,
                         style: AppTextStyles.sectionTitle(context),
                       ),
                     ),
@@ -2070,14 +2061,14 @@ class _TopCurveClipper extends CustomClipper<Path> {
 // Onboarding data model
 class OnboardingData {
   final String icon;
-  final String title;
+  final String titleKey;
   final String emoji;
-  final String description;
+  final String descriptionKey;
 
   OnboardingData({
     required this.icon,
-    required this.title,
+    required this.titleKey,
     required this.emoji,
-    required this.description,
+    required this.descriptionKey,
   });
 }

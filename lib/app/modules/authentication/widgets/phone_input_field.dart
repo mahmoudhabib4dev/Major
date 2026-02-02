@@ -13,10 +13,10 @@ class PhoneInputField extends GetView<AuthenticationController> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             'phone_number'.tr,
             style: AppTextStyles.inputLabel(context),
@@ -44,7 +44,7 @@ class PhoneInputField extends GetView<AuthenticationController> {
                   child: TextField(
                     controller: controller.phoneController,
                     keyboardType: TextInputType.phone,
-                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.ltr,
                     style: AppTextStyles.bodyText(context),
                     textInputAction: TextInputAction.next,
                     onChanged: (value) {

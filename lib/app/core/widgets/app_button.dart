@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_loader.dart';
+
 class AppButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
@@ -71,15 +73,9 @@ class AppButton extends StatelessWidget {
           elevation: 0,
         ),
         child: isLoading
-            ? SizedBox(
-                width: screenSize.width * 0.05,
-                height: screenSize.width * 0.05,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    loadingColor ?? textColor ?? Colors.white,
-                  ),
-                ),
+            ? AppLoaderButton(
+                size: screenSize.width * 0.06,
+                color: loadingColor ?? textColor ?? Colors.white,
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,

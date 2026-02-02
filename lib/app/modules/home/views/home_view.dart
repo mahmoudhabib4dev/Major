@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/custom_refresh_indicator.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/user_header_widget.dart';
 import '../widgets/home_carousel_widget.dart';
@@ -33,9 +35,7 @@ class HomeView extends GetView<HomeController> {
                 ),
               ),
               child: const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                ),
+                child: AppLoader(size: 80),
               ),
             ),
           );
@@ -46,6 +46,7 @@ class HomeView extends GetView<HomeController> {
           child: AppScaffold(
             backgroundImage: AppImages.image3,
             showContentContainer: true,
+            onRefresh: controller.onRefresh,
             headerChildren: [
               SafeArea(
                 child: Padding(

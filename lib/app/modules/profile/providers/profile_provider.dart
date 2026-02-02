@@ -17,6 +17,7 @@ import '../models/social_links_response_model.dart';
 import '../models/leaderboard_response_model.dart';
 import '../models/support_center_response_model.dart';
 import '../models/complaint_response_model.dart';
+import '../models/complaint_types_response_model.dart';
 
 class ProfileProvider {
   final ApiClient _apiClient = ApiClient();
@@ -326,6 +327,22 @@ class ProfileProvider {
         return SupportCenterResponseModel.fromJson(jsonData);
       } else {
         throw Exception('Failed to load support center');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Get Complaint Types
+  Future<ComplaintTypesResponseModel> getComplaintTypes() async {
+    try {
+      final response = await _apiClient.get(ApiConstants.complaintTypes);
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        return ComplaintTypesResponseModel.fromJson(jsonData);
+      } else {
+        throw Exception('Failed to load complaint types');
       }
     } catch (e) {
       rethrow;

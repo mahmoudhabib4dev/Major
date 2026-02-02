@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/api_image.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/home_controller.dart';
 
 class HomeCarouselWidget extends GetView<HomeController> {
@@ -24,9 +25,7 @@ class HomeCarouselWidget extends GetView<HomeController> {
           return SizedBox(
             height: screenSize.height * 0.25,
             child: const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primary,
-              ),
+              child: AppLoader(size: 50),
             ),
           );
         }
@@ -83,9 +82,7 @@ class HomeCarouselWidget extends GetView<HomeController> {
                             placeholder: Container(
                               color: AppColors.grey200,
                               child: const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.primary,
-                                ),
+                                child: AppLoader(size: 50),
                               ),
                             ),
                             errorWidget: Container(

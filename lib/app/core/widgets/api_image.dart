@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import '../theme/app_colors.dart';
+import 'app_loader.dart';
 
 /// Custom network image widget that handles HTTP 206 (Partial Content) responses
 /// which are commonly returned by media servers for range requests.
@@ -104,10 +105,7 @@ class _ApiImageState extends State<ApiImage> {
             child: Container(
               color: AppColors.grey200,
               child: const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                ),
+                child: AppLoader(size: 40),
               ),
             ),
           );

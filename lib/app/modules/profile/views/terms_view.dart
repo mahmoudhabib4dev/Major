@@ -6,6 +6,7 @@ import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/profile_page_header_widget.dart';
 
@@ -43,9 +44,7 @@ class TermsView extends GetView<ProfileController> {
                     return Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.2),
-                        child: const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        ),
+                        child: const AppLoader(size: 60),
                       ),
                     );
                   }
@@ -62,14 +61,18 @@ class TermsView extends GetView<ProfileController> {
                     );
                   }
 
+                  final isArabic = Get.locale?.languageCode == 'ar';
                   return FadeInUp(
                     duration: const Duration(milliseconds: 500),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        controller.termsDescription.value,
-                        style: AppTextStyles.bodyText(context),
-                        textAlign: TextAlign.right,
+                      child: Directionality(
+                        textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+                        child: Text(
+                          controller.termsDescription.value,
+                          style: AppTextStyles.bodyText(context),
+                          textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                        ),
                       ),
                     ),
                   );

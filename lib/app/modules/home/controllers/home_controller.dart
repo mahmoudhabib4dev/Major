@@ -5,6 +5,7 @@ import 'dart:developer' as developer;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_loader.dart';
 
 import '../../../routes/app_pages.dart';
 import '../../../core/services/storage_service.dart';
@@ -43,7 +44,7 @@ class HomeController extends GetxController {
 
   // User data
   final userName = ''.obs;
-  final greetingText = 'مرحبا بك .. !'.obs;
+  final greetingText = ''.obs;
   final userAvatarUrl = ''.obs;
   final userAvatarAsset = ''.obs;
 
@@ -105,30 +106,57 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
-  // Refresh user data from API to get latest plan_status
+  // Refresh user data from API to get latest plan_status and profile image
   Future<void> refreshUserDataFromApi() async {
     try {
-      developer.log('🔄 Refreshing user subscription status from API...', name: 'HomeController');
+      developer.log('🔄 Refreshing user data from API...', name: 'HomeController');
 
-      final response = await authProvider.refreshSubscription();
+      // Refresh subscription status
+      final subscriptionResponse = await authProvider.refreshSubscription();
 
-      if (response.success && response.data != null) {
-        final currentUser = storageService.currentUser;
-        if (currentUser != null) {
-          // Update user with new plan_status
-          final updatedUser = currentUser.copyWith(
-            planStatus: response.data!.planStatus,
-          );
+      // Refresh profile data to get fresh image URL
+      final profileProvider = ProfileProvider();
+      final profileResponse = await profileProvider.getProfileData();
 
-          // Save updated user to storage
-          await storageService.saveUser(updatedUser);
+      final currentUser = storageService.currentUser;
+      if (currentUser != null) {
+        // Update user with new data
+        final updatedUser = currentUser.copyWith(
+          planStatus: subscriptionResponse.data?.planStatus ?? currentUser.planStatus,
+          profileImage: profileResponse.data?.picture ?? currentUser.profileImage,
+        );
 
-          developer.log('✅ User subscription refreshed - plan_status: ${response.data!.planStatus}', name: 'HomeController');
-        }
+        // Save updated user to storage
+        await storageService.saveUser(updatedUser);
+
+        developer.log('✅ User data refreshed', name: 'HomeController');
+        developer.log('   Plan status: ${updatedUser.planStatus}', name: 'HomeController');
+        developer.log('   Profile image: ${updatedUser.profileImage}', name: 'HomeController');
       }
     } catch (e) {
-      developer.log('⚠️ Failed to refresh subscription status: $e', name: 'HomeController');
+      developer.log('⚠️ Failed to refresh user data: $e', name: 'HomeController');
       // Don't block app load if refresh fails
+    }
+  }
+
+  // Pull-to-refresh handler for home page
+  Future<void> onRefresh() async {
+    try {
+      developer.log('🔄 Pull-to-refresh triggered on home page', name: 'HomeController');
+
+      // Refresh user data and reload content
+      await Future.wait([
+        refreshUserDataFromApi(),
+        loadOffers(),
+        loadSubjects(),
+      ]);
+
+      // Reload user data to update UI with fresh profile image
+      loadUserData();
+
+      developer.log('✅ Home page refreshed successfully', name: 'HomeController');
+    } catch (e) {
+      developer.log('❌ Error refreshing home page: $e', name: 'HomeController');
     }
   }
 
@@ -139,7 +167,7 @@ class HomeController extends GetxController {
     developer.log('   User: ${user?.toJson()}', name: 'HomeController');
 
     if (user != null) {
-      userName.value = user.name ?? 'مستخدم';
+      userName.value = user.name ?? 'user'.tr;
 
       // Set avatar based on profile image or gender
       if (user.profileImage != null && user.profileImage!.isNotEmpty) {
@@ -158,7 +186,7 @@ class HomeController extends GetxController {
       }
     } else {
       developer.log('   ❌ No user found in storage', name: 'HomeController');
-      userName.value = 'مستخدم';
+      userName.value = 'user'.tr;
       userAvatarAsset.value = AppImages.icon58; // Default to male avatar
       userAvatarUrl.value = '';
     }
@@ -208,7 +236,7 @@ class HomeController extends GetxController {
         developer.log('✅ Opened external link: ${offer.link}', name: 'HomeController');
       } catch (e) {
         developer.log('❌ Error launching URL: $e', name: 'HomeController');
-        AppDialog.showError(message: 'تعذر فتح الرابط');
+        AppDialog.showError(message: 'home_unable_to_open_link'.tr);
       }
     } else if (offer.linkType == 'internal' && offer.lessonId != null) {
       // Navigate to lesson by ID
@@ -233,8 +261,7 @@ class HomeController extends GetxController {
             child: const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(),
-              
+                AppLoader(size: 50),
               ],
             ),
           ),
@@ -251,7 +278,7 @@ class HomeController extends GetxController {
       if (divisionId == null) {
         developer.log('❌ No division ID found', name: 'HomeController');
         Get.back(); // Close loading dialog
-        AppDialog.showError(message: 'حدث خطأ، يرجى تسجيل الدخول مرة أخرى');
+        AppDialog.showError(message: 'home_error_please_login_again'.tr);
         return;
       }
 
@@ -260,7 +287,7 @@ class HomeController extends GetxController {
       if (!subjectsResponse.success || subjectsResponse.data.isEmpty) {
         developer.log('❌ No subjects found', name: 'HomeController');
         Get.back(); // Close loading dialog
-        AppDialog.showError(message: 'لم يتم العثور على المواد');
+        AppDialog.showError(message: 'home_subjects_not_found'.tr);
         return;
       }
 
@@ -322,12 +349,12 @@ class HomeController extends GetxController {
       // If we get here, lesson was not found
       developer.log('❌ Lesson $lessonId not found', name: 'HomeController');
       Get.back(); // Close loading dialog
-      AppDialog.showError(message: 'الدرس غير متاح حالياً');
+      AppDialog.showError(message: 'home_lesson_not_available'.tr);
 
     } catch (e) {
       developer.log('❌ Error navigating to lesson: $e', name: 'HomeController');
       Get.back(); // Close loading dialog
-      AppDialog.showError(message: 'حدث خطأ أثناء فتح الدرس');
+      AppDialog.showError(message: 'home_error_opening_lesson'.tr);
     }
   }
 
@@ -364,11 +391,11 @@ class HomeController extends GetxController {
       if (e.toString().contains('Subscription expired') ||
           (e is ApiErrorModel && e.message?.contains('Subscription expired') == true)) {
         isSubscriptionExpired.value = true;
-        errorMessage.value = 'انتهت صلاحية الاشتراك';
+        errorMessage.value = 'home_subscription_expired'.tr;
       } else if (e is ApiErrorModel) {
         errorMessage.value = e.displayMessage;
       } else {
-        errorMessage.value = 'حدث خطأ أثناء تحميل المواد';
+        errorMessage.value = 'home_error_loading_subjects'.tr;
       }
     } finally {
       isLoading.value = false;
@@ -473,7 +500,7 @@ class HomeController extends GetxController {
       } else if (e is ApiErrorModel) {
         AppDialog.showError(message: e.displayMessage);
       } else {
-        AppDialog.showError(message: 'حدث خطأ أثناء البحث');
+        AppDialog.showError(message: 'home_search_error'.tr);
       }
       searchResults.clear();
     } finally {

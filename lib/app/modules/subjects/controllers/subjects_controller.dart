@@ -62,6 +62,20 @@ class SubjectsController extends GetxController {
     }
   }
 
+  // Pull-to-refresh handler for subjects page
+  Future<void> onRefresh() async {
+    try {
+      developer.log('🔄 Pull-to-refresh triggered on subjects page', name: 'SubjectsController');
+
+      // Reload subjects
+      await loadSubjects();
+
+      developer.log('✅ Subjects page refreshed successfully', name: 'SubjectsController');
+    } catch (e) {
+      developer.log('❌ Error refreshing subjects page: $e', name: 'SubjectsController');
+    }
+  }
+
   // Load units for a specific subject
   Future<void> loadUnits(int subjectId) async {
     try {

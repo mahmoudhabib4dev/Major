@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:media_kit/media_kit.dart';
 
 import 'package:get/get.dart';
 
@@ -16,6 +17,9 @@ import 'app/core/translations/app_translations.dart';
 void main() async {
   // Set global status bar style to white icons
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize media_kit for fast video playback
+  MediaKit.ensureInitialized();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -47,17 +51,21 @@ void main() async {
   }
 
   // Get saved locale or default to Arabic
-  final savedLocale = storageService.locale ?? 'ar';
+  final savedLocale = storageService.locale ?? 'en';
+
+  // Set the language for API requests
+  apiClient.setLanguage(savedLocale);
 
   runApp(
     GetMaterialApp(
       title: "Application",
+
       debugShowCheckedModeBanner: false,
       initialRoute: AppPages.INITIAL,
       getPages: AppPages.routes,
       theme: ThemeData(fontFamily: 'Tajawal'),
       locale: Locale(savedLocale),
-      fallbackLocale: const Locale('ar'),
+      fallbackLocale: const Locale('en'),
       translations: AppTranslations(),
       supportedLocales: const [
         Locale('ar'),

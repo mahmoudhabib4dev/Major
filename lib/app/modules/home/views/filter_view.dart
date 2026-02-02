@@ -8,6 +8,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/home_controller.dart';
 import '../../subjects/models/subject_model.dart';
 import '../../subjects/views/subject_detail_view.dart';
@@ -37,9 +38,9 @@ class _FilterViewState extends State<FilterView> {
   void initState() {
     super.initState();
     contentTypes = [
-      'فيديوهات',
-      'دروس',
-      'PDF',
+      'filter_type_videos'.tr,
+      'filter_type_lessons'.tr,
+      'filter_type_pdf'.tr,
     ];
   }
 
@@ -67,25 +68,30 @@ class _FilterViewState extends State<FilterView> {
       
       headerChildren: [
         SizedBox(height: screenSize.height * 0.12 + 10),
-        // Top bar with close and forward buttons
+        // Top bar with back button - fixed position for all languages
         FadeInDown(
           duration: const Duration(milliseconds: 500),
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: screenSize.width * 0.05,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                GestureDetector(
-                  onTap: () => Get.back(),
-                  child: const Icon(
-                    Icons.arrow_forward,
-                    color: Colors.white,
-                    size: 28,
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 28),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: const Icon(
+                      Icons.arrow_forward,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -97,7 +103,7 @@ class _FilterViewState extends State<FilterView> {
           duration: const Duration(milliseconds: 600),
           delay: const Duration(milliseconds: 300),
           child: Align(
-            alignment: Alignment.centerRight,
+            alignment: Get.locale?.languageCode == 'ar' ? Alignment.centerRight : Alignment.centerLeft,
             child: Text(
               'filter_subject_label'.tr,
               style: AppTextStyles.sectionTitle(context),
@@ -111,12 +117,13 @@ class _FilterViewState extends State<FilterView> {
           delay: const Duration(milliseconds: 400),
           child: Obx(() {
             if (homeController.subjects.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: AppLoader(size: 50));
             }
+            final isRtl = Get.locale?.languageCode == 'ar';
             return Wrap(
               spacing: 8,
               runSpacing: 12,
-              alignment: WrapAlignment.end,
+              alignment: isRtl ? WrapAlignment.end : WrapAlignment.start,
               children: homeController.subjects.map((subject) {
                 final isSelected = isSubjectSelected(subject);
                 return GestureDetector(
@@ -159,9 +166,9 @@ class _FilterViewState extends State<FilterView> {
           duration: const Duration(milliseconds: 600),
           delay: const Duration(milliseconds: 600),
           child: Align(
-            alignment: Alignment.centerRight,
+            alignment: Get.locale?.languageCode == 'ar' ? Alignment.centerRight : Alignment.centerLeft,
             child: Text(
-              'النوع',
+              'filter_type_label'.tr,
               style: AppTextStyles.sectionTitle(context),
             ),
           ),
@@ -187,23 +194,25 @@ class _FilterViewState extends State<FilterView> {
                   width: 1,
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    color: AppColors.grey500,
-                    size: 24,
-                  ),
-                  Expanded(
-                    child: Text(
-                      selectedContentType ?? 'اختر النوع',
-                      textAlign: TextAlign.right,
-                      style: selectedContentType != null
-                          ? AppTextStyles.bodyText(context)
-                          : AppTextStyles.inputHint(context),
+              child: Directionality(
+                textDirection: Get.locale?.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        selectedContentType ?? 'filter_select_type'.tr,
+                        style: selectedContentType != null
+                            ? AppTextStyles.bodyText(context)
+                            : AppTextStyles.inputHint(context),
+                      ),
                     ),
-                  ),
-                ],
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      color: AppColors.grey500,
+                      size: 24,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -240,22 +249,22 @@ class _FilterViewState extends State<FilterView> {
           SizedBox(height: screenSize.height * 0.02),
           // Results header
           Align(
-            alignment: Alignment.centerRight,
+            alignment: Get.locale?.languageCode == 'ar' ? Alignment.centerRight : Alignment.centerLeft,
             child: Text(
-              'النتائج',
+              'filter_results'.tr,
               style: AppTextStyles.sectionTitle(context),
             ),
           ),
           SizedBox(height: screenSize.height * 0.02),
           // Loading or results
           if (isLoading)
-            const Center(child: CircularProgressIndicator())
+            const Center(child: AppLoader(size: 50))
           else if (filterResults.isEmpty)
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Text(
-                  'لا توجد نتائج',
+                  'filter_no_results'.tr,
                   style: AppTextStyles.bodyText(context).copyWith(
                     color: AppColors.grey500,
                   ),
@@ -269,6 +278,7 @@ class _FilterViewState extends State<FilterView> {
               itemCount: filterResults.length,
               itemBuilder: (context, index) {
                 final item = filterResults[index];
+                final isRtl = Get.locale?.languageCode == 'ar';
                 return GestureDetector(
                   onTap: () => _onResultTap(item),
                   child: Container(
@@ -278,25 +288,27 @@ class _FilterViewState extends State<FilterView> {
                       color: AppColors.grey100,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item['name'] ?? 'عنصر ${index + 1}',
-                            style: AppTextStyles.bodyText(context),
-                            textAlign: TextAlign.right,
+                    child: Directionality(
+                      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item['name'] ?? '${'filter_item'.tr} ${index + 1}',
+                              style: AppTextStyles.bodyText(context),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Icon(
-                          filterType == 'video'
-                              ? Icons.play_circle_outline
-                              : filterType == 'lesson'
-                                  ? Icons.book_outlined
-                                  : Icons.picture_as_pdf_outlined,
-                          color: AppColors.primary,
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Icon(
+                            filterType == 'video'
+                                ? Icons.play_circle_outline
+                                : filterType == 'lesson'
+                                    ? Icons.book_outlined
+                                    : Icons.picture_as_pdf_outlined,
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -313,6 +325,7 @@ class _FilterViewState extends State<FilterView> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: false,
       builder: (context) => _ContentTypeBottomSheet(
         items: contentTypes,
         selectedValue: selectedContentType,
@@ -336,7 +349,7 @@ class _FilterViewState extends State<FilterView> {
     } else if (filterType == 'pdf') {
       // TODO: Handle PDF navigation if needed
       AppDialog.showInfo(
-        message: 'سيتم إضافة عرض الملفات قريباً',
+        message: 'filter_pdf_coming_soon'.tr,
       );
     }
   }
@@ -354,14 +367,14 @@ class _FilterViewState extends State<FilterView> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Column(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
+                const AppLoader(size: 60),
+                const SizedBox(height: 16),
                 Text(
-                  'جاري تحميل المادة...',
-                  style: TextStyle(
+                  'filter_loading_subject'.tr,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
@@ -391,12 +404,12 @@ class _FilterViewState extends State<FilterView> {
           duration: const Duration(milliseconds: 300),
         );
       } else {
-        AppDialog.showError(message: 'المادة غير متاحة');
+        AppDialog.showError(message: 'filter_subject_not_available'.tr);
       }
     } catch (e) {
       // Close loading dialog
       Get.back();
-      AppDialog.showError(message: 'حدث خطأ أثناء تحميل المحتوى');
+      AppDialog.showError(message: 'filter_error_loading_content'.tr);
     }
   }
 
@@ -404,18 +417,18 @@ class _FilterViewState extends State<FilterView> {
   void _applyFilters(BuildContext context) async {
     // Map content type to API type
     String? apiType;
-    if (selectedContentType == 'فيديوهات') {
+    if (selectedContentType == 'filter_type_videos'.tr) {
       apiType = 'video';
-    } else if (selectedContentType == 'دروس') {
+    } else if (selectedContentType == 'filter_type_lessons'.tr) {
       apiType = 'lesson';
-    } else if (selectedContentType == 'PDF') {
+    } else if (selectedContentType == 'filter_type_pdf'.tr) {
       apiType = 'pdf';
     }
 
     // Validate selections
     if (selectedSubjectIds.isEmpty || apiType == null) {
       AppDialog.showInfo(
-        message: 'الرجاء اختيار المادة والنوع',
+        message: 'filter_please_select'.tr,
       );
       return;
     }
@@ -450,7 +463,7 @@ class _FilterViewState extends State<FilterView> {
         filterResults = [];
       });
       AppDialog.showError(
-        message: 'حدث خطأ أثناء البحث',
+        message: 'filter_search_error'.tr,
       );
     }
   }
@@ -502,26 +515,32 @@ class _ContentTypeBottomSheet extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // Close button
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: AppColors.grey100,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                color: AppColors.grey600,
-                                size: 20,
+                          FadeInLeft(
+                            duration: const Duration(milliseconds: 400),
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: AppColors.grey100,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: AppColors.grey600,
+                                  size: 20,
+                                ),
                               ),
                             ),
                           ),
                           // Title
-                          Text(
-                            'اختر النوع',
-                            style: AppTextStyles.sectionTitle(context),
+                          FadeInDown(
+                            duration: const Duration(milliseconds: 500),
+                            child: Text(
+                              'filter_select_type_title'.tr,
+                              style: AppTextStyles.sectionTitle(context),
+                            ),
                           ),
                           // Empty space for balance
                           const SizedBox(width: 36),
@@ -537,12 +556,17 @@ class _ContentTypeBottomSheet extends StatelessWidget {
                     // Options
                     ...List.generate(
                       items.length,
-                      (index) => _buildOption(
-                        context: context,
-                        item: items[index],
-                        isLast: index == items.length - 1,
+                      (index) => FadeInUp(
+                        duration: const Duration(milliseconds: 400),
+                        delay: Duration(milliseconds: 100 * index),
+                        child: _buildOption(
+                          context: context,
+                          item: items[index],
+                          isLast: index == items.length - 1,
+                        ),
                       ),
                     ),
+                    SizedBox(height: AppDimensions.spacing(context, 0.04)),
                   ],
                 ),
               ),

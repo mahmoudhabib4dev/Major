@@ -9,6 +9,7 @@ import 'package:maajor/app/modules/subjects/views/video_player_screen.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../models/pdf_resource_model.dart';
 import '../controllers/subjects_controller.dart';
 
@@ -111,9 +112,7 @@ class PdfListView extends GetView<SubjectsController> {
                             return Center(
                               child: Padding(
                                 padding: EdgeInsets.only(top: screenSize.height * 0.2),
-                                child: const CircularProgressIndicator(
-                                  color: Color(0xFF000D47),
-                                ),
+                                child: const AppLoader(size: 60),
                               ),
                             );
                           }

@@ -26,6 +26,7 @@ class SubjectDetailView extends GetView<SubjectsController> {
     final Size screenSize = MediaQuery.of(context).size;
     final storageService = Get.find<StorageService>();
     final isGuestMode = !storageService.isLoggedIn;
+    final isArabic = Get.locale?.languageCode == 'ar';
 
     // Check subscription status for logged-in users
     final currentUser = storageService.currentUser;
@@ -42,7 +43,7 @@ class SubjectDetailView extends GetView<SubjectsController> {
     );
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         extendBody: true,
         body: Container(
@@ -67,29 +68,33 @@ class SubjectDetailView extends GetView<SubjectsController> {
                 ),
                 child: FadeIn(
                   duration: const Duration(milliseconds: 800),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Spacer to center the title (right side in RTL)
-                      const SizedBox(width: 48),
-                      // Title
-                      Expanded(
-                        child: Text(
-                          subject.name,
-                          style: AppTextStyles.subjectDetailTitle(context),
-                          textAlign: TextAlign.center,
+                  // Keep RTL layout for header to maintain arrow position on left
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Spacer to center the title
+                        const SizedBox(width: 48),
+                        // Title
+                        Expanded(
+                          child: Text(
+                            subject.name,
+                            style: AppTextStyles.subjectDetailTitle(context),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
-                      ),
-                      // Back button (left side in RTL)
-                      IconButton(
-                        onPressed: () => Get.back(),
-                        icon: const Icon(
-                          Icons.arrow_forward,
-                          color: Colors.white,
-                          size: 28,
+                        // Back button (always on left)
+                        IconButton(
+                          onPressed: () => Get.back(),
+                          icon: const Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 28,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -136,6 +141,7 @@ class SubjectDetailView extends GetView<SubjectsController> {
                                     screenSize,
                                     'educational_topics'.tr,
                                     AppImages.icon17,
+                                    isArabic,
                                     () {
                                       // Load units when user taps on educational topics
                                       controller.loadUnits(subject.id);
@@ -159,6 +165,7 @@ class SubjectDetailView extends GetView<SubjectsController> {
                                     screenSize,
                                     'notes'.tr,
                                     AppImages.icon18,
+                                    isArabic,
                                     () {
                                       // Check if user is guest or needs subscription
                                       if (isGuestMode || needsSubscription) {
@@ -189,6 +196,7 @@ class SubjectDetailView extends GetView<SubjectsController> {
                                     screenSize,
                                     'solved_exercises'.tr,
                                     AppImages.icon19,
+                                    isArabic,
                                     () {
                                       // Check if user is guest or needs subscription
                                       if (isGuestMode || needsSubscription) {
@@ -219,6 +227,7 @@ class SubjectDetailView extends GetView<SubjectsController> {
                                     screenSize,
                                     'pdf_references'.tr,
                                     AppImages.icon20,
+                                    isArabic,
                                     () {
                                       // Check if user is guest or needs subscription
                                       if (isGuestMode || needsSubscription) {
@@ -382,8 +391,8 @@ class SubjectDetailView extends GetView<SubjectsController> {
     BuildContext context,
     Size screenSize,
     String title,
-
     String iconPath,
+    bool isArabic,
     VoidCallback onTap,
   ) {
     return InkWell(
@@ -401,19 +410,19 @@ class SubjectDetailView extends GetView<SubjectsController> {
         ),
         child: Row(
           children: [
-            // Icon (right side in RTL)
+            // Icon
             Image.asset(
               iconPath,
               width: 88,
               height: 88,
             ),
             SizedBox(width: screenSize.width * 0.03),
-            // Title (left side in RTL)
+            // Title
             Expanded(
               child: Text(
                 title,
                 style: AppTextStyles.sectionCardTitle(context),
-                textAlign: TextAlign.right,
+                textAlign: isArabic ? TextAlign.right : TextAlign.left,
               ),
             ),
           ],
@@ -453,7 +462,7 @@ class SubjectDetailView extends GetView<SubjectsController> {
               const SizedBox(height: 24),
               // Title
               Text(
-                isGuestMode ? 'تسجيل الدخول مطلوب' : 'اشتراك مميز مطلوب',
+                isGuestMode ? 'login_required'.tr : 'premium_subscription_required'.tr,
                 style: TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 20,
@@ -466,8 +475,8 @@ class SubjectDetailView extends GetView<SubjectsController> {
               // Message
               Text(
                 isGuestMode
-                    ? 'يجب عليك تسجيل الدخول للوصول إلى المحتوى'
-                    : 'يجب الاشتراك للوصول إلى المحتوى',
+                    ? 'login_to_access_content'.tr
+                    : 'subscribe_to_access_content'.tr,
                 style: TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 14,
@@ -492,7 +501,7 @@ class SubjectDetailView extends GetView<SubjectsController> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: Text(
-                        'إلغاء',
+                        'cancel'.tr,
                         style: TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
@@ -526,7 +535,7 @@ class SubjectDetailView extends GetView<SubjectsController> {
                         elevation: 0,
                       ),
                       child: Text(
-                        isGuestMode ? 'تسجيل الدخول' : 'عرض خطط الاشتراك',
+                        isGuestMode ? 'login'.tr : 'view_subscription_plans'.tr,
                         style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,

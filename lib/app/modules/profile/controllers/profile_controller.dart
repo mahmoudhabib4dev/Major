@@ -26,6 +26,7 @@ import '../models/update_password_request_model.dart';
 import '../models/app_review_request_model.dart';
 import '../models/leaderboard_response_model.dart';
 import '../models/support_center_response_model.dart';
+import '../models/complaint_types_response_model.dart';
 
 class ProfileController extends GetxController {
   final StorageService storageService = Get.find<StorageService>();
@@ -61,6 +62,10 @@ class ProfileController extends GetxController {
   final whatsappNumber = ''.obs;
   final supportEmail = ''.obs;
   final supportWebsite = ''.obs;
+
+  // Complaint Types
+  final RxList<ComplaintType> complaintTypes = <ComplaintType>[].obs;
+  final isLoadingComplaintTypes = false.obs;
 
   // Profile data
   final isLoadingProfile = false.obs;
@@ -174,6 +179,9 @@ class ProfileController extends GetxController {
 
     // Update app locale
     Get.updateLocale(Locale(selectedLanguage.value));
+
+    // Update API client language header
+    ApiClient().setLanguage(selectedLanguage.value);
 
     // Close bottom sheet
     Get.back();
@@ -311,6 +319,21 @@ class ProfileController extends GetxController {
     }
   }
 
+  Future<void> loadComplaintTypes() async {
+    try {
+      isLoadingComplaintTypes.value = true;
+      final response = await profileProvider.getComplaintTypes();
+      complaintTypes.value = response.complaintTypes;
+      developer.log('✅ Complaint types loaded: ${response.complaintTypes.length} types', name: 'ProfileController');
+    } on ApiErrorModel catch (error) {
+      developer.log('❌ Failed to load complaint types: ${error.displayMessage}', name: 'ProfileController');
+    } catch (e) {
+      developer.log('❌ Unexpected error loading complaint types: $e', name: 'ProfileController');
+    } finally {
+      isLoadingComplaintTypes.value = false;
+    }
+  }
+
   // Open social media link - tries to open app first, falls back to browser
   Future<void> openSocialLink(String platform, String url) async {
     try {
@@ -396,6 +419,57 @@ class ProfileController extends GetxController {
       AppDialog.showError(message: 'فشل في تحميل بيانات الملف الشخصي');
     } finally {
       isLoadingProfile.value = false;
+    }
+  }
+
+  // Refresh profile data to get fresh profile image URL
+  Future<void> refreshProfileData() async {
+    try {
+      developer.log('🔄 Refreshing profile data...', name: 'ProfileController');
+      final response = await profileProvider.getProfileData();
+
+      if (response.data != null) {
+        final data = response.data!;
+        final currentUser = storageService.currentUser;
+
+        if (currentUser != null) {
+          // Update user with fresh data from API
+          final updatedUser = currentUser.copyWith(
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            profileImage: data.picture,
+            educationalStage: data.stage,
+            branch: data.division,
+          );
+
+          // Save updated user to storage
+          await storageService.saveUser(updatedUser);
+
+          // Reload user data to update UI
+          _loadUserData();
+
+          developer.log('✅ Profile data refreshed successfully', name: 'ProfileController');
+          developer.log('   Profile image: ${data.picture}', name: 'ProfileController');
+        }
+      }
+    } catch (e) {
+      developer.log('❌ Error refreshing profile data: $e', name: 'ProfileController');
+      // Don't show error dialog to avoid interrupting user experience
+    }
+  }
+
+  // Pull-to-refresh handler for profile page
+  Future<void> onRefresh() async {
+    try {
+      developer.log('🔄 Pull-to-refresh triggered on profile page', name: 'ProfileController');
+
+      // Refresh profile data
+      await refreshProfileData();
+
+      developer.log('✅ Profile page refreshed successfully', name: 'ProfileController');
+    } catch (e) {
+      developer.log('❌ Error refreshing profile page: $e', name: 'ProfileController');
     }
   }
 

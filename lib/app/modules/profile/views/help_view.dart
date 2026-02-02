@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../widgets/ticket_type_bottom_sheet.dart';
 import '../controllers/profile_controller.dart';
 
@@ -16,7 +17,7 @@ class HelpView extends GetView<ProfileController> {
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
-    final isRtl = Get.locale?.languageCode == 'ar';
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     // Load support center data when view opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -62,19 +63,32 @@ class HelpView extends GetView<ProfileController> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const SizedBox(width: 48),
+                          if (!isRtl)
+                            IconButton(
+                              onPressed: () => Get.back(),
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            )
+                          else
+                            const SizedBox(width: 48),
                           Text(
                             'help_center'.tr,
                             style: AppTextStyles.notificationPageTitle(context),
                           ),
-                          IconButton(
-                            onPressed: () => Get.back(),
-                            icon: const Icon(
-                              Icons.arrow_forward,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                          ),
+                          if (isRtl)
+                            IconButton(
+                              onPressed: () => Get.back(),
+                              icon: const Icon(
+                                Icons.arrow_forward,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            )
+                          else
+                            const SizedBox(width: 48),
                         ],
                       ),
                     ),
@@ -179,7 +193,7 @@ class HelpView extends GetView<ProfileController> {
   }
 
   Widget _buildSupportNumbers(BuildContext context) {
-    final isRtl = Get.locale?.languageCode == 'ar';
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -264,7 +278,7 @@ class HelpView extends GetView<ProfileController> {
     required String value,
     required VoidCallback? onTap,
   }) {
-    final isRtl = Get.locale?.languageCode == 'ar';
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return InkWell(
       onTap: onTap,
@@ -315,7 +329,7 @@ class HelpView extends GetView<ProfileController> {
   }
 
   Widget _buildFaqsSection(BuildContext context) {
-    final isRtl = Get.locale?.languageCode == 'ar';
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Obx(
       () => Column(
@@ -340,7 +354,7 @@ class HelpView extends GetView<ProfileController> {
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(20),
-                  child: CircularProgressIndicator(),
+                  child: AppLoader(size: 50),
                 ),
               )
             else
@@ -627,6 +641,7 @@ class _FaqItemState extends State<_FaqItem> {
                         color: Color(0xFF000D47),
                       ),
                       textAlign: widget.isRtl ? TextAlign.right : TextAlign.left,
+                      textDirection: widget.isRtl ? TextDirection.rtl : TextDirection.ltr,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -652,6 +667,7 @@ class _FaqItemState extends State<_FaqItem> {
                   height: 1.6,
                 ),
                 textAlign: widget.isRtl ? TextAlign.right : TextAlign.left,
+                textDirection: widget.isRtl ? TextDirection.rtl : TextDirection.ltr,
               ),
             ),
         ],

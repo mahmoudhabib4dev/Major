@@ -14,9 +14,9 @@ class PasswordInputField extends GetView<AuthenticationController> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Label aligned to the right
+        // Label aligned to start (right for RTL, left for LTR)
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             'password'.tr,
             style: AppTextStyles.inputLabel(context),
@@ -39,7 +39,7 @@ class PasswordInputField extends GetView<AuthenticationController> {
                 controller: controller.passwordController,
                 focusNode: controller.passwordFocusNode,
                 obscureText: !controller.isPasswordVisible.value,
-                textAlign: TextAlign.right,
+                textAlign: TextAlign.start,
                 style: AppTextStyles.bodyText(context),
                 textInputAction: TextInputAction.done,
                 onChanged: (value) {
@@ -59,7 +59,7 @@ class PasswordInputField extends GetView<AuthenticationController> {
                     horizontal: AppDimensions.spacing(context, 0.04),
                     vertical: AppDimensions.spacing(context, 0.04),
                   ),
-                  prefixIcon: IconButton(
+                  suffixIcon: IconButton(
                     icon: Image.asset(
                       AppImages.icon4,
                       width: AppDimensions.iconSmall(context) * 1.5,
@@ -79,7 +79,7 @@ class PasswordInputField extends GetView<AuthenticationController> {
                     top: AppDimensions.spacing(context, 0.01),
                   ),
                   child: Align(
-                    alignment: Alignment.centerRight,
+                    alignment: AlignmentDirectional.centerStart,
                     child: Text(
                       controller.passwordError.value,
                       style: AppTextStyles.smallText(context).copyWith(
@@ -91,9 +91,9 @@ class PasswordInputField extends GetView<AuthenticationController> {
               : const SizedBox.shrink(),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
-        // Forgot password aligned to the left
+        // Forgot password aligned to end (left for LTR, right for RTL)
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerEnd,
           child: GestureDetector(
             onTap: controller.forgotPassword,
             child: Text(

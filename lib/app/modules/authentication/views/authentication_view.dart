@@ -97,9 +97,9 @@ class AuthenticationView extends GetView<AuthenticationController> {
               return OnboardingPage(
                 key: ValueKey('onboarding_page_$index'),
                 icon: data.icon,
-                title: data.title,
+                title: data.titleKey.tr,
                 emoji: data.emoji,
-                description: data.description,
+                description: data.descriptionKey.tr,
               );
             },
           ),
