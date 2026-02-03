@@ -40,30 +40,22 @@ class ParentController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // Set default index to Home (0 for Arabic, 3 for others)
-    currentIndex = (isArabic ? 0 : 3).obs;
+    // Use same page order for all languages: 0=Home, 1=Subjects, 2=Favorite, 3=Profile
+    currentIndex = 0.obs;
 
-    // Set page titles based on language order
-    pageTitles = isArabic
-        ? [
-            'الرئيسية',    // Home
-            'المواد',      // Subjects
-            'المفضلة',     // Favorite
-            'الملف الشخصي', // Profile
-          ]
-        : [
-            'الملف الشخصي', // Profile
-            'المفضلة',     // Favorite
-            'المواد',      // Subjects
-            'الرئيسية',    // Home
-          ];
+    // Page titles in same order for all languages
+    pageTitles = [
+      'home'.tr,
+      'subjects'.tr,
+      'favorites'.tr,
+      'profile'.tr,
+    ];
   }
 
   // Change current page
   void changePage(int index) {
-    // Refresh profile data when switching to Home tab
-    final homeIndex = isArabic ? 0 : 3;
-    if (index == homeIndex) {
+    // Refresh profile data when switching to Home tab (index 0)
+    if (index == 0) {
       currentIndex.value = index;
       try {
         final homeController = Get.find<HomeController>();
@@ -75,9 +67,8 @@ class ParentController extends GetxController {
       return;
     }
 
-    // Refresh profile data when switching to Profile tab
-    final profileIndex = isArabic ? 3 : 0;
-    if (index == profileIndex) {
+    // Refresh profile data when switching to Profile tab (index 3)
+    if (index == 3) {
       currentIndex.value = index;
       try {
         final profileController = Get.find<ProfileController>();
@@ -89,9 +80,8 @@ class ParentController extends GetxController {
       return;
     }
 
-    // Load subjects when subjects tab is selected
-    final subjectsIndex = isArabic ? 1 : 2;
-    if (index == subjectsIndex) {
+    // Load subjects when subjects tab is selected (index 1)
+    if (index == 1) {
       currentIndex.value = index;
       try {
         final subjectsController = Get.find<SubjectsController>();
@@ -105,9 +95,8 @@ class ParentController extends GetxController {
       return;
     }
 
-    // Check for favorites tab selection
-    final favoritesIndex = isArabic ? 2 : 1;
-    if (index == favoritesIndex) {
+    // Check for favorites tab selection (index 2)
+    if (index == 2) {
       // Show login dialog if user is in guest mode
       if (isGuest) {
         _showLoginDialog();
@@ -160,9 +149,9 @@ class ParentController extends GetxController {
               ),
               const SizedBox(height: 24),
               // Title
-              const Text(
-                'تسجيل الدخول مطلوب',
-                style: TextStyle(
+              Text(
+                'login_required'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -172,9 +161,9 @@ class ParentController extends GetxController {
               ),
               const SizedBox(height: 12),
               // Message
-              const Text(
-                'يجب عليك تسجيل الدخول للوصول إلى المفضلة',
-                style: TextStyle(
+              Text(
+                'login_to_access_favorites'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -197,9 +186,9 @@ class ParentController extends GetxController {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'إلغاء',
-                        style: TextStyle(
+                      child: Text(
+                        'cancel'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -226,9 +215,9 @@ class ParentController extends GetxController {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'تسجيل الدخول',
-                        style: TextStyle(
+                      child: Text(
+                        'login'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -293,16 +282,16 @@ class ParentController extends GetxController {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.diamond_outlined,
+                  Icons.workspace_premium,
                   color: AppColors.primary,
                   size: 40,
                 ),
               ),
               const SizedBox(height: 24),
               // Title
-              const Text(
-                'اشتراك مطلوب',
-                style: TextStyle(
+              Text(
+                'subscription_required'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -312,9 +301,9 @@ class ParentController extends GetxController {
               ),
               const SizedBox(height: 12),
               // Message
-              const Text(
-                'يجب عليك الاشتراك للوصول إلى التحديات ولوحة المتصدرين',
-                style: TextStyle(
+              Text(
+                'subscribe_to_access_challenges'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -337,9 +326,9 @@ class ParentController extends GetxController {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'إلغاء',
-                        style: TextStyle(
+                      child: Text(
+                        'cancel'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -365,9 +354,9 @@ class ParentController extends GetxController {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'اشترك الآن',
-                        style: TextStyle(
+                      child: Text(
+                        'subscribe_now'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

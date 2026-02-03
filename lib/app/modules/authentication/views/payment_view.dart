@@ -138,6 +138,7 @@ class PaymentView extends GetView<AuthenticationController> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: AppDimensions.spacing(context, 0.04),
@@ -145,7 +146,18 @@ class PaymentView extends GetView<AuthenticationController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const SizedBox(width: 28),
+          // Back button (appears on the left in LTR, right in RTL)
+          if (!isRtl)
+            GestureDetector(
+              onTap: () => Get.back(),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppColors.white,
+                size: 28,
+              ),
+            )
+          else
+            const SizedBox(width: 28),
           Text(
             'subscription'.tr,
             style: AppTextStyles.sectionTitle(context).copyWith(
@@ -153,14 +165,18 @@ class PaymentView extends GetView<AuthenticationController> {
               fontSize: 18,
             ),
           ),
-          GestureDetector(
-            onTap: () => Get.back(),
-            child: const Icon(
-              Icons.arrow_forward,
-              color: AppColors.white,
-              size: 28,
-            ),
-          ),
+          // Back button (appears on the right in RTL, spacer in LTR)
+          if (isRtl)
+            GestureDetector(
+              onTap: () => Get.back(),
+              child: const Icon(
+                Icons.arrow_forward,
+                color: AppColors.white,
+                size: 28,
+              ),
+            )
+          else
+            const SizedBox(width: 28),
         ],
       ),
     );
@@ -170,23 +186,25 @@ class PaymentView extends GetView<AuthenticationController> {
     final isArabic = Get.locale?.languageCode == 'ar';
 
     return Column(
-      crossAxisAlignment: isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RichText(
-          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: 'full_name'.tr,
-                style: AppTextStyles.inputLabel(context),
-              ),
-              TextSpan(
-                text: ' *',
-                style: AppTextStyles.inputLabel(context).copyWith(
-                  color: AppColors.error,
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: 'full_name'.tr,
+                  style: AppTextStyles.inputLabel(context),
                 ),
-              ),
-            ],
+                TextSpan(
+                  text: ' *',
+                  style: AppTextStyles.inputLabel(context).copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -199,7 +217,7 @@ class PaymentView extends GetView<AuthenticationController> {
           ),
           child: TextField(
             controller: controller.usernameController,
-            textAlign: TextAlign.right,
+            textAlign: isArabic ? TextAlign.right : TextAlign.left,
             style: AppTextStyles.bodyText(context),
             decoration: InputDecoration(
               hintText: 'full_name'.tr,
@@ -220,23 +238,25 @@ class PaymentView extends GetView<AuthenticationController> {
     final isArabic = Get.locale?.languageCode == 'ar';
 
     return Column(
-      crossAxisAlignment: isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RichText(
-          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: 'phone_number'.tr,
-                style: AppTextStyles.inputLabel(context),
-              ),
-              TextSpan(
-                text: ' *',
-                style: AppTextStyles.inputLabel(context).copyWith(
-                  color: AppColors.error,
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: 'phone_number'.tr,
+                  style: AppTextStyles.inputLabel(context),
                 ),
-              ),
-            ],
+                TextSpan(
+                  text: ' *',
+                  style: AppTextStyles.inputLabel(context).copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -277,7 +297,7 @@ class PaymentView extends GetView<AuthenticationController> {
                 child: TextField(
                   controller: controller.signUpPhoneController,
                   keyboardType: TextInputType.phone,
-                  textAlign: TextAlign.right,
+                  textAlign: isArabic ? TextAlign.right : TextAlign.left,
                   style: AppTextStyles.bodyText(context),
                   decoration: InputDecoration(
                     hintText: 'phone_number'.tr,
@@ -301,11 +321,14 @@ class PaymentView extends GetView<AuthenticationController> {
     final isArabic = Get.locale?.languageCode == 'ar';
 
     return Column(
-      crossAxisAlignment: isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'select_payment_account'.tr,
-          style: AppTextStyles.inputLabel(context),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            'select_payment_account'.tr,
+            style: AppTextStyles.inputLabel(context),
+          ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.015),
         Obx(() {
@@ -542,23 +565,25 @@ class PaymentView extends GetView<AuthenticationController> {
     final isArabic = Get.locale?.languageCode == 'ar';
 
     return Column(
-      crossAxisAlignment: isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RichText(
-          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: 'reference_number'.tr,
-                style: AppTextStyles.inputLabel(context),
-              ),
-              TextSpan(
-                text: ' *',
-                style: AppTextStyles.inputLabel(context).copyWith(
-                  color: AppColors.error,
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: 'reference_number'.tr,
+                  style: AppTextStyles.inputLabel(context),
                 ),
-              ),
-            ],
+                TextSpan(
+                  text: ' *',
+                  style: AppTextStyles.inputLabel(context).copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
@@ -598,7 +623,7 @@ class PaymentView extends GetView<AuthenticationController> {
         width: 80,
         height: 50,
         child: ElevatedButton(
-          onPressed: controller.isLoading.value
+          onPressed: controller.isApplyingCoupon.value
               ? null
               : controller.applyCoupon,
           style: ElevatedButton.styleFrom(
@@ -611,7 +636,7 @@ class PaymentView extends GetView<AuthenticationController> {
             ),
             padding: EdgeInsets.zero,
           ),
-          child: controller.isLoading.value
+          child: controller.isApplyingCoupon.value
               ? const AppLoader(size: 20, showLogo: false,
                 )
               : Text(
@@ -676,11 +701,14 @@ class PaymentView extends GetView<AuthenticationController> {
     );
 
     return Column(
-      crossAxisAlignment: isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'have_coupon'.tr,
-          style: AppTextStyles.inputLabel(context),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            'have_coupon'.tr,
+            style: AppTextStyles.inputLabel(context),
+          ),
         ),
         SizedBox(height: AppDimensions.screenHeight(context) * 0.01),
         Row(

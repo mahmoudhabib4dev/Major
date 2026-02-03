@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:maajor/app/modules/authentication/models/subscription_refresh_response_model.dart';
 import '../../../core/api_client.dart';
@@ -20,6 +21,7 @@ import '../models/reset_password_response_model.dart';
 import '../models/subscription_plans_response_model.dart';
 import '../models/bank_accounts_response_model.dart';
 import '../models/subscription_store_models.dart';
+import '../models/apply_coupon_response_model.dart';
 import '../models/verify_otp_request_model.dart';
 import '../models/set_password_request_model.dart';
 import '../models/set_password_response_model.dart';
@@ -56,7 +58,7 @@ class AuthProvider {
         return fromJson(jsonData);
       } catch (e) {
         throw ApiErrorModel(
-          message: 'فشل في معالجة استجابة الخادم',
+          message: 'failed_to_process_response'.tr,
           statusCode: statusCode,
         );
       }
@@ -72,7 +74,7 @@ class AuthProvider {
       } catch (e) {
         if (e is ApiErrorModel) rethrow;
         throw ApiErrorModel(
-          message: 'حدث خطأ غير متوقع',
+          message: 'unexpected_error'.tr,
           statusCode: statusCode,
         );
       }
@@ -327,7 +329,7 @@ class AuthProvider {
   }
 
   // Apply Coupon
-  Future<SubscriptionStoreResponse> applyCoupon({
+  Future<ApplyCouponResponse> applyCoupon({
     required int planId,
     required String couponCode,
   }) async {
@@ -342,7 +344,7 @@ class AuthProvider {
 
       return _handleResponse(
         response: response,
-        fromJson: (json) => SubscriptionStoreResponse.fromJson(json),
+        fromJson: (json) => ApplyCouponResponse.fromJson(json),
       );
     } catch (e) {
       rethrow;
@@ -381,6 +383,11 @@ class AuthProvider {
 
       if (request.transactionId != null && request.transactionId!.isNotEmpty) {
         fields['transaction_id'] = request.transactionId!;
+      }
+
+      // Add calculate_only flag if true
+      if (request.calculateOnly) {
+        fields['calculate_only'] = 'true';
       }
 
       // Add file
@@ -441,7 +448,7 @@ class AuthProvider {
       if (statusCode >= 200 && statusCode < 300) {
         // Success response - API returns HTML
         return SetPasswordResponseModel(
-          message: 'تم تعيين كلمة المرور بنجاح',
+          message: 'password_set_successfully'.tr,
         );
       } else {
         // Error response
@@ -455,7 +462,7 @@ class AuthProvider {
         } catch (e) {
           if (e is ApiErrorModel) rethrow;
           throw ApiErrorModel(
-            message: 'حدث خطأ أثناء تعيين كلمة المرور',
+            message: 'error_setting_password'.tr,
             statusCode: statusCode,
           );
         }
@@ -485,7 +492,7 @@ class AuthProvider {
         // Success response - API returns HTML
         return ResetPasswordResponseModel(
           success: true,
-          message: 'تم إعادة تعيين كلمة المرور بنجاح',
+          message: 'password_reset_successfully'.tr,
         );
       } else {
         // Error response
@@ -499,7 +506,7 @@ class AuthProvider {
         } catch (e) {
           if (e is ApiErrorModel) rethrow;
           throw ApiErrorModel(
-            message: 'حدث خطأ أثناء إعادة تعيين كلمة المرور',
+            message: 'error_resetting_password'.tr,
             statusCode: statusCode,
           );
         }

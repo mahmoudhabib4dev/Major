@@ -399,25 +399,43 @@ class FavoriteView extends GetView<FavoriteController> {
         );
       }
 
-      return ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: lessons.length,
-        separatorBuilder: (context, index) => SizedBox(height: screenSize.height * 0.015),
-        itemBuilder: (context, index) {
-          final favoriteItem = lessons[index];
+      return Column(
+        children: [
+          // Video player overlay
+          Obx(() {
+            if (controller.isLoadingVideo.value) {
+              return _buildVideoLoadingIndicator(context, screenSize);
+            }
 
-          return FadeInUp(
-            duration: const Duration(milliseconds: 600),
-            delay: Duration(milliseconds: 100 * index),
-            child: _buildFavoriteCard(
-              context: context,
-              screenSize: screenSize,
-              favoriteItem: favoriteItem,
-              isArabic: isArabic,
-            ),
-          );
-        },
+            if (controller.isVideoPlaying.value && controller.videoController != null) {
+              return _buildVideoPlayer(context, screenSize);
+            }
+
+            return const SizedBox.shrink();
+          }),
+
+          // Lessons list
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: lessons.length,
+            separatorBuilder: (context, index) => SizedBox(height: screenSize.height * 0.015),
+            itemBuilder: (context, index) {
+              final favoriteItem = lessons[index];
+
+              return FadeInUp(
+                duration: const Duration(milliseconds: 600),
+                delay: Duration(milliseconds: 100 * index),
+                child: _buildFavoriteCard(
+                  context: context,
+                  screenSize: screenSize,
+                  favoriteItem: favoriteItem,
+                  isArabic: isArabic,
+                ),
+              );
+            },
+          ),
+        ],
       );
     });
   }
@@ -584,7 +602,7 @@ class FavoriteView extends GetView<FavoriteController> {
                     child: GestureDetector(
                       onTap: () {
                         if (lessonId != null) {
-                          controller.openLessonTest(lessonId, lesson?.testId);
+                          controller.openLessonTest(lessonId, lesson?.testId, lessonName: title);
                         }
                       },
                       child: Container(
@@ -655,19 +673,24 @@ class FavoriteView extends GetView<FavoriteController> {
           ),
           child: Row(
             children: [
-              // Video icon (right side in RTL)
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E6F5),
-                  borderRadius: BorderRadius.circular(36),
-                ),
-                child: Center(
-                  child: Image.asset(
-                    AppImages.icon27,
-                    width: 30,
-                    height: 30,
+              // Delete icon (right side in RTL)
+              GestureDetector(
+                onTap: () async {
+                  await controller.deleteDownloadedVideo(video.lessonId);
+                },
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFE5E5),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      AppImages.icon39,
+                      width: 24,
+                      height: 24,
+                    ),
                   ),
                 ),
               ),

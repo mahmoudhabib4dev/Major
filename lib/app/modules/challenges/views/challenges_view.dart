@@ -8,9 +8,9 @@ import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_loader.dart';
+import '../../../core/widgets/api_image.dart';
 import '../../parent/controllers/parent_controller.dart';
 import '../../profile/controllers/profile_controller.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 class ChallengesView extends StatelessWidget {
   const ChallengesView({super.key});
@@ -164,8 +164,13 @@ class ChallengesView extends StatelessWidget {
                     child: Obx(() {
                       // Show loading while data is being fetched
                       if (profileController.isLoadingLeaderboard.value) {
-                        return const Center(
-                          child: AppLoader(size: 50),
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              AppLoader(size: 80),
+                            ],
+                          ),
                         );
                       }
 
@@ -235,15 +240,12 @@ class ChallengesView extends StatelessWidget {
                                           ),
                                           child: ClipOval(
                                             child: topPlayers[0].pictureUrl != null
-                                                ? CachedNetworkImage(
+                                                ? ApiImage(
                                                     imageUrl: topPlayers[0].pictureUrl!,
+                                                    width: 70,
+                                                    height: 70,
                                                     fit: BoxFit.cover,
-                                                    placeholder: (context, url) => Image.asset(
-                                                      AppImages.icon56,
-                                                      width: 70,
-                                                      height: 70,
-                                                    ),
-                                                    errorWidget: (context, url, error) => Image.asset(
+                                                    errorWidget: Image.asset(
                                                       AppImages.icon56,
                                                       width: 70,
                                                       height: 70,
@@ -322,15 +324,12 @@ class ChallengesView extends StatelessWidget {
                                           ),
                                           child: ClipOval(
                                             child: topPlayers[1].pictureUrl != null
-                                                ? CachedNetworkImage(
+                                                ? ApiImage(
                                                     imageUrl: topPlayers[1].pictureUrl!,
+                                                    width: 60,
+                                                    height: 60,
                                                     fit: BoxFit.cover,
-                                                    placeholder: (context, url) => Image.asset(
-                                                      AppImages.icon57,
-                                                      width: 60,
-                                                      height: 60,
-                                                    ),
-                                                    errorWidget: (context, url, error) => Image.asset(
+                                                    errorWidget: Image.asset(
                                                       AppImages.icon57,
                                                       width: 60,
                                                       height: 60,
@@ -409,15 +408,12 @@ class ChallengesView extends StatelessWidget {
                                           ),
                                           child: ClipOval(
                                             child: topPlayers[2].pictureUrl != null
-                                                ? CachedNetworkImage(
+                                                ? ApiImage(
                                                     imageUrl: topPlayers[2].pictureUrl!,
+                                                    width: 60,
+                                                    height: 60,
                                                     fit: BoxFit.cover,
-                                                    placeholder: (context, url) => Image.asset(
-                                                      AppImages.icon58,
-                                                      width: 60,
-                                                      height: 60,
-                                                    ),
-                                                    errorWidget: (context, url, error) => Image.asset(
+                                                    errorWidget: Image.asset(
                                                       AppImages.icon58,
                                                       width: 60,
                                                       height: 60,
@@ -498,134 +494,137 @@ class ChallengesView extends StatelessWidget {
                             width: double.infinity,
                             padding: EdgeInsets.only(top: notchRadius * 0.8),
                             color: Colors.white,
-                            child: ListView.builder(
-                              controller: scrollController,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: screenSize.width * 0.06,
-                                vertical: 20,
-                              ),
-                              itemCount: profileController.leaderboard.value?.top.length.clamp(0, 10) ?? 0,
-                              itemBuilder: (context, index) {
-                                final topPlayers = profileController.leaderboard.value?.top ?? [];
-                                if (index >= topPlayers.length) return const SizedBox.shrink();
+                            child: Obx(() {
+                              final topPlayers = profileController.leaderboard.value?.top ?? [];
 
-                                final player = topPlayers[index];
-                                final colors = [0xFF9B59B6, 0xFF3498DB, 0xFFE91E63, 0xFF4CAF50, 0xFFFF9800, 0xFF00BCD4, 0xFF673AB7, 0xFFE91E63, 0xFF2196F3, 0xFF4CAF50];
-                                final playerColor = colors[index % colors.length];
+                              return ListView.builder(
+                                controller: scrollController,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: screenSize.width * 0.06,
+                                  vertical: 20,
+                                ),
+                                itemCount: topPlayers.length.clamp(0, 10),
+                                itemBuilder: (context, index) {
+                                  if (index >= topPlayers.length) return const SizedBox.shrink();
 
-                                return FadeInRight(
-                                  duration: Duration(milliseconds: 400 + (index * 100)),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: Row(
-                                      children: [
-                                        const Spacer(),
-                                        // Name and points
-                                        Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Text(
-                                              player.name,
-                                              style: const TextStyle(
-                                                fontFamily: 'Tajawal',
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF000D47),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${player.score} ${'points'.tr}',
-                                              style: const TextStyle(
-                                                fontFamily: 'Tajawal',
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(width: 12),
-                                        // Avatar with rank number overlay
-                                        SizedBox(
-                                          width: 55,
-                                          height: 55,
-                                          child: Stack(
-                                            children: [
-                                              // Avatar
-                                              Positioned(
-                                                top: 0,
-                                                right: 0,
-                                                child: Container(
-                                                  width: 50,
-                                                  height: 50,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(
-                                                      color: Color(playerColor),
-                                                      width: 3,
+                                  final player = topPlayers[index];
+                                  final colors = [0xFF9B59B6, 0xFF3498DB, 0xFFE91E63, 0xFF4CAF50, 0xFFFF9800, 0xFF00BCD4, 0xFF673AB7, 0xFFE91E63, 0xFF2196F3, 0xFF4CAF50];
+                                  final playerColor = colors[index % colors.length];
+
+                                  return FadeInRight(
+                                    duration: Duration(milliseconds: 400 + (index * 100)),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: Row(
+                                        children: [
+                                          // Avatar with rank number overlay
+                                          SizedBox(
+                                            width: 55,
+                                            height: 55,
+                                            child: Stack(
+                                              children: [
+                                                // Avatar
+                                                Positioned(
+                                                  top: 0,
+                                                  right: 0,
+                                                  child: Container(
+                                                    width: 50,
+                                                    height: 50,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      border: Border.all(
+                                                        color: Color(playerColor),
+                                                        width: 3,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  child: ClipOval(
-                                                    child: player.pictureUrl != null
-                                                        ? CachedNetworkImage(
-                                                            imageUrl: player.pictureUrl!,
-                                                            fit: BoxFit.cover,
-                                                            placeholder: (context, url) => Container(
-                                                              color: Colors.grey.shade200,
-                                                            ),
-                                                            errorWidget: (context, url, error) => Icon(
+                                                    child: ClipOval(
+                                                      child: player.pictureUrl != null
+                                                          ? ApiImage(
+                                                              imageUrl: player.pictureUrl!,
+                                                              width: 50,
+                                                              height: 50,
+                                                              fit: BoxFit.cover,
+                                                              errorWidget: Icon(
+                                                                Icons.person,
+                                                                color: Colors.grey.shade400,
+                                                                size: 30,
+                                                              ),
+                                                            )
+                                                          : Icon(
                                                               Icons.person,
                                                               color: Colors.grey.shade400,
                                                               size: 30,
                                                             ),
-                                                          )
-                                                        : Icon(
-                                                            Icons.person,
-                                                            color: Colors.grey.shade400,
-                                                            size: 30,
-                                                          ),
-                                                  ),
-                                                ),
-                                              ),
-                                              // Rank number badge (bottom-left of avatar)
-                                              Positioned(
-                                                bottom: 0,
-                                                left: 0,
-                                                child: Container(
-                                                  width: 24,
-                                                  height: 24,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color: Colors.white,
-                                                    border: Border.all(
-                                                      color: Colors.grey.shade400,
-                                                      width: 1.5,
                                                     ),
                                                   ),
-                                                  child: Center(
-                                                    child: Text(
-                                                      '${player.rank}',
-                                                      style: TextStyle(
-                                                        fontFamily: 'Tajawal',
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Colors.grey.shade600,
+                                                ),
+                                                // Rank number badge (bottom-left of avatar)
+                                                Positioned(
+                                                  bottom: 0,
+                                                  left: 0,
+                                                  child: Container(
+                                                    width: 24,
+                                                    height: 24,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: Colors.white,
+                                                      border: Border.all(
+                                                        color: Colors.grey.shade400,
+                                                        width: 1.5,
+                                                      ),
+                                                    ),
+                                                    child: Center(
+                                                      child: Text(
+                                                        '${player.rank}',
+                                                        textAlign: TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontFamily: 'Tajawal',
+                                                          fontSize: 11,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Colors.grey.shade600,
+                                                          height: 1.2,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          // Name and points
+                                          Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                player.name,
+                                                style: const TextStyle(
+                                                  fontFamily: 'Tajawal',
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xFF000D47),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${player.score} ${'points'.tr}',
+                                                style: const TextStyle(
+                                                  fontFamily: 'Tajawal',
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Colors.grey,
+                                                ),
                                               ),
                                             ],
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
+                                  );
+                                },
+                              );
+                            }),
                           ),
                         ),
                         // Small dot at top center where curve peaks
@@ -711,11 +710,12 @@ class ChallengesView extends StatelessWidget {
     required int index,
     required bool isActive,
   }) {
+    // Icons match controller's unified page order: 0=Home, 1=Subjects, 2=Favorite, 3=Profile
     final icons = [
-      {'unselected': AppImages.icon5, 'selected': AppImages.icon6},
-      {'unselected': AppImages.icon11, 'selected': AppImages.icon12},
-      {'unselected': AppImages.icon7, 'selected': AppImages.icon8},
-      {'unselected': AppImages.icon9, 'selected': AppImages.icon10},
+      {'unselected': AppImages.icon5, 'selected': AppImages.icon6},   // 0: Home
+      {'unselected': AppImages.icon11, 'selected': AppImages.icon12}, // 1: Subjects
+      {'unselected': AppImages.icon7, 'selected': AppImages.icon8},   // 2: Favorite
+      {'unselected': AppImages.icon9, 'selected': AppImages.icon10},  // 3: Profile
     ];
 
     final iconPath = isActive ? icons[index]['selected']! : icons[index]['unselected']!;

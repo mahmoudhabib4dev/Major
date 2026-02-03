@@ -401,8 +401,8 @@ class FavoriteController extends GetxController {
   }
 
   // Load and navigate to test
-  Future<void> openLessonTest(int lessonId, int? testId) async {
-    // Check if lesson has a test_id before calling API
+  Future<void> openLessonTest(int lessonId, int? testId, {String? lessonName}) async {
+    // Check if lesson has a test_id before proceeding
     if (testId == null) {
       developer.log('ℹ️ No test_id for lesson $lessonId, showing info message', name: 'FavoriteController');
       AppDialog.showInfo(message: 'no_test_available'.tr);
@@ -411,45 +411,30 @@ class FavoriteController extends GetxController {
 
     try {
       isLoadingTest.value = true;
-      developer.log('📝 Loading test for lesson: $lessonId (testId: $testId)', name: 'FavoriteController');
+      developer.log('📝 Opening test for lesson: $lessonId (testId: $testId)', name: 'FavoriteController');
 
-      final response = await _subjectsProvider.getLessonTest(lessonId);
+      // Delete any existing quiz controller to ensure fresh start
+      Get.delete<QuizController>();
 
-      if (response.status && response.data.questions.isNotEmpty) {
-        developer.log('✅ Test loaded: ${response.data.questions.length} questions', name: 'FavoriteController');
-
-        // Delete any existing quiz controller to ensure fresh start
+      // Navigate to quiz screen with testId - QuizController will call /api/tests/{testId}/start
+      Get.to(
+        () => const QuizView(),
+        binding: BindingsBuilder(() {
+          Get.put(QuizController(
+            lessonTitle: lessonName ?? 'lesson_test'.tr,
+            testId: testId,
+          ));
+        }),
+        transition: Transition.rightToLeft,
+        duration: const Duration(milliseconds: 300),
+      )?.then((_) {
+        // Delete controller when returning from quiz
         Get.delete<QuizController>();
+      });
 
-        // Navigate to quiz screen with lesson test questions
-        Get.to(
-          () => const QuizView(),
-          binding: BindingsBuilder(() {
-            Get.put(QuizController(
-              lessonTitle: response.data.testName,
-              initialQuestions: response.data.questions,
-            ));
-          }),
-          transition: Transition.rightToLeft,
-          duration: const Duration(milliseconds: 300),
-        )?.then((_) {
-          // Delete controller when returning from quiz
-          Get.delete<QuizController>();
-        });
-      } else {
-        developer.log('❌ No test available', name: 'FavoriteController');
-        AppDialog.showInfo(message: 'no_test_available'.tr);
-      }
-    } on ApiErrorModel catch (error) {
-      developer.log('❌ Failed to load test: ${error.displayMessage}', name: 'FavoriteController');
-      // Show info message for 404 errors (no test available)
-      if (error.statusCode == 404) {
-        AppDialog.showInfo(message: 'no_test_available'.tr);
-      } else {
-        AppDialog.showError(message: error.displayMessage);
-      }
+      developer.log('✅ Navigated to quiz with testId: $testId', name: 'FavoriteController');
     } catch (e) {
-      developer.log('❌ Unexpected error loading test: $e', name: 'FavoriteController');
+      developer.log('❌ Unexpected error opening test: $e', name: 'FavoriteController');
       AppDialog.showError(message: 'favorite_error_loading_test'.tr);
     } finally {
       isLoadingTest.value = false;
@@ -492,22 +477,27 @@ class FavoriteController extends GetxController {
   }
 
   // Play lesson video
-  Future<void> playLessonVideo(int lessonId) async {
+  Future<void> playLessonVideo(int lessonId, {String? lessonName}) async {
     try {
       isLoadingVideo.value = true;
+      currentPlayingVideoId.value = lessonId;
       developer.log('🎥 Loading video for lesson: $lessonId', name: 'FavoriteController');
 
+      // Check if video is downloaded first
+      final localPath = await _downloadService.getLocalVideoPath(lessonId);
+
+      if (localPath != null) {
+        developer.log('✅ Playing video from local storage: $localPath', name: 'FavoriteController');
+        await _playVideoFromPath(localPath);
+        return;
+      }
+
+      // Load from API
       final response = await _subjectsProvider.getLessonVideo(lessonId);
 
       if (response.status && response.data.videoUrl.isNotEmpty) {
         developer.log('✅ Video URL loaded: ${response.data.videoUrl}', name: 'FavoriteController');
-
-        // Navigate to a simple video player or show video
-        // For now, just show success message - you can implement video player later
-        AppDialog.showSuccess(message: 'favorite_video_loading_msg'.tr);
-
-        // TODO: Implement video player navigation
-        // Get.to(() => VideoPlayerView(videoUrl: response.data.videoUrl));
+        await _playVideoFromUrl(response.data.videoUrl);
       } else {
         developer.log('❌ No video URL available', name: 'FavoriteController');
         AppDialog.showError(message: 'favorite_no_video_available'.tr);
@@ -520,6 +510,70 @@ class FavoriteController extends GetxController {
       AppDialog.showError(message: 'favorite_error_loading_video'.tr);
     } finally {
       isLoadingVideo.value = false;
+    }
+  }
+
+  // Play video from URL using media_kit
+  Future<void> _playVideoFromUrl(String videoUrl) async {
+    try {
+      developer.log('▶️ Playing video: $videoUrl', name: 'FavoriteController');
+
+      // Dispose previous player if exists
+      await _disposeVideoPlayer();
+
+      // Initialize media_kit player
+      player = Player(
+        configuration: const PlayerConfiguration(
+          bufferSize: 32 * 1024 * 1024, // 32MB buffer for faster start
+        ),
+      );
+      videoController = VideoController(player!);
+
+      // Show video UI immediately - don't wait for buffering
+      isVideoPlaying.value = true;
+
+      // Open and play media - play: true starts playback immediately
+      player?.open(Media(videoUrl), play: true);
+    } catch (e) {
+      developer.log('❌ Error playing video: $e', name: 'FavoriteController');
+      AppDialog.showError(message: 'favorite_error_playing_video'.tr);
+      isVideoPlaying.value = false;
+    }
+  }
+
+  // Play video from local file path
+  Future<void> _playVideoFromPath(String filePath) async {
+    try {
+      developer.log('▶️ Playing local video: $filePath', name: 'FavoriteController');
+
+      // Dispose previous player if exists
+      await _disposeVideoPlayer();
+
+      // Check if file exists
+      final file = File(filePath);
+      if (!await file.exists()) {
+        developer.log('❌ Video file not found: $filePath', name: 'FavoriteController');
+        AppDialog.showError(message: 'favorite_file_not_found'.tr);
+        return;
+      }
+
+      // Initialize media_kit player
+      player = Player(
+        configuration: const PlayerConfiguration(
+          bufferSize: 32 * 1024 * 1024,
+        ),
+      );
+      videoController = VideoController(player!);
+
+      // Show video UI immediately
+      isVideoPlaying.value = true;
+
+      // Open and play - local files should start instantly
+      player?.open(Media(filePath), play: true);
+    } catch (e) {
+      developer.log('❌ Error playing local video: $e', name: 'FavoriteController');
+      AppDialog.showError(message: 'favorite_error_playing_video'.tr);
+      isVideoPlaying.value = false;
     }
   }
 
@@ -600,56 +654,9 @@ class FavoriteController extends GetxController {
 
   // Play downloaded video inline using media_kit
   Future<void> playDownloadedVideo(DownloadedVideoModel video) async {
-    try {
-      isLoadingVideo.value = true;
-      videoLoadProgress.value = 0.0;
-      currentPlayingVideoId.value = video.lessonId;
-
-      developer.log('🎥 Playing downloaded video: ${video.lessonName}', name: 'FavoriteController');
-
-      // Dispose previous player if exists
-      await _disposeVideoPlayer();
-
-      // Check if file exists
-      final file = File(video.localPath);
-      if (!await file.exists()) {
-        developer.log('❌ Video file not found: ${video.localPath}', name: 'FavoriteController');
-        AppDialog.showError(message: 'favorite_file_not_found'.tr);
-        isLoadingVideo.value = false;
-        return;
-      }
-
-      // Initialize media_kit player
-      player = Player();
-      videoController = VideoController(player!);
-
-      // Listen for errors
-      player!.stream.error.listen((error) {
-        developer.log('❌ Video error: $error', name: 'FavoriteController');
-      });
-
-      // Listen for playing state
-      player!.stream.playing.listen((playing) {
-        if (playing) {
-          videoLoadProgress.value = 1.0;
-          isLoadingVideo.value = false;
-        }
-      });
-
-      // Open and play video from local file
-      await player!.open(Media(file.path));
-      await player!.play();
-
-      isVideoPlaying.value = true;
-      videoLoadProgress.value = 1.0;
-      developer.log('✅ Video player initialized successfully', name: 'FavoriteController');
-    } catch (e) {
-      developer.log('❌ Error playing video: $e', name: 'FavoriteController');
-      AppDialog.showError(message: 'favorite_error_playing_video'.tr);
-      await _disposeVideoPlayer();
-    } finally {
-      isLoadingVideo.value = false;
-    }
+    currentPlayingVideoId.value = video.lessonId;
+    developer.log('🎥 Playing downloaded video: ${video.lessonName}', name: 'FavoriteController');
+    await _playVideoFromPath(video.localPath);
   }
 
   // Stop and dispose video player

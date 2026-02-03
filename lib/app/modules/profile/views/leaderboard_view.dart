@@ -1,12 +1,12 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_loader.dart';
+import '../../../core/widgets/api_image.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/profile_page_header_widget.dart';
 
@@ -342,18 +342,12 @@ class LeaderboardView extends GetView<ProfileController> {
           // Profile Picture
           ClipOval(
             child: player.pictureUrl != null
-                ? CachedNetworkImage(
+                ? ApiImage(
                     imageUrl: player.pictureUrl!,
                     width: 50,
                     height: 50,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: AppColors.grey200,
-                      child: const Center(
-                        child: AppLoader(size: 30),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
+                    errorWidget: Container(
                       color: AppColors.grey200,
                       child: const Icon(
                         Icons.person,

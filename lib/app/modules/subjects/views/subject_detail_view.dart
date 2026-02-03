@@ -531,17 +531,18 @@ class SubjectDetailView extends GetView<SubjectsController> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                         elevation: 0,
                       ),
                       child: Text(
-                        isGuestMode ? 'login'.tr : 'view_subscription_plans'.tr,
+                        isGuestMode ? 'login'.tr : 'view_plans'.tr,
                         style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),

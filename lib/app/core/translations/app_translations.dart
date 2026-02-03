@@ -81,6 +81,56 @@ class AppTranslations extends Translations {
           'faq_delete_account_a':
               'يمكنك حذف حسابك من خلال الذهاب إلى الملف الشخصي ثم الضغط على حذف الحساب في أسفل الصفحة.',
 
+          // Dialog buttons
+          'ok': 'حسناً',
+
+          // Navigation
+          'home': 'الرئيسية',
+          'profile': 'الملف الشخصي',
+
+          // Login/Subscription dialogs
+          'login_to_access_favorites': 'يجب عليك تسجيل الدخول للوصول إلى المفضلة',
+          'subscribe_to_access_challenges': 'يجب عليك الاشتراك للوصول إلى التحديات ولوحة المتصدرين',
+          'create_account_to_access': 'يجب عليك إنشاء حساب للوصول إلى محتوى الدروس',
+          'subscribe_to_access_lessons': 'يجب الاشتراك للوصول إلى محتوى الدروس',
+
+          // Lessons
+          'error_loading_lessons': 'حدث خطأ أثناء تحميل الدروس',
+          'error_loading_lesson': 'حدث خطأ أثناء تحميل الدرس',
+          'search_result': 'نتيجة البحث',
+          'invalid_stream_link': 'رابط البث غير صالح',
+          'error_updating_favorites': 'حدث خطأ أثناء تحديث المفضلة',
+          'no_summary_available': 'لا يوجد ملخص متاح لهذا الدرس',
+          'error_loading_summary': 'حدث خطأ أثناء تحميل الملخص',
+          'lesson_not_found': 'لم يتم العثور على الدرس',
+
+          // Quiz/Test
+          'test_time_expired': 'انتهى الاختبار. يمكنك بدء اختبار جديد.',
+          'failed_to_start_test': 'فشل بدء الاختبار',
+          'failed_to_submit_answer': 'فشل إرسال الإجابة',
+          'server_error': 'خطأ في الخادم. يرجى المحاولة لاحقاً',
+          'failed_to_load_test': 'فشل تحميل الاختبار',
+          'time_up': 'انتهى',
+          'test_results': 'نتيجة الاختبار',
+          'test_time_ended': 'لقد انتهى الاختبار',
+          'total_questions': 'إجمالي الأسئلة',
+          'correct_answers': 'الإجابات الصحيحة',
+          'wrong_answers': 'الإجابات الخاطئة',
+          'not_answered': 'لم يتم الإجابة',
+          'finish': 'إنهاء',
+
+          // Video download
+          'no_video_link_available': 'لا يوجد رابط فيديو متاح',
+          'video_downloaded_successfully': 'تم تنزيل الفيديو بنجاح',
+          'error_downloading_video': 'حدث خطأ أثناء تنزيل الفيديو',
+          'delete_video': 'حذف الفيديو',
+          'delete_video_confirmation': 'هل أنت متأكد من حذف هذا الفيديو المحمل؟',
+          'delete_video_confirmation_detail': 'هل أنت متأكد من حذف هذا الفيديو المحمل؟\nيمكنك تنزيله مرة أخرى لاحقاً',
+          'video_deleted_successfully': 'تم حذف الفيديو بنجاح',
+          'no_video_available_for_download': 'لا يوجد فيديو متاح للتنزيل',
+          'download_cancelled': 'تم إلغاء التنزيل',
+          'error_deleting_video': 'حدث خطأ أثناء حذف الفيديو',
+
           // Splash & Loading
           'loading': 'جاري التحميل',
           'user': 'مستخدم',
@@ -90,6 +140,7 @@ class AppTranslations extends Translations {
           'login_to_access_content': 'يجب عليك تسجيل الدخول للوصول إلى المحتوى',
           'subscribe_to_access_content': 'يجب الاشتراك للوصول إلى المحتوى',
           'view_subscription_plans': 'عرض خطط الاشتراك',
+          'view_plans': 'عرض الخطط',
 
           // Onboarding
           'skip': 'تخطي',
@@ -98,8 +149,8 @@ class AppTranslations extends Translations {
           'continue_as_guest': 'المتابعة كزائر',
           'select_preferences': 'اختر تفضيلاتك',
           'select_educational_stage_first': 'اختر المرحلة الدراسية أولاً',
-          'onboarding_title_1': 'تعلم بذكاء، لا بجهد',
-          'onboarding_desc_1': 'ابدأ رحلتك مع ماجور كلاس، المنصة التي تبني معرفتك خطوة بخطوة باستخدام أدوات ذكية وتجربة تعلم مصممة خصيصاً لك.',
+          'onboarding_title_1': 'مجتمع ماجور اكلاس',
+          'onboarding_desc_1': 'انضم إلى فضاء يجمع نخبة التلاميذ والمدرسين لتبادل الخبرات العلمية وتجاوز التحديات الدراسية. استفد من توجيهات الأساتذة لتعزيز مستواك التعليمي وضمان تفوقك الدراسي.',
           'onboarding_title_2': 'تعليم تفاعلي يشبهك',
           'onboarding_desc_2': 'تعلم بالطريقة التي تفضلها – فيديوهات، اختبارات، أو مهارات تفاعلية – ماجور كلاس يجعل كل درس تجربة ممتعة وسهلة الفهم.',
           'onboarding_title_3': 'نمو مع مجتمع ماجور كلاس',
@@ -221,6 +272,7 @@ class AppTranslations extends Translations {
           // Payment
           'enter_payment_details': 'من فضلك أدخل البيانات التالية لإتمام اشتراكك',
           'full_name': 'الاسم الكامل',
+          'please_enter_full_name': 'من فضلك أدخل الاسم الكامل',
           'select_payment_account': 'اختر حساب الدفع',
           'no_bank_accounts': 'لا توجد حسابات بنكية متاحة حالياً',
           'unknown_bank': 'Unknown Bank',
@@ -495,6 +547,11 @@ class AppTranslations extends Translations {
           'login_success': 'تم تسجيل الدخول بنجاح',
           'continue_button': 'متابعة',
           'unexpected_error': 'حدث خطأ غير متوقع',
+          'failed_to_process_response': 'فشل في معالجة استجابة الخادم',
+          'error_setting_password': 'حدث خطأ أثناء تعيين كلمة المرور',
+          'password_set_successfully': 'تم تعيين كلمة المرور بنجاح',
+          'error_resetting_password': 'حدث خطأ أثناء إعادة تعيين كلمة المرور',
+          'password_reset_successfully': 'تم إعادة تعيين كلمة المرور بنجاح',
           'failed_to_load_stages': 'فشل تحميل المراحل الدراسية',
           'please_enter_username': 'من فضلك أدخل اسم المستخدم',
           'username_must_be_3_chars': 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل',
@@ -520,7 +577,7 @@ class AppTranslations extends Translations {
           'error_applying_coupon': 'حدث خطأ أثناء تطبيق كود الخصم',
           'please_select_payment_account': 'من فضلك اختر حساب الدفع',
           'please_attach_receipt': 'من فضلك قم بإرفاق صورة الحوالة',
-          'please_enter_reference_number': 'من فضلك أدخل رقم المرجع',
+          'please_enter_reference_number': 'من فضلك ادخل الرقم الذي تم الدفع منه',
           'payment_request_sent_success': 'تم إرسال طلبك بنجاح\nعليك الانتظار حتى يتم قبول حسابك',
           'go_to_home': 'الذهاب للصفحة الرئيسية',
           'error_completing_payment': 'حدث خطأ أثناء إتمام الدفع',
@@ -608,6 +665,56 @@ class AppTranslations extends Translations {
           'faq_delete_account_a':
               'You can delete your account by going to Profile then clicking on Delete Account at the bottom of the page.',
 
+          // Dialog buttons
+          'ok': 'OK',
+
+          // Navigation
+          'home': 'Home',
+          'profile': 'Profile',
+
+          // Login/Subscription dialogs
+          'login_to_access_favorites': 'You must login to access favorites',
+          'subscribe_to_access_challenges': 'You must subscribe to access challenges and leaderboard',
+          'create_account_to_access': 'You must create an account to access lesson content',
+          'subscribe_to_access_lessons': 'You must subscribe to access lesson content',
+
+          // Lessons
+          'error_loading_lessons': 'Error loading lessons',
+          'error_loading_lesson': 'Error loading lesson',
+          'search_result': 'Search Result',
+          'invalid_stream_link': 'Invalid stream link',
+          'error_updating_favorites': 'Error updating favorites',
+          'no_summary_available': 'No summary available for this lesson',
+          'error_loading_summary': 'Error loading summary',
+          'lesson_not_found': 'Lesson not found',
+
+          // Quiz/Test
+          'test_time_expired': 'Test completed. You can start a new test.',
+          'failed_to_start_test': 'Failed to start test',
+          'failed_to_submit_answer': 'Failed to submit answer',
+          'server_error': 'Server error. Please try again later.',
+          'failed_to_load_test': 'Failed to load test',
+          'time_up': 'Finished',
+          'test_results': 'Test Results',
+          'test_time_ended': 'Test has ended',
+          'total_questions': 'Total Questions',
+          'correct_answers': 'Correct Answers',
+          'wrong_answers': 'Wrong Answers',
+          'not_answered': 'Not Answered',
+          'finish': 'Finish',
+
+          // Video download
+          'no_video_link_available': 'No video link available',
+          'video_downloaded_successfully': 'Video downloaded successfully',
+          'error_downloading_video': 'Error downloading video',
+          'delete_video': 'Delete Video',
+          'delete_video_confirmation': 'Are you sure you want to delete this downloaded video?',
+          'delete_video_confirmation_detail': 'Are you sure you want to delete this downloaded video?\nYou can download it again later',
+          'video_deleted_successfully': 'Video deleted successfully',
+          'no_video_available_for_download': 'No video available for download',
+          'download_cancelled': 'Download cancelled',
+          'error_deleting_video': 'Error deleting video',
+
           // Splash & Loading
           'loading': 'Loading',
           'user': 'User',
@@ -617,6 +724,7 @@ class AppTranslations extends Translations {
           'login_to_access_content': 'You must login to access the content',
           'subscribe_to_access_content': 'You must subscribe to access the content',
           'view_subscription_plans': 'View Subscription Plans',
+          'view_plans': 'View Plans',
 
           // Onboarding
           'skip': 'Skip',
@@ -748,6 +856,7 @@ class AppTranslations extends Translations {
           // Payment
           'enter_payment_details': 'Please enter the following details to complete your subscription',
           'full_name': 'Full Name',
+          'please_enter_full_name': 'Please enter full name',
           'select_payment_account': 'Select Payment Account',
           'no_bank_accounts': 'No bank accounts available currently',
           'unknown_bank': 'Unknown Bank',
@@ -1022,6 +1131,11 @@ class AppTranslations extends Translations {
           'login_success': 'Login successful',
           'continue_button': 'Continue',
           'unexpected_error': 'An unexpected error occurred',
+          'failed_to_process_response': 'Failed to process server response',
+          'error_setting_password': 'Error setting password',
+          'password_set_successfully': 'Password set successfully',
+          'error_resetting_password': 'Error resetting password',
+          'password_reset_successfully': 'Password reset successfully',
           'failed_to_load_stages': 'Failed to load educational stages',
           'please_enter_username': 'Please enter username',
           'username_must_be_3_chars': 'Username must be at least 3 characters',
@@ -1047,7 +1161,7 @@ class AppTranslations extends Translations {
           'error_applying_coupon': 'Error applying coupon',
           'please_select_payment_account': 'Please select payment account',
           'please_attach_receipt': 'Please attach transfer receipt',
-          'please_enter_reference_number': 'Please enter reference number',
+          'please_enter_reference_number': 'Please enter the number from which payment was made',
           'payment_request_sent_success': 'Your request has been sent successfully\nPlease wait until your account is approved',
           'go_to_home': 'Go to Home',
           'error_completing_payment': 'Error completing payment',
@@ -1141,6 +1255,56 @@ class AppTranslations extends Translations {
           'faq_delete_account_a':
               'Vous pouvez supprimer votre compte en allant dans Profil puis en cliquant sur Supprimer le compte en bas de la page.',
 
+          // Dialog buttons
+          'ok': 'D\'accord',
+
+          // Navigation
+          'home': 'Accueil',
+          'profile': 'Profil',
+
+          // Login/Subscription dialogs
+          'login_to_access_favorites': 'Vous devez vous connecter pour accéder aux favoris',
+          'subscribe_to_access_challenges': 'Vous devez vous abonner pour accéder aux défis et au classement',
+          'create_account_to_access': 'Vous devez créer un compte pour accéder au contenu des leçons',
+          'subscribe_to_access_lessons': 'Vous devez vous abonner pour accéder au contenu des leçons',
+
+          // Lessons
+          'error_loading_lessons': 'Erreur lors du chargement des leçons',
+          'error_loading_lesson': 'Erreur lors du chargement de la leçon',
+          'search_result': 'Résultat de recherche',
+          'invalid_stream_link': 'Lien de diffusion invalide',
+          'error_updating_favorites': 'Erreur lors de la mise à jour des favoris',
+          'no_summary_available': 'Aucun résumé disponible pour cette leçon',
+          'error_loading_summary': 'Erreur lors du chargement du résumé',
+          'lesson_not_found': 'Leçon non trouvée',
+
+          // Quiz/Test
+          'test_time_expired': 'Test terminé. Vous pouvez commencer un nouveau test.',
+          'failed_to_start_test': 'Échec du démarrage du test',
+          'failed_to_submit_answer': 'Échec de l\'envoi de la réponse',
+          'server_error': 'Erreur serveur. Veuillez réessayer plus tard.',
+          'failed_to_load_test': 'Échec du chargement du test',
+          'time_up': 'Terminé',
+          'test_results': 'Résultats du test',
+          'test_time_ended': 'Le test est terminé',
+          'total_questions': 'Total des questions',
+          'correct_answers': 'Réponses correctes',
+          'wrong_answers': 'Réponses incorrectes',
+          'not_answered': 'Non répondu',
+          'finish': 'Terminer',
+
+          // Video download
+          'no_video_link_available': 'Aucun lien vidéo disponible',
+          'video_downloaded_successfully': 'Vidéo téléchargée avec succès',
+          'error_downloading_video': 'Erreur lors du téléchargement de la vidéo',
+          'delete_video': 'Supprimer la vidéo',
+          'delete_video_confirmation': 'Êtes-vous sûr de vouloir supprimer cette vidéo téléchargée?',
+          'delete_video_confirmation_detail': 'Êtes-vous sûr de vouloir supprimer cette vidéo téléchargée?\nVous pourrez la télécharger à nouveau plus tard',
+          'video_deleted_successfully': 'Vidéo supprimée avec succès',
+          'no_video_available_for_download': 'Aucune vidéo disponible pour le téléchargement',
+          'download_cancelled': 'Téléchargement annulé',
+          'error_deleting_video': 'Erreur lors de la suppression de la vidéo',
+
           // Splash & Loading
           'loading': 'Chargement',
           'user': 'Utilisateur',
@@ -1150,6 +1314,7 @@ class AppTranslations extends Translations {
           'login_to_access_content': 'Vous devez vous connecter pour accéder au contenu',
           'subscribe_to_access_content': 'Vous devez vous abonner pour accéder au contenu',
           'view_subscription_plans': 'Voir les plans d\'abonnement',
+          'view_plans': 'Voir les plans',
 
           // Onboarding
           'skip': 'Passer',
@@ -1281,6 +1446,7 @@ class AppTranslations extends Translations {
           // Payment
           'enter_payment_details': 'Veuillez entrer les détails suivants pour compléter votre abonnement',
           'full_name': 'Nom complet',
+          'please_enter_full_name': 'Veuillez entrer le nom complet',
           'select_payment_account': 'Sélectionner le compte de paiement',
           'no_bank_accounts': 'Aucun compte bancaire disponible actuellement',
           'unknown_bank': 'Banque inconnue',
@@ -1555,6 +1721,11 @@ class AppTranslations extends Translations {
           'login_success': 'Connexion réussie',
           'continue_button': 'Continuer',
           'unexpected_error': 'Une erreur inattendue s\'est produite',
+          'failed_to_process_response': 'Échec du traitement de la réponse du serveur',
+          'error_setting_password': 'Erreur lors de la définition du mot de passe',
+          'password_set_successfully': 'Mot de passe défini avec succès',
+          'error_resetting_password': 'Erreur lors de la réinitialisation du mot de passe',
+          'password_reset_successfully': 'Mot de passe réinitialisé avec succès',
           'failed_to_load_stages': 'Échec du chargement des niveaux d\'études',
           'please_enter_username': 'Veuillez entrer le nom d\'utilisateur',
           'username_must_be_3_chars': 'Le nom d\'utilisateur doit comporter au moins 3 caractères',
@@ -1580,7 +1751,7 @@ class AppTranslations extends Translations {
           'error_applying_coupon': 'Erreur lors de l\'application du coupon',
           'please_select_payment_account': 'Veuillez sélectionner le compte de paiement',
           'please_attach_receipt': 'Veuillez joindre le reçu de transfert',
-          'please_enter_reference_number': 'Veuillez entrer le numéro de référence',
+          'please_enter_reference_number': 'Veuillez entrer le numéro à partir duquel le paiement a été effectué',
           'payment_request_sent_success': 'Votre demande a été envoyée avec succès\nVeuillez attendre que votre compte soit approuvé',
           'go_to_home': 'Aller à l\'accueil',
           'error_completing_payment': 'Erreur lors de la finalisation du paiement',

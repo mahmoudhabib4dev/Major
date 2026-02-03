@@ -25,23 +25,14 @@ class ParentView extends GetView<ParentController> {
       ),
     );
 
-    // Check if current language is Arabic (RTL)
-    final isArabic = Get.locale?.languageCode == 'ar';
-
-    // Reorder pages based on language (mirror for Arabic)
-    final List<Widget> pages = isArabic
-        ? [
-            const HomeView(),
-            const SubjectsView(),
-            const FavoriteView(),
-            const ProfileView(),
-          ]
-        : [
-            const ProfileView(),
-            const FavoriteView(),
-            const SubjectsView(),
-            const HomeView(),
-          ];
+    // Use same page order for all languages (matches controller indices)
+    // 0: Home, 1: Subjects, 2: Favorite, 3: Profile
+    final List<Widget> pages = [
+      const HomeView(),
+      const SubjectsView(),
+      const FavoriteView(),
+      const ProfileView(),
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -115,23 +106,13 @@ class ParentView extends GetView<ParentController> {
     required int index,
     required bool isActive,
   }) {
-    // Check if current language is Arabic (RTL)
-    final isArabic = Get.locale?.languageCode == 'ar';
-
-    // Reorder icons based on language (mirror for Arabic)
-    final icons = isArabic
-        ? [
-            {'unselected': AppImages.icon5, 'selected': AppImages.icon6},   // Home
-            {'unselected': AppImages.icon11, 'selected': AppImages.icon12}, // Subjects
-            {'unselected': AppImages.icon7, 'selected': AppImages.icon8},   // Favorite
-            {'unselected': AppImages.icon9, 'selected': AppImages.icon10},  // Profile
-          ]
-        : [
-            {'unselected': AppImages.icon9, 'selected': AppImages.icon10},  // Profile
-            {'unselected': AppImages.icon7, 'selected': AppImages.icon8},   // Favorite
-            {'unselected': AppImages.icon11, 'selected': AppImages.icon12}, // Subjects
-            {'unselected': AppImages.icon5, 'selected': AppImages.icon6},   // Home
-          ];
+    // Icons match controller's unified page order: 0=Home, 1=Subjects, 2=Favorite, 3=Profile
+    final icons = [
+      {'unselected': AppImages.icon5, 'selected': AppImages.icon6},   // 0: Home
+      {'unselected': AppImages.icon11, 'selected': AppImages.icon12}, // 1: Subjects
+      {'unselected': AppImages.icon7, 'selected': AppImages.icon8},   // 2: Favorite
+      {'unselected': AppImages.icon9, 'selected': AppImages.icon10},  // 3: Profile
+    ];
 
     final iconPath = isActive ? icons[index]['selected']! : icons[index]['unselected']!;
 

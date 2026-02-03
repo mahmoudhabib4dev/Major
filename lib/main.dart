@@ -50,8 +50,11 @@ void main() async {
     apiClient.setToken(storedToken);
   }
 
-  // Get saved locale or default to Arabic
-  final savedLocale = storageService.locale ?? 'en';
+  // Get saved locale or use device language as default
+  final supportedLocales = ['ar', 'en', 'fr'];
+  final deviceLocale = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+  final defaultLocale = supportedLocales.contains(deviceLocale) ? deviceLocale : 'ar';
+  final savedLocale = storageService.locale ?? defaultLocale;
 
   // Set the language for API requests
   apiClient.setLanguage(savedLocale);
@@ -65,7 +68,7 @@ void main() async {
       getPages: AppPages.routes,
       theme: ThemeData(fontFamily: 'Tajawal'),
       locale: Locale(savedLocale),
-      fallbackLocale: const Locale('en'),
+      fallbackLocale: const Locale('ar'),
       translations: AppTranslations(),
       supportedLocales: const [
         Locale('ar'),

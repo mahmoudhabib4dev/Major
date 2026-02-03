@@ -55,7 +55,7 @@ class AuthenticationController extends GetxController {
     OnboardingData(
       icon: AppImages.icon1,
       titleKey: 'onboarding_title_1',
-      emoji: '🎓',
+      emoji: '🇲🇷',
       descriptionKey: 'onboarding_desc_1',
     ),
     OnboardingData(
@@ -501,6 +501,7 @@ class AuthenticationController extends GetxController {
   final RxDouble discountAmount = 0.0.obs;
   final RxDouble totalAmount = 0.0.obs;
   final RxBool isCouponApplied = false.obs;
+  final RxBool isApplyingCoupon = false.obs;
 
   // Password strength indicators
   final RxBool hasMinLength = false.obs;
@@ -1253,7 +1254,7 @@ class AuthenticationController extends GetxController {
   // Start countdown timer for resend
   void startResendCountdown() {
     canResend.value = false;
-    resendCountdown.value = 120; // 2 minutes
+    resendCountdown.value = 1800; // 30 minutes
 
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 1));
@@ -1400,8 +1401,14 @@ class AuthenticationController extends GetxController {
         // Now login to get permanent token and full user data
         developer.log('🔐 Auto-login after registration...', name: 'AuthController');
 
+        // Use saved phone number from storage (in case user resumed from password step)
+        final savedPhone = storageService.registrationPhone;
+        final phoneToUse = savedPhone ?? '${selectedCountryCode.value}${signUpPhoneController.text.trim()}';
+
+        developer.log('📱 Using phone for login: $phoneToUse', name: 'AuthController');
+
         final loginRequest = LoginRequestModel(
-          phone: '${selectedCountryCode.value}${signUpPhoneController.text.trim()}',
+          phone: phoneToUse,
           password: newPasswordController.text.trim(),
         );
 
@@ -1660,7 +1667,7 @@ class AuthenticationController extends GetxController {
       return;
     }
 
-    isLoading.value = true;
+    isApplyingCoupon.value = true;
 
     try {
       developer.log('🎫 Applying coupon code...', name: 'AuthController');
@@ -1670,22 +1677,35 @@ class AuthenticationController extends GetxController {
         throw ApiErrorModel(message: 'please_select_plan_first'.tr);
       }
 
+      // Use applyCoupon endpoint for validation
       final response = await authProvider.applyCoupon(
         planId: planId,
         couponCode: couponCodeController.text.trim(),
       );
 
       developer.log('✅ Coupon applied successfully', name: 'AuthController');
+      developer.log('Response data: ${response.toJson()}', name: 'AuthController');
 
-      // Update amounts from nested data object
-      originalAmount.value = response.data?.originalPrice ?? 0.0;
-      discountAmount.value = response.data?.discount ?? 0.0;
-      totalAmount.value = response.data?.finalPrice ?? 0.0;
-      isCouponApplied.value = true;
+      // Update amounts from response
+      if (response.originalPrice != null && response.finalPrice != null) {
+        originalAmount.value = response.originalPrice!;
+        discountAmount.value = response.discountValue ?? 0.0;
+        totalAmount.value = response.finalPrice!;
+        isCouponApplied.value = true;
 
-      AppDialog.showSuccess(
-        message: response.message ?? 'coupon_applied_success'.tr,
-      );
+        developer.log('💰 Updated amounts - Original: ${originalAmount.value}, Discount: ${discountAmount.value}, Total: ${totalAmount.value}', name: 'AuthController');
+
+        AppDialog.showSuccess(
+          message: 'coupon_applied_success'.tr,
+        );
+      } else {
+        developer.log('⚠️ Response is missing price information', name: 'AuthController');
+        isCouponApplied.value = false;
+
+        AppDialog.showError(
+          message: 'error_applying_coupon'.tr,
+        );
+      }
     } on ApiErrorModel catch (error) {
       developer.log('❌ Apply coupon error: ${error.displayMessage}', name: 'AuthController');
       AppDialog.showError(message: error.displayMessage);
@@ -1695,12 +1715,24 @@ class AuthenticationController extends GetxController {
       AppDialog.showError(message: 'error_applying_coupon'.tr);
       isCouponApplied.value = false;
     } finally {
-      isLoading.value = false;
+      isApplyingCoupon.value = false;
     }
   }
 
   // Complete payment
   Future<void> completePayment() async {
+    // Validate full name
+    if (usernameController.text.trim().isEmpty) {
+      AppDialog.showError(message: 'please_enter_full_name'.tr);
+      return;
+    }
+
+    // Validate phone number
+    if (signUpPhoneController.text.trim().isEmpty) {
+      AppDialog.showError(message: 'please_enter_phone_number'.tr);
+      return;
+    }
+
     // Validate bank account selection
     if (selectedBankAccount.value == null) {
       AppDialog.showError(message: 'please_select_payment_account'.tr);

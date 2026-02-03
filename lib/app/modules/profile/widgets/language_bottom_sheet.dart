@@ -238,6 +238,15 @@ class LanguageBottomSheet extends GetView<ProfileController> {
                 ),
                 child: Row(
                   children: [
+                    // Language name
+                    Text(
+                      language['nameKey']!.tr,
+                      style: AppTextStyles.bodyText(context).copyWith(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? AppColors.primary : null,
+                      ),
+                    ),
+                    const Spacer(),
                     // Radio button
                     Container(
                       width: 24,
@@ -261,15 +270,6 @@ class LanguageBottomSheet extends GetView<ProfileController> {
                               ),
                             )
                           : null,
-                    ),
-                    const Spacer(),
-                    // Language name
-                    Text(
-                      language['nameKey']!.tr,
-                      style: AppTextStyles.bodyText(context).copyWith(
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? AppColors.primary : null,
-                      ),
                     ),
                   ],
                 ),

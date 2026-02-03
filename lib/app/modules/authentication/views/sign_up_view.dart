@@ -1,7 +1,6 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:get/get.dart';
 
 import '../../../core/constants/app_images.dart';
@@ -1475,19 +1474,78 @@ class _DatePickerBottomSheet extends StatefulWidget {
 }
 
 class _DatePickerBottomSheetState extends State<_DatePickerBottomSheet> {
-  late DateTime _selectedDate;
+  late int _selectedDay;
+  late int _selectedMonth;
+  late int _selectedYear;
+
+  late FixedExtentScrollController _dayController;
+  late FixedExtentScrollController _monthController;
+  late FixedExtentScrollController _yearController;
+
+  // Standard Arabic month names (used in North Africa and Gulf)
+  static const List<String> _arabicMonths = [
+    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  ];
+
+  static const List<String> _englishMonths = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  static const List<String> _frenchMonths = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
+
+  List<String> get _months {
+    final locale = Get.locale?.languageCode ?? 'ar';
+    if (locale == 'ar') return _arabicMonths;
+    if (locale == 'fr') return _frenchMonths;
+    return _englishMonths;
+  }
+
+  int get _daysInMonth {
+    return DateTime(_selectedYear, _selectedMonth + 1, 0).day;
+  }
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.initialDate;
+    _selectedDay = widget.initialDate.day;
+    _selectedMonth = widget.initialDate.month;
+    _selectedYear = widget.initialDate.year;
+
+    _dayController = FixedExtentScrollController(initialItem: _selectedDay - 1);
+    _monthController = FixedExtentScrollController(initialItem: _selectedMonth - 1);
+    _yearController = FixedExtentScrollController(initialItem: DateTime.now().year - _selectedYear);
+  }
+
+  @override
+  void dispose() {
+    _dayController.dispose();
+    _monthController.dispose();
+    _yearController.dispose();
+    super.dispose();
+  }
+
+  void _updateDate() {
+    // Ensure day is valid for the selected month
+    final maxDay = _daysInMonth;
+    if (_selectedDay > maxDay) {
+      _selectedDay = maxDay;
+      _dayController.jumpToItem(_selectedDay - 1);
+    }
+
+    final newDate = DateTime(_selectedYear, _selectedMonth, _selectedDay);
+    widget.onDateChanged(newDate);
   }
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final notchRadius = screenSize.width * 0.08;
-    final locale = Get.locale?.languageCode ?? 'ar';
+    final currentYear = DateTime.now().year;
 
     return Transform.translate(
       offset: Offset(0, notchRadius * 0.8),
@@ -1556,39 +1614,124 @@ class _DatePickerBottomSheetState extends State<_DatePickerBottomSheet> {
                       height: 1,
                     ),
                     SizedBox(height: AppDimensions.spacing(context, 0.03)),
-                    // Date Picker
+                    // Custom Date Picker
                     FadeInUp(
                       duration: const Duration(milliseconds: 400),
                       child: Container(
+                        height: 200,
                         padding: EdgeInsets.symmetric(
                           horizontal: AppDimensions.spacing(context, 0.04),
                         ),
-                        child: DatePickerWidget(
-                          looping: false,
-                          firstDate: DateTime(1950),
-                          lastDate: DateTime.now(),
-                          initialDate: _selectedDate,
-                          dateFormat: 'dd-MMMM-yyyy',
-                          locale: locale == 'ar'
-                              ? DateTimePickerLocale.ar
-                              : locale == 'fr'
-                                  ? DateTimePickerLocale.fr
-                                  : DateTimePickerLocale.en_us,
-                          pickerTheme: DateTimePickerTheme(
-                            backgroundColor: AppColors.white,
-                            itemTextStyle: AppTextStyles.bodyText(context).copyWith(
-                              color: AppColors.textDark,
-                              fontSize: 18,
+                        child: Stack(
+                          children: [
+                            // Selection indicator
+                            Center(
+                              child: Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    top: BorderSide(color: AppColors.primary, width: 1),
+                                    bottom: BorderSide(color: AppColors.primary, width: 1),
+                                  ),
+                                ),
+                              ),
                             ),
-                            dividerColor: AppColors.primary,
-                            itemHeight: 50,
-                          ),
-                          onChange: (DateTime newDate, _) {
-                            setState(() {
-                              _selectedDate = newDate;
-                            });
-                            widget.onDateChanged(newDate);
-                          },
+                            Row(
+                              children: [
+                                // Day picker
+                                Expanded(
+                                  child: ListWheelScrollView.useDelegate(
+                                    controller: _dayController,
+                                    itemExtent: 50,
+                                    perspective: 0.005,
+                                    diameterRatio: 1.2,
+                                    physics: const FixedExtentScrollPhysics(),
+                                    onSelectedItemChanged: (index) {
+                                      setState(() {
+                                        _selectedDay = index + 1;
+                                      });
+                                      _updateDate();
+                                    },
+                                    childDelegate: ListWheelChildBuilderDelegate(
+                                      childCount: _daysInMonth,
+                                      builder: (context, index) {
+                                        return Center(
+                                          child: Text(
+                                            '${index + 1}'.padLeft(2, '0'),
+                                            style: AppTextStyles.bodyText(context).copyWith(
+                                              color: AppColors.textDark,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                // Month picker
+                                Expanded(
+                                  flex: 2,
+                                  child: ListWheelScrollView.useDelegate(
+                                    controller: _monthController,
+                                    itemExtent: 50,
+                                    perspective: 0.005,
+                                    diameterRatio: 1.2,
+                                    physics: const FixedExtentScrollPhysics(),
+                                    onSelectedItemChanged: (index) {
+                                      setState(() {
+                                        _selectedMonth = index + 1;
+                                      });
+                                      _updateDate();
+                                    },
+                                    childDelegate: ListWheelChildBuilderDelegate(
+                                      childCount: 12,
+                                      builder: (context, index) {
+                                        return Center(
+                                          child: Text(
+                                            _months[index],
+                                            style: AppTextStyles.bodyText(context).copyWith(
+                                              color: AppColors.textDark,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                // Year picker
+                                Expanded(
+                                  child: ListWheelScrollView.useDelegate(
+                                    controller: _yearController,
+                                    itemExtent: 50,
+                                    perspective: 0.005,
+                                    diameterRatio: 1.2,
+                                    physics: const FixedExtentScrollPhysics(),
+                                    onSelectedItemChanged: (index) {
+                                      setState(() {
+                                        _selectedYear = currentYear - index;
+                                      });
+                                      _updateDate();
+                                    },
+                                    childDelegate: ListWheelChildBuilderDelegate(
+                                      childCount: currentYear - 1950 + 1,
+                                      builder: (context, index) {
+                                        return Center(
+                                          child: Text(
+                                            '${currentYear - index}',
+                                            style: AppTextStyles.bodyText(context).copyWith(
+                                              color: AppColors.textDark,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),

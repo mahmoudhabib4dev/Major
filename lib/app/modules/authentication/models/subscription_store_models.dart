@@ -30,6 +30,7 @@ class SubscriptionStoreRequest {
     return SubscriptionStoreRequest(
       planId: planId,
       couponCode: couponCode,
+      paymentMethod: 'bank_transfer', // Required by API even for calculation
       calculateOnly: true,
     );
   }

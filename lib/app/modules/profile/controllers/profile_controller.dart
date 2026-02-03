@@ -162,7 +162,7 @@ class ProfileController extends GetxController {
   ];
 
   // ==================== Language ====================
-  final selectedLanguage = 'ar'.obs;
+  final selectedLanguage = (Get.locale?.languageCode ?? 'ar').obs;
   final List<Map<String, String>> languages = [
     {'code': 'ar', 'nameKey': 'arabic'},
     {'code': 'en', 'nameKey': 'english'},
@@ -572,8 +572,8 @@ class ProfileController extends GetxController {
   }
 
   void _loadLanguage() {
-    // Load saved language or default to Arabic
-    final savedLocale = storageService.locale ?? 'ar';
+    // Load saved language or use current app locale
+    final savedLocale = storageService.locale ?? Get.locale?.languageCode ?? 'ar';
     selectedLanguage.value = savedLocale;
   }
 

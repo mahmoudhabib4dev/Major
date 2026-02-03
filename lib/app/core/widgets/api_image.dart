@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import '../theme/app_colors.dart';
 import 'app_loader.dart';
 
 /// Custom network image widget that handles HTTP 206 (Partial Content) responses
-/// which are commonly returned by media servers for range requests.
+/// with proper memory management and caching.
 ///
 /// Use this widget for ALL images loaded from the API.
 class ApiImage extends StatefulWidget {
@@ -31,9 +32,9 @@ class ApiImage extends StatefulWidget {
 }
 
 class _ApiImageState extends State<ApiImage> {
-  Uint8List? _imageData;
   bool _isLoading = true;
   bool _hasError = false;
+  Uint8List? _imageBytes;
 
   @override
   void initState() {
@@ -45,6 +46,11 @@ class _ApiImageState extends State<ApiImage> {
   void didUpdateWidget(ApiImage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.imageUrl != widget.imageUrl) {
+      setState(() {
+        _isLoading = true;
+        _hasError = false;
+        _imageBytes = null;
+      });
       _loadImage();
     }
   }
@@ -60,22 +66,40 @@ class _ApiImageState extends State<ApiImage> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _hasError = false;
-      _imageData = null;
-    });
-
     try {
       final response = await http.get(Uri.parse(widget.imageUrl));
 
       // Accept both 200 (OK) and 206 (Partial Content) as successful responses
       if (response.statusCode == 200 || response.statusCode == 206) {
         if (mounted) {
-          setState(() {
-            _imageData = response.bodyBytes;
-            _isLoading = false;
-          });
+          // Decode and resize image to save memory
+          final bytes = response.bodyBytes;
+
+          // If dimensions are specified, decode and resize
+          if (widget.width != null || widget.height != null) {
+            final codec = await ui.instantiateImageCodec(
+              bytes,
+              targetWidth: widget.width?.round(),
+              targetHeight: widget.height?.round(),
+            );
+            final frame = await codec.getNextFrame();
+            final data = await frame.image.toByteData(format: ui.ImageByteFormat.png);
+
+            if (mounted && data != null) {
+              setState(() {
+                _imageBytes = data.buffer.asUint8List();
+                _isLoading = false;
+              });
+            }
+          } else {
+            // No resizing needed
+            if (mounted) {
+              setState(() {
+                _imageBytes = bytes;
+                _isLoading = false;
+              });
+            }
+          }
         }
       } else {
         if (mounted) {
@@ -96,6 +120,13 @@ class _ApiImageState extends State<ApiImage> {
   }
 
   @override
+  void dispose() {
+    // Clear image data when widget is disposed
+    _imageBytes = null;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return widget.placeholder ??
@@ -111,7 +142,7 @@ class _ApiImageState extends State<ApiImage> {
           );
     }
 
-    if (_hasError || _imageData == null) {
+    if (_hasError || _imageBytes == null) {
       return widget.errorWidget ??
           SizedBox(
             width: widget.width,
@@ -127,8 +158,9 @@ class _ApiImageState extends State<ApiImage> {
       width: widget.width,
       height: widget.height,
       child: Image.memory(
-        _imageData!,
+        _imageBytes!,
         fit: widget.fit,
+        gaplessPlayback: true,
       ),
     );
   }

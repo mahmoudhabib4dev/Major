@@ -73,7 +73,12 @@ class LessonDetailController extends GetxController {
   }
 
   void _initializePlayer() {
-    player = Player();
+    player = Player(
+      configuration: const PlayerConfiguration(
+        // Reduce buffer for faster start
+        bufferSize: 32 * 1024 * 1024, // 32MB buffer
+      ),
+    );
     videoController = VideoController(player!);
   }
 
@@ -118,7 +123,7 @@ class LessonDetailController extends GetxController {
       if (e is ApiErrorModel) {
         AppDialog.showError(message: e.displayMessage);
       } else {
-        AppDialog.showError(message: 'حدث خطأ أثناء تحميل الدروس');
+        AppDialog.showError(message: 'error_loading_lessons'.tr);
       }
     } finally {
       isLoadingLessons.value = false;
@@ -139,7 +144,7 @@ class LessonDetailController extends GetxController {
       );
 
       lessons.value = [tempLesson];
-      unitName.value = 'نتيجة البحث';
+      unitName.value = 'search_result'.tr;
       teacherName.value = '';
       liveAt.value = '';
       lessonsCount.value = 1;
@@ -149,7 +154,7 @@ class LessonDetailController extends GetxController {
       await playLessonVideo(lessonId);
     } catch (e) {
       developer.log('❌ Error loading single lesson: $e', name: 'LessonDetailController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تحميل الدرس');
+      AppDialog.showError(message: 'error_loading_lesson'.tr);
     } finally {
       isLoadingLessons.value = false;
     }
@@ -202,7 +207,7 @@ class LessonDetailController extends GetxController {
               ),
               const SizedBox(height: 24),
               Text(
-                isGuestMode ? 'تسجيل الدخول مطلوب' : 'اشتراك مميز مطلوب',
+                isGuestMode ? 'login_required'.tr : 'premium_subscription_required'.tr,
                 style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 20,
@@ -214,8 +219,8 @@ class LessonDetailController extends GetxController {
               const SizedBox(height: 12),
               Text(
                 isGuestMode
-                    ? 'يجب عليك إنشاء حساب للوصول إلى محتوى الدروس'
-                    : 'يجب الاشتراك للوصول إلى محتوى الدروس',
+                    ? 'create_account_to_access'.tr
+                    : 'subscribe_to_access_lessons'.tr,
                 style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 14,
@@ -237,9 +242,9 @@ class LessonDetailController extends GetxController {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'إلغاء',
-                        style: TextStyle(
+                      child: Text(
+                        'cancel'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -267,17 +272,18 @@ class LessonDetailController extends GetxController {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                         elevation: 0,
                       ),
                       child: Text(
-                        isGuestMode ? 'تسجيل الدخول' : 'عرض خطط الاشتراك',
+                        isGuestMode ? 'login'.tr : 'view_plans'.tr,
                         style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
@@ -355,16 +361,16 @@ class LessonDetailController extends GetxController {
           // Get direct URL from YouTube
           final directUrl = await _getYouTubeDirectUrl(videoId);
           if (directUrl != null) {
-            await _playVideo(directUrl);
+            _playVideo(directUrl);
             return;
           } else {
             developer.log('❌ Could not get YouTube direct URL', name: 'LessonDetailController');
-            AppDialog.showError(message: 'رابط البث غير صالح');
+            AppDialog.showError(message: 'invalid_stream_link'.tr);
             return;
           }
         } else {
           developer.log('❌ Could not extract YouTube video ID', name: 'LessonDetailController');
-          AppDialog.showError(message: 'رابط البث غير صالح');
+          AppDialog.showError(message: 'invalid_stream_link'.tr);
           return;
         }
       }
@@ -378,12 +384,12 @@ class LessonDetailController extends GetxController {
       if (localPath != null) {
         developer.log('✅ Playing video from local storage: $localPath', name: 'LessonDetailController');
         isVideoDownloaded.value = true;
-        await _playVideoFromFile(localPath);
+        _playVideoFromFile(localPath);
       } else if (lesson != null && lesson.videoUrl != null && lesson.videoUrl!.isNotEmpty) {
         _currentVideoUrl = lesson.videoUrl!;
         developer.log('✅ Using video URL from lesson: ${lesson.videoUrl}', name: 'LessonDetailController');
         isVideoDownloaded.value = false;
-        await _playVideo(lesson.videoUrl!);
+        _playVideo(lesson.videoUrl!);
       } else {
         final storageService = Get.find<StorageService>();
         final isGuestMode = !storageService.isLoggedIn || storageService.currentUser == null;
@@ -400,7 +406,7 @@ class LessonDetailController extends GetxController {
           _currentVideoUrl = response.data.videoUrl;
           developer.log('✅ Video URL loaded from API: ${response.data.videoUrl}', name: 'LessonDetailController');
           isVideoDownloaded.value = false;
-          await _playVideo(response.data.videoUrl);
+          _playVideo(response.data.videoUrl);
         } else {
           developer.log('❌ No video URL available', name: 'LessonDetailController');
           AppDialog.showError(message: 'video_not_available'.tr);
@@ -428,14 +434,13 @@ class LessonDetailController extends GetxController {
     try {
       developer.log('▶️ Playing video: $videoUrl', name: 'LessonDetailController');
 
-      // Open the media - this starts buffering immediately
-      await player?.open(Media(videoUrl));
-
-      // Start playback
-      await player?.play();
-
+      // Show video UI immediately - don't wait for buffering
       isVideoPlaying.value = true;
       update();
+
+      // Open and play media - play: true starts playback immediately
+      // Don't await to avoid blocking on buffer
+      player?.open(Media(videoUrl), play: true);
     } catch (e) {
       developer.log('❌ Error playing video: $e', name: 'LessonDetailController');
       AppDialog.showError(message: 'video_not_available'.tr);
@@ -448,11 +453,12 @@ class LessonDetailController extends GetxController {
     try {
       developer.log('▶️ Playing local video: $filePath', name: 'LessonDetailController');
 
-      await player?.open(Media(filePath));
-      await player?.play();
-
+      // Show video UI immediately
       isVideoPlaying.value = true;
       update();
+
+      // Open and play - local files should start instantly
+      player?.open(Media(filePath), play: true);
     } catch (e) {
       developer.log('❌ Error playing local video: $e', name: 'LessonDetailController');
       AppDialog.showError(message: 'video_not_available'.tr);
@@ -498,7 +504,7 @@ class LessonDetailController extends GetxController {
       AppDialog.showError(message: error.displayMessage);
     } catch (e) {
       developer.log('❌ Unexpected error toggling favorite: $e', name: 'LessonDetailController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تحديث المفضلة');
+      AppDialog.showError(message: 'error_updating_favorites'.tr);
     }
   }
 
@@ -596,13 +602,13 @@ class LessonDetailController extends GetxController {
       } else {
         developer.log('❌ No summary available', name: 'LessonDetailController');
         AppDialog.showInfo(
-          message: 'لا يوجد ملخص متاح لهذا الدرس',
+          message: 'no_summary_available'.tr,
         );
       }
     } catch (e) {
       developer.log('❌ Error loading summary: $e', name: 'LessonDetailController');
       AppDialog.showError(
-        message: 'حدث خطأ أثناء تحميل الملخص',
+        message: 'error_loading_summary'.tr,
       );
     } finally {
       isLoadingSummary.value = false;
@@ -621,13 +627,13 @@ class LessonDetailController extends GetxController {
       }
 
       if (_currentVideoUrl.isEmpty) {
-        AppDialog.showError(message: 'لا يوجد رابط فيديو متاح');
+        AppDialog.showError(message: 'no_video_link_available'.tr);
         return;
       }
 
       final lesson = lessons.firstWhereOrNull((l) => l.id == currentLessonId.value);
       if (lesson == null) {
-        AppDialog.showError(message: 'لم يتم العثور على الدرس');
+        AppDialog.showError(message: 'lesson_not_found'.tr);
         return;
       }
 
@@ -649,7 +655,7 @@ class LessonDetailController extends GetxController {
       downloadProgress.value = 1.0;
 
       developer.log('✅ Video downloaded successfully', name: 'LessonDetailController');
-      AppDialog.showSuccess(message: 'تم تنزيل الفيديو بنجاح');
+      AppDialog.showSuccess(message: 'video_downloaded_successfully'.tr);
 
       try {
         final favoriteController = Get.find<FavoriteController>();
@@ -659,7 +665,7 @@ class LessonDetailController extends GetxController {
       }
     } catch (e) {
       developer.log('❌ Error downloading video: $e', name: 'LessonDetailController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تنزيل الفيديو');
+      AppDialog.showError(message: 'error_downloading_video'.tr);
     } finally {
       isDownloading.value = false;
     }
@@ -672,12 +678,12 @@ class LessonDetailController extends GetxController {
 
       Get.dialog(
         AlertDialog(
-          title: const Text('حذف الفيديو'),
-          content: const Text('هل أنت متأكد من حذف هذا الفيديو المحمل؟'),
+          title: Text('delete_video'.tr),
+          content: Text('delete_video_confirmation'.tr),
           actions: [
             TextButton(
               onPressed: () => Get.back(),
-              child: const Text('إلغاء'),
+              child: Text('cancel'.tr),
             ),
             TextButton(
               onPressed: () async {
@@ -687,7 +693,7 @@ class LessonDetailController extends GetxController {
                 isVideoDownloaded.value = false;
 
                 developer.log('✅ Video deleted successfully', name: 'LessonDetailController');
-                AppDialog.showSuccess(message: 'تم حذف الفيديو بنجاح');
+                AppDialog.showSuccess(message: 'video_deleted_successfully'.tr);
 
                 try {
                   final favoriteController = Get.find<FavoriteController>();
@@ -696,14 +702,14 @@ class LessonDetailController extends GetxController {
                   // FavoriteController might not be initialized
                 }
               },
-              child: const Text('حذف', style: TextStyle(color: Colors.red)),
+              child: Text('delete'.tr, style: const TextStyle(color: Colors.red)),
             ),
           ],
         ),
       );
     } catch (e) {
       developer.log('❌ Error deleting video: $e', name: 'LessonDetailController');
-      AppDialog.showError(message: 'حدث خطأ أثناء حذف الفيديو');
+      AppDialog.showError(message: 'error_deleting_video'.tr);
     }
   }
 
@@ -741,7 +747,7 @@ class LessonDetailController extends GetxController {
     final lesson = lessons.firstWhereOrNull((l) => l.id == lessonId);
     if (lesson == null) {
       developer.log('❌ Lesson not found in list: $lessonId', name: 'LessonDetailController');
-      AppDialog.showError(message: 'لم يتم العثور على الدرس');
+      AppDialog.showError(message: 'lesson_not_found'.tr);
       return;
     }
 
@@ -757,12 +763,12 @@ class LessonDetailController extends GetxController {
           developer.log('✅ Video URL loaded from API: $videoUrl', name: 'LessonDetailController');
         } else {
           developer.log('❌ API returned no video URL', name: 'LessonDetailController');
-          AppDialog.showError(message: 'لا يوجد فيديو متاح للتنزيل');
+          AppDialog.showError(message: 'no_video_available_for_download'.tr);
           return;
         }
       } catch (e) {
         developer.log('❌ Failed to fetch video URL from API: $e', name: 'LessonDetailController');
-        AppDialog.showError(message: 'لا يوجد فيديو متاح للتنزيل');
+        AppDialog.showError(message: 'no_video_available_for_download'.tr);
         return;
       }
     }
@@ -779,7 +785,7 @@ class LessonDetailController extends GetxController {
       downloadedLessons.add(lessonId);
 
       developer.log('✅ Lesson video downloaded successfully', name: 'LessonDetailController');
-      AppDialog.showSuccess(message: 'تم تنزيل الفيديو بنجاح');
+      AppDialog.showSuccess(message: 'video_downloaded_successfully'.tr);
 
       try {
         final favoriteController = Get.find<FavoriteController>();
@@ -790,14 +796,14 @@ class LessonDetailController extends GetxController {
     } on DioException catch (e) {
       if (e.type == DioExceptionType.cancel) {
         developer.log('⚠️ Download cancelled for lesson: $lessonId', name: 'LessonDetailController');
-        AppDialog.showInfo(message: 'تم إلغاء التنزيل');
+        AppDialog.showInfo(message: 'download_cancelled'.tr);
       } else {
         developer.log('❌ Error downloading lesson video: $e', name: 'LessonDetailController');
-        AppDialog.showError(message: 'حدث خطأ أثناء تنزيل الفيديو');
+        AppDialog.showError(message: 'error_downloading_video'.tr);
       }
     } catch (e) {
       developer.log('❌ Error downloading lesson video: $e', name: 'LessonDetailController');
-      AppDialog.showError(message: 'حدث خطأ أثناء تنزيل الفيديو');
+      AppDialog.showError(message: 'error_downloading_video'.tr);
     }
   }
 
@@ -844,9 +850,9 @@ class LessonDetailController extends GetxController {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'حذف الفيديو',
-                style: TextStyle(
+              Text(
+                'delete_video'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -855,9 +861,9 @@ class LessonDetailController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              const Text(
-                'هل أنت متأكد من حذف هذا الفيديو المحمل؟\nيمكنك تنزيله مرة أخرى لاحقاً',
-                style: TextStyle(
+              Text(
+                'delete_video_confirmation_detail'.tr,
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -878,9 +884,9 @@ class LessonDetailController extends GetxController {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text(
-                        'إلغاء',
-                        style: TextStyle(
+                      child: Text(
+                        'cancel'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -900,7 +906,7 @@ class LessonDetailController extends GetxController {
                         downloadedLessons.remove(lessonId);
 
                         developer.log('✅ Lesson video deleted successfully', name: 'LessonDetailController');
-                        AppDialog.showSuccess(message: 'تم حذف الفيديو بنجاح');
+                        AppDialog.showSuccess(message: 'video_deleted_successfully'.tr);
 
                         try {
                           final favoriteController = Get.find<FavoriteController>();
@@ -917,9 +923,9 @@ class LessonDetailController extends GetxController {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'حذف',
-                        style: TextStyle(
+                      child: Text(
+                        'delete'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

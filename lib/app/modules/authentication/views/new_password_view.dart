@@ -86,7 +86,7 @@ class NewPasswordView extends GetView<AuthenticationController> {
 
   Widget _buildPasswordSection(BuildContext context, Size screenSize) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Label
         Text(
@@ -106,13 +106,13 @@ class NewPasswordView extends GetView<AuthenticationController> {
             child: TextField(
               controller: controller.newPasswordController,
               obscureText: controller.obscureNewPassword.value,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.start,
               style: AppTextStyles.bodyText(context),
               onChanged: (_) => controller.validateNewPasswordStrength(),
               decoration: InputDecoration(
                 hintText: 'password'.tr,
                 hintStyle: AppTextStyles.inputHint(context),
-                prefixIcon: IconButton(
+                suffixIcon: IconButton(
                   icon: Image.asset(
                     AppImages.icon4,
                     width: AppDimensions.iconSmall(context) * 1.5,
@@ -170,10 +170,21 @@ class NewPasswordView extends GetView<AuthenticationController> {
 
   Widget _buildRequirementRow(BuildContext context, String text, bool isValid) {
     final hasInput = controller.newPasswordController.text.isNotEmpty;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
+        if (!isRtl) ...[
+          Icon(
+            isValid ? Icons.check : Icons.close,
+            size: 18,
+            color: hasInput
+                ? (isValid ? AppColors.success : AppColors.error)
+                : AppColors.grey400,
+          ),
+          SizedBox(width: 8),
+        ],
         Text(
           text,
           style: AppTextStyles.smallText(context).copyWith(
@@ -182,21 +193,23 @@ class NewPasswordView extends GetView<AuthenticationController> {
                 : AppColors.grey500,
           ),
         ),
-        SizedBox(width: 8),
-        Icon(
-          isValid ? Icons.check : Icons.close,
-          size: 18,
-          color: hasInput
-              ? (isValid ? AppColors.success : AppColors.error)
-              : AppColors.grey400,
-        ),
+        if (isRtl) ...[
+          SizedBox(width: 8),
+          Icon(
+            isValid ? Icons.check : Icons.close,
+            size: 18,
+            color: hasInput
+                ? (isValid ? AppColors.success : AppColors.error)
+                : AppColors.grey400,
+          ),
+        ],
       ],
     );
   }
 
   Widget _buildConfirmPasswordSection(BuildContext context, Size screenSize) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Label
         Text(
@@ -216,7 +229,7 @@ class NewPasswordView extends GetView<AuthenticationController> {
             child: TextField(
               controller: controller.confirmNewPasswordController,
               obscureText: controller.obscureConfirmNewPassword.value,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.start,
               style: AppTextStyles.bodyText(context),
               textInputAction: TextInputAction.done,
               onChanged: (_) => controller.validatePasswordsMatch(),
@@ -226,7 +239,7 @@ class NewPasswordView extends GetView<AuthenticationController> {
               decoration: InputDecoration(
                 hintText: 'password'.tr,
                 hintStyle: AppTextStyles.inputHint(context),
-                prefixIcon: IconButton(
+                suffixIcon: IconButton(
                   icon: Image.asset(
                     AppImages.icon4,
                     width: AppDimensions.iconSmall(context) * 1.5,
@@ -249,10 +262,21 @@ class NewPasswordView extends GetView<AuthenticationController> {
           () {
             final hasInput = controller.confirmNewPasswordController.text.isNotEmpty;
             final isMatch = controller.passwordsMatch.value;
+            final isRtl = Directionality.of(context) == TextDirection.rtl;
 
             return Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                if (!isRtl) ...[
+                  Icon(
+                    isMatch ? Icons.check : Icons.close,
+                    size: 18,
+                    color: hasInput
+                        ? (isMatch ? AppColors.success : AppColors.error)
+                        : AppColors.grey400,
+                  ),
+                  SizedBox(width: 8),
+                ],
                 Text(
                   'passwords_must_match'.tr,
                   style: AppTextStyles.smallText(context).copyWith(
@@ -261,14 +285,16 @@ class NewPasswordView extends GetView<AuthenticationController> {
                         : AppColors.grey500,
                   ),
                 ),
-                SizedBox(width: 8),
-                Icon(
-                  isMatch ? Icons.check : Icons.close,
-                  size: 18,
-                  color: hasInput
-                      ? (isMatch ? AppColors.success : AppColors.error)
-                      : AppColors.grey400,
-                ),
+                if (isRtl) ...[
+                  SizedBox(width: 8),
+                  Icon(
+                    isMatch ? Icons.check : Icons.close,
+                    size: 18,
+                    color: hasInput
+                        ? (isMatch ? AppColors.success : AppColors.error)
+                        : AppColors.grey400,
+                  ),
+                ],
               ],
             );
           },

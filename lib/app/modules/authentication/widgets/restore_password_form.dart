@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../controllers/authentication_controller.dart';
 import 'restore_password_header.dart';
 import 'otp_input_fields.dart';
@@ -68,13 +69,14 @@ class RestorePasswordForm extends GetView<AuthenticationController> {
           _AnimatedWidget(
             delay: 200,
             child: Obx(
-              () => AppButton(
-                text: 'confirm'.tr,
-                onPressed: controller.verifyOtp,
-                isLoading: controller.isLoading.value,
-                backgroundColor: AppColors.primary,
-                width: double.infinity,
-              ),
+              () => controller.isLoading.value
+                  ? const Center(child: AppLoader(size: 50))
+                  : AppButton(
+                      text: 'confirm'.tr,
+                      onPressed: controller.verifyOtp,
+                      backgroundColor: AppColors.primary,
+                      width: double.infinity,
+                    ),
             ),
           ),
 

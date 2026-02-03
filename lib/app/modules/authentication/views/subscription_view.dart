@@ -565,6 +565,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             icon,
@@ -573,8 +574,8 @@ class SubscriptionView extends GetView<AuthenticationController> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
@@ -585,6 +586,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   value,
                   style: const TextStyle(
@@ -593,6 +595,8 @@ class SubscriptionView extends GetView<AuthenticationController> {
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
+                  maxLines: 3,
+                  overflow: TextOverflow.visible,
                 ),
               ],
             ),
@@ -608,8 +612,8 @@ class SubscriptionView extends GetView<AuthenticationController> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.golden,
-            AppColors.golden.withValues(alpha: 0.8),
+            AppColors.primary,
+            AppColors.primary.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -617,7 +621,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.golden.withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -662,6 +666,7 @@ class SubscriptionView extends GetView<AuthenticationController> {
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Icon(
                   Icons.info_outline,
@@ -669,13 +674,16 @@ class SubscriptionView extends GetView<AuthenticationController> {
                   size: 16,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'subscription_pending_note'.tr,
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                Flexible(
+                  child: Text(
+                    'subscription_pending_note'.tr,
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],

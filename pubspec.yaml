@@ -30,7 +30,7 @@ dependencies:
   animate_do: ^4.2.0
   animated_bottom_navigation_bar: ^1.4.0
   proste_bezier_curve: ^2.0.2
-  cached_network_image: ^3.4.1
+  #cached_network_image: ^3.4.1
   carousel_slider: ^5.0.0
   # Fast native video player
   media_kit: ^1.1.11

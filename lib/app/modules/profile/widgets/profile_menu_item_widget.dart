@@ -78,17 +78,21 @@ class ProfileMenuItemWidget extends GetView<ProfileController> {
                     ),
                     SizedBox(width: screenSize.width * 0.03),
                     // Title with fade animation
-                    FadeIn(
-                      duration: const Duration(milliseconds: 350),
-                      delay: Duration(milliseconds: animationDelay + 50),
-                      child: Text(
-                        title,
-                        style: isDanger
-                            ? AppTextStyles.profileMenuItemDanger(context)
-                            : AppTextStyles.profileMenuItem(context),
+                    Expanded(
+                      child: FadeIn(
+                        duration: const Duration(milliseconds: 350),
+                        delay: Duration(milliseconds: animationDelay + 50),
+                        child: Text(
+                          title,
+                          style: isDanger
+                              ? AppTextStyles.profileMenuItemDanger(context)
+                              : AppTextStyles.profileMenuItem(context),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
-                    const Spacer(),
+                    SizedBox(width: screenSize.width * 0.02),
                     // Toggle switch with animation (left side in RTL)
                     if (type == ProfileMenuItemType.toggle)
                       FadeIn(

@@ -167,11 +167,12 @@ class _GuestSelectionDialogState extends State<GuestSelectionDialog> {
     required String value,
     required VoidCallback? onTap,
   }) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: isRtl ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.centerRight,
+          alignment: isRtl ? Alignment.centerRight : Alignment.centerLeft,
           child: Text(
             label,
             style: AppTextStyles.inputLabel(context),
@@ -194,19 +195,19 @@ class _GuestSelectionDialogState extends State<GuestSelectionDialog> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  color: onTap == null ? AppColors.grey400 : AppColors.grey500,
-                  size: 24,
-                ),
                 Expanded(
                   child: Text(
                     value.isEmpty ? hint : value,
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.start,
                     style: value.isEmpty
                         ? AppTextStyles.inputHint(context)
                         : AppTextStyles.bodyText(context),
                   ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: onTap == null ? AppColors.grey400 : AppColors.grey500,
+                  size: 24,
                 ),
               ],
             ),

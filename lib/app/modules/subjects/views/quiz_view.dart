@@ -63,41 +63,6 @@ class QuizView extends GetView<QuizController> {
                       ),
                     ),
                   ),
-                  // Time indicator (left side in RTL)
-                  Positioned(
-                    left: 0,
-                    child: Obx(() => Container(
-                      height: 24,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            AppImages.icon63,
-                            width: 16,
-                            height: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            controller.formattedTime,
-                            style: const TextStyle(
-                              fontFamily: 'Ubuntu',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF000D47),
-                              height: 1.0,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
-                  ),
                 ],
               ),
             ),
@@ -192,91 +157,117 @@ class QuizView extends GetView<QuizController> {
   }
 
   Widget _buildProgressIndicators(BuildContext context) {
-    return SizedBox(
-      height: 37,
-      child: ListView.builder(
-        controller: controller.scrollController,
-        scrollDirection: Axis.horizontal,
-        itemCount: controller.questions.length,
-        padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.05),
-        itemBuilder: (context, index) {
-          final number = index + 1;
-          final isCurrent = index == controller.currentQuestionIndex.value;
-          final isAnswered = controller.userAnswers.containsKey(index);
+    return Column(
+      children: [
+        // Current question indicator (e.g., "5/33")
+        Text(
+          '${controller.currentQuestionIndex.value + 1}/${controller.questions.length}',
+          style: AppTextStyles.bodyText(context).copyWith(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Progress circles
+        SizedBox(
+          height: 50,
+          child: ListView.builder(
+            controller: controller.scrollController,
+            scrollDirection: Axis.horizontal,
+            itemCount: controller.questions.length,
+            padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.05),
+            itemBuilder: (context, index) {
+              final number = index + 1;
+              final isCurrent = index == controller.currentQuestionIndex.value;
+              final isAnswered = controller.userAnswers.containsKey(index);
+              final isCorrect = controller.answerResults[index];
 
-          // Determine colors based on state
-          Color backgroundColor;
-          Color textColor;
+              // Show colors for ANY answered question (server may reorder questions on resume)
+              final canShowStatus = isAnswered;
 
-          if (isCurrent) {
-            backgroundColor = AppColors.primary;
-            textColor = Colors.white;
-          } else if (isAnswered) {
-            backgroundColor = AppColors.success;
-            textColor = Colors.white;
-          } else {
-            backgroundColor = AppColors.grey200;
-            textColor = AppColors.grey500;
-          }
+              // Determine colors based on state
+              Color backgroundColor;
+              Color textColor;
 
-          // In review/finish mode, allow navigation to all questions (view only)
-          // In start/resume mode, only allow forward navigation (can't go back)
-          final canTap = controller.isReviewMode
-              ? true
-              : index >= controller.currentQuestionIndex.value;
+              if (isCurrent) {
+                backgroundColor = AppColors.primary;
+                textColor = Colors.white;
+              } else if (canShowStatus && isAnswered) {
+                // Only show colors for answered questions that are BEFORE current position
+                if (isCorrect == true) {
+                  backgroundColor = AppColors.success;
+                  textColor = Colors.white;
+                } else if (isCorrect == false) {
+                  backgroundColor = AppColors.error;
+                  textColor = Colors.white;
+                } else {
+                  // Answered but correctness not yet determined (shouldn't happen)
+                  backgroundColor = AppColors.grey400;
+                  textColor = Colors.white;
+                }
+              } else {
+                backgroundColor = AppColors.grey200;
+                textColor = AppColors.grey500;
+              }
 
-          return GestureDetector(
-            onTap: canTap ? () => controller.goToQuestion(index) : null,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: 37,
-              height: 37,
-              padding: const EdgeInsets.only(top: 3.5, right: 1.5),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$number',
-                style: TextStyle(
-                  fontFamily: 'Tajawal',
-                  color: textColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  height: 1.2,
+              // In review/finish mode, allow navigation to all questions (view only)
+              // In start/resume mode: allow tapping on answered questions (to review)
+              // OR questions at/before current position
+              final canTap = controller.isReviewMode
+                  ? true
+                  : (isAnswered || index <= controller.currentQuestionIndex.value);
+
+              // Add animation to current question
+              Widget circleWidget = Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: 37,
+                height: 37,
+                padding: const EdgeInsets.only(top: 3.5, right: 1.5),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  shape: BoxShape.circle,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
-        },
-      ),
+                child: Text(
+                  '$number',
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    color: textColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              );
+
+              // Animate current question with subtle pulse effect
+              if (isCurrent) {
+                circleWidget = _SubtlePulse(child: circleWidget);
+              }
+
+              return GestureDetector(
+                onTap: canTap ? () => controller.goToQuestion(index) : null,
+                child: circleWidget,
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildProgressBar(BuildContext context) {
     final progress = (controller.currentQuestionIndex.value + 1) / controller.questions.length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          '${controller.currentQuestionIndex.value + 1}/${controller.questions.length}',
-          style: AppTextStyles.bodyText(context).copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: LinearProgressIndicator(
-            value: progress,
-            backgroundColor: AppColors.grey200,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-            minHeight: 8,
-          ),
-        ),
-      ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: LinearProgressIndicator(
+        value: progress,
+        backgroundColor: AppColors.grey200,
+        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+        minHeight: 8,
+      ),
     );
   }
 
@@ -739,4 +730,47 @@ class _MessageBubblePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Subtle pulse animation for current question indicator
+class _SubtlePulse extends StatefulWidget {
+  final Widget child;
+
+  const _SubtlePulse({required this.child});
+
+  @override
+  State<_SubtlePulse> createState() => _SubtlePulseState();
+}
+
+class _SubtlePulseState extends State<_SubtlePulse>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: 1.0, end: 1.08).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _animation,
+      child: widget.child,
+    );
+  }
 }

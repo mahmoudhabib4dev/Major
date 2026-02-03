@@ -45,6 +45,7 @@ class QuizController extends GetxController {
   // Questions data - can be either SelfTestQuestionModel or TestQuestion
   final questions = <dynamic>[].obs;
   final userAnswers = <int, String>{}.obs; // questionIndex -> optionKey
+  final answerResults = <int, bool>{}.obs; // questionIndex -> isCorrect (true/false)
   final correctAnswersCount = 0.obs;
   final wrongAnswersCount = 0.obs;
 
@@ -112,7 +113,7 @@ class QuizController extends GetxController {
           // Expired test with no answers - show message and go back
           print('🔵 Test expired with no answers - showing message and going back');
           AppDialog.showInfo(
-            message: 'انتهى وقت الاختبار. يمكنك بدء اختبار جديد.',
+            message: 'test_time_expired'.tr,
           );
           Future.delayed(const Duration(seconds: 2), () {
             Get.back();
@@ -182,7 +183,7 @@ class QuizController extends GetxController {
       print('❌ Error starting test: $e');
       print('❌ Stack trace: $stackTrace');
       AppDialog.showError(
-        message: 'فشل بدء الاختبار: $e',
+        message: 'failed_to_start_test'.tr,
       );
     } finally {
       isLoading.value = false;
@@ -197,6 +198,11 @@ class QuizController extends GetxController {
       if (question.studentAnswer != null) {
         userAnswers[i] = question.studentAnswer.toString();
 
+        // Store answer correctness in answerResults
+        if (question.isCorrect != null) {
+          answerResults[i] = question.isCorrect!;
+        }
+
         // Update counters
         if (question.isCorrect == true) {
           correctAnswersCount.value++;
@@ -205,6 +211,10 @@ class QuizController extends GetxController {
         }
       }
     }
+
+    // Trigger UI update for progress indicators
+    userAnswers.refresh();
+    answerResults.refresh();
 
     // Mark current question as checked if it was answered
     final currentQuestion = questions[currentQuestionIndex.value] as TestQuestionModel;
@@ -222,11 +232,17 @@ class QuizController extends GetxController {
 
     int firstUnansweredIndex = -1;
 
+    // Load ALL answered questions from the API
     for (int i = 0; i < questions.length; i++) {
       final question = questions[i] as TestQuestionModel;
       if (question.studentAnswer != null) {
         // Pre-populate userAnswers with existing answers
         userAnswers[i] = question.studentAnswer.toString();
+
+        // Store answer correctness in answerResults
+        if (question.isCorrect != null) {
+          answerResults[i] = question.isCorrect!;
+        }
 
         // Update counters for already answered questions
         if (question.isCorrect == true) {
@@ -243,13 +259,18 @@ class QuizController extends GetxController {
       }
     }
 
-    // Navigate to first unanswered question, or stay at first if all answered
+    // Trigger UI update for progress indicators
+    userAnswers.refresh();
+    answerResults.refresh();
+
+    // Navigate to first unanswered question, or stay at last if all answered
     if (firstUnansweredIndex != -1) {
       currentQuestionIndex.value = firstUnansweredIndex;
       print('🔵 Navigating to first unanswered question: $firstUnansweredIndex');
     } else {
-      // All questions answered - stay at first question
-      print('🔵 All questions already answered, staying at first question');
+      // All questions answered - stay at last question
+      currentQuestionIndex.value = questions.length - 1;
+      print('🔵 All questions already answered, staying at last question');
     }
 
     // Reset state for the current question
@@ -263,12 +284,27 @@ class QuizController extends GetxController {
       print('🔵 Submitting answer for question $questionId: $answer');
       print('🔵 Attempt ID: $attemptId');
       print('🔵 Subject ID: $subjectId');
+      print('🔵 Test ID: $testId');
 
-      // New API endpoint format: /api/subjects/{attempt_id}/self-test-attempts/{attempt_id}/answer
-      // With query parameters: self_test_id and answer
-      final response = await apiClient.post(
-        '${ApiConstants.baseUrl}/subjects/$attemptId/self-test-attempts/$attemptId/answer?self_test_id=$questionId&answer=$answer',
-      );
+      // Use different API endpoint based on test type
+      late final dynamic response;
+      if (testId != null) {
+        // Lesson test: POST /api/test-attempts/{attempt_id}/answer with form-data body
+        final endpoint = '${ApiConstants.baseUrl}/test-attempts/$attemptId/answer';
+        print('🔵 Using endpoint: $endpoint');
+        response = await apiClient.post(
+          endpoint,
+          body: {
+            'question_id': questionId,
+            'answer': answer,
+          },
+        );
+      } else {
+        // Self-test: /api/subjects/{attempt_id}/self-test-attempts/{attempt_id}/answer
+        final endpoint = '${ApiConstants.baseUrl}/subjects/$attemptId/self-test-attempts/$attemptId/answer?self_test_id=$questionId&answer=$answer';
+        print('🔵 Using endpoint: $endpoint');
+        response = await apiClient.post(endpoint);
+      }
 
       print('🔵 Answer submit response status: ${response.statusCode}');
       print('🔵 Answer submit response body: ${response.body}');
@@ -309,7 +345,7 @@ class QuizController extends GetxController {
         // Handle validation error - could be "already answered" or "time expired"
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
         print('⚠️ Validation error: $jsonData');
-        final errorMessage = jsonData['message'] as String? ?? 'حدث خطأ';
+        final errorMessage = jsonData['message'] as String? ?? 'unexpected_error'.tr;
         AppDialog.showInfo(
           message: errorMessage,
         );
@@ -321,7 +357,7 @@ class QuizController extends GetxController {
       print('❌ Error submitting answer: $e');
       print('❌ Stack trace: $stackTrace');
       AppDialog.showError(
-        message: 'فشل إرسال الإجابة',
+        message: 'failed_to_submit_answer'.tr,
       );
       return null;
     }
@@ -343,7 +379,7 @@ class QuizController extends GetxController {
       if (response.statusCode >= 500) {
         print('❌ Server error: ${response.statusCode}');
         AppDialog.showError(
-          message: 'خطأ في الخادم. يرجى المحاولة لاحقاً',
+          message: 'server_error'.tr,
         );
         return;
       }
@@ -351,7 +387,7 @@ class QuizController extends GetxController {
       if (response.statusCode != 200 && response.statusCode != 201) {
         print('❌ API error: ${response.statusCode}');
         AppDialog.showError(
-          message: 'فشل تحميل الاختبار',
+          message: 'failed_to_load_test'.tr,
         );
         return;
       }
@@ -376,7 +412,7 @@ class QuizController extends GetxController {
         // Expired test with no answers - show message and go back
         print('🔵 Test expired with no answers - showing message and going back');
         AppDialog.showInfo(
-          message: 'انتهى وقت الاختبار. يمكنك بدء اختبار جديد.',
+          message: 'test_time_expired'.tr,
         );
         Future.delayed(const Duration(seconds: 2), () {
           Get.back();
@@ -443,7 +479,7 @@ class QuizController extends GetxController {
       print('❌ Error loading self-test: $e');
       print('❌ Stack trace: $stackTrace');
       AppDialog.showError(
-        message: 'فشل تحميل الاختبار',
+        message: 'failed_to_load_test'.tr,
       );
     } finally {
       isLoading.value = false;
@@ -570,6 +606,9 @@ class QuizController extends GetxController {
         hasCheckedAnswer.value = true;
         showExplanation.value = !apiResult;
 
+        // Store answer correctness in answerResults map
+        answerResults[currentQuestionIndex.value] = apiResult;
+
         // Update score counters
         if (apiResult) {
           correctAnswersCount.value++;
@@ -596,6 +635,9 @@ class QuizController extends GetxController {
 
     // Show explanation when answer is wrong
     showExplanation.value = !isCorrect;
+
+    // Store answer correctness in answerResults map
+    answerResults[currentQuestionIndex.value] = isCorrect;
 
     // Update score counters
     if (isCorrect) {
@@ -782,7 +824,7 @@ class _QuizResultsDialogState extends State<_QuizResultsDialog>
                   duration: const Duration(milliseconds: 400),
                   delay: const Duration(milliseconds: 100),
                   child: Text(
-                    widget.isTimeUp ? 'انتهى الوقت' : 'نتيجة الاختبار',
+                    widget.isTimeUp ? 'time_up'.tr : 'test_results'.tr,
                     style: AppTextStyles.sectionTitle(context).copyWith(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -796,7 +838,7 @@ class _QuizResultsDialogState extends State<_QuizResultsDialog>
                     duration: const Duration(milliseconds: 400),
                     delay: const Duration(milliseconds: 150),
                     child: Text(
-                      'لقد انتهى وقت الاختبار',
+                      'test_time_ended'.tr,
                       style: AppTextStyles.bodyText(context).copyWith(
                         color: AppColors.grey500,
                         fontSize: 14,
@@ -846,33 +888,33 @@ class _QuizResultsDialogState extends State<_QuizResultsDialog>
                 FadeInUp(
                   duration: const Duration(milliseconds: 400),
                   delay: const Duration(milliseconds: 600),
-                  child: _buildStatRow('إجمالي الأسئلة', widget.totalQuestions.toString(), AppColors.primary),
+                  child: _buildStatRow('total_questions'.tr, widget.totalQuestions.toString(), AppColors.primary),
                 ),
                 const SizedBox(height: 8),
                 FadeInUp(
                   duration: const Duration(milliseconds: 400),
                   delay: const Duration(milliseconds: 650),
-                  child: _buildStatRow('الإجابات الصحيحة', widget.correctAnswers.toString(), AppColors.success),
+                  child: _buildStatRow('correct_answers'.tr, widget.correctAnswers.toString(), AppColors.success),
                 ),
                 const SizedBox(height: 8),
                 FadeInUp(
                   duration: const Duration(milliseconds: 400),
                   delay: const Duration(milliseconds: 700),
-                  child: _buildStatRow('الإجابات الخاطئة', widget.wrongAnswers.toString(), AppColors.error),
+                  child: _buildStatRow('wrong_answers'.tr, widget.wrongAnswers.toString(), AppColors.error),
                 ),
                 if (widget.unansweredQuestions > 0) ...[
                   const SizedBox(height: 8),
                   FadeInUp(
                     duration: const Duration(milliseconds: 400),
                     delay: const Duration(milliseconds: 750),
-                    child: _buildStatRow('لم يتم الإجابة', widget.unansweredQuestions.toString(), AppColors.grey500),
+                    child: _buildStatRow('not_answered'.tr, widget.unansweredQuestions.toString(), AppColors.grey500),
                   ),
                 ],
                 const SizedBox(height: 8),
                 FadeInUp(
                   duration: const Duration(milliseconds: 400),
                   delay: const Duration(milliseconds: 800),
-                  child: _buildStatRow('النقاط', '${widget.correctAnswers * 10}', Colors.amber),
+                  child: _buildStatRow('points'.tr, '${widget.correctAnswers * 10}', Colors.amber),
                 ),
                 SizedBox(height: screenSize.height * 0.04),
                 // Button
@@ -895,7 +937,7 @@ class _QuizResultsDialogState extends State<_QuizResultsDialog>
                         elevation: 0,
                       ),
                       child: Text(
-                        'إنهاء',
+                        'finish'.tr,
                         style: AppTextStyles.buttonText(context).copyWith(
                           color: AppColors.white,
                         ),

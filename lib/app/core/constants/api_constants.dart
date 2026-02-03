@@ -68,6 +68,7 @@ class ApiConstants {
   static String lessonVideo(int lessonId) => '$baseUrl/lessons/$lessonId/video';
   static String lessonTest(int lessonId) => '$baseUrl/lessons/$lessonId/test';
   static String lessonSummary(int lessonId) => '$baseUrl/lessons/$lessonId/summary';
+  static String testStart(int testId) => '$baseUrl/tests/$testId/start';
 
   // Notification Endpoints
   static const String notifications = '$baseUrl/student/notifications';

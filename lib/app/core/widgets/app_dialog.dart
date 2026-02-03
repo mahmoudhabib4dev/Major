@@ -28,13 +28,13 @@ class AppDialog extends StatelessWidget {
   /// Shows a success dialog
   static void showSuccess({
     required String message,
-    String buttonText = 'حسناً',
+    String? buttonText,
     VoidCallback? onButtonPressed,
   }) {
     Get.dialog(
       AppDialog(
         message: message,
-        buttonText: buttonText,
+        buttonText: buttonText ?? 'ok'.tr,
         onButtonPressed: onButtonPressed ?? () => Get.back(),
         isSuccess: true,
         icon: const Icon(
@@ -51,13 +51,13 @@ class AppDialog extends StatelessWidget {
   /// Shows an error dialog
   static void showError({
     required String message,
-    String buttonText = 'حسناً',
+    String? buttonText,
     VoidCallback? onButtonPressed,
   }) {
     Get.dialog(
       AppDialog(
         message: message,
-        buttonText: buttonText,
+        buttonText: buttonText ?? 'ok'.tr,
         onButtonPressed: onButtonPressed ?? () => Get.back(),
         isError: true,
         icon: const Icon(
@@ -74,14 +74,14 @@ class AppDialog extends StatelessWidget {
   /// Shows an info dialog
   static void showInfo({
     required String message,
-    String buttonText = 'حسناً',
+    String? buttonText,
     VoidCallback? onButtonPressed,
     Widget? icon,
   }) {
     Get.dialog(
       AppDialog(
         message: message,
-        buttonText: buttonText,
+        buttonText: buttonText ?? 'ok'.tr,
         onButtonPressed: onButtonPressed ?? () => Get.back(),
         icon: icon,
       ),
