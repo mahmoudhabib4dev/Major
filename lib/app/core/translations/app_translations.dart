@@ -149,12 +149,12 @@ class AppTranslations extends Translations {
           'continue_as_guest': 'المتابعة كزائر',
           'select_preferences': 'اختر تفضيلاتك',
           'select_educational_stage_first': 'اختر المرحلة الدراسية أولاً',
-          'onboarding_title_1': 'مجتمع ماجور اكلاس',
-          'onboarding_desc_1': 'انضم إلى فضاء يجمع نخبة التلاميذ والمدرسين لتبادل الخبرات العلمية وتجاوز التحديات الدراسية. استفد من توجيهات الأساتذة لتعزيز مستواك التعليمي وضمان تفوقك الدراسي.',
+          'onboarding_title_1': 'مرحباً بك في تطبيق ماجور اكلاس 🇲🇷',
+          'onboarding_desc_1': 'منصّة تعليمية ذكية تجمعك بخيرة المدرّسين والطلبة، لتعلّمٍ أعمق، وتفاعلٍ أفضل، وتجربةٍ تصنع الفرق.',
           'onboarding_title_2': 'تعليم تفاعلي يشبهك',
           'onboarding_desc_2': 'تعلم بالطريقة التي تفضلها – فيديوهات، اختبارات، أو مهارات تفاعلية – ماجور كلاس يجعل كل درس تجربة ممتعة وسهلة الفهم.',
           'onboarding_title_3': 'نمو مع مجتمع ماجور كلاس',
-          'onboarding_desc_3': 'انضم إلى مجتمع من المتعلمين والمعلمين حول العالم، تبادل الخبرات، وشارك إنجازاتك وخذ خطوة نحو مستقبلك المهني.',
+          'onboarding_desc_3': 'في ماجور اكلاس نوفر لك بيئة تعليمية حديثة تبادل فيها المعرفة، تابع دروسك بسهولة، واستفد من خبرات الأساتذة لتطوير مستواك العلمي بثقة واستمرارية.',
 
           // Login
           'login': 'تسجيل الدخول',
@@ -236,6 +236,7 @@ class AppTranslations extends Translations {
           'password_req_case': 'علي الاقل حرف كبير و حرف صغير',
           'password_req_special': 'علي الاقل رمز واحد خاص',
           'password_req_number': 'علي الاقل رقم واحد',
+          'password_req_8_chars': 'على الأقل 8 أحرف',
           'passwords_must_match': 'يجب ان تكون كلمتا المرور متطابقان',
 
           // Subscription
@@ -571,6 +572,7 @@ class AppTranslations extends Translations {
           'error_verifying_account': 'حدث خطأ أثناء التحقق من الحساب',
           'error_changing_password': 'حدث خطأ أثناء تغيير كلمة المرور',
           'image_selected_success': 'تم اختيار الصورة بنجاح',
+          'crop_receipt': 'قص صورة الإيصال',
           'please_enter_coupon_code': 'من فضلك أدخل كود الخصم',
           'please_select_plan_first': 'يرجى اختيار خطة الاشتراك أولاً',
           'coupon_applied_success': 'تم تطبيق كود الخصم بنجاح',
@@ -583,6 +585,20 @@ class AppTranslations extends Translations {
           'error_completing_payment': 'حدث خطأ أثناء إتمام الدفع',
           'error_loading_subscription_plans': 'حدث خطأ أثناء تحميل خطط الاشتراك',
           'error_loading_bank_accounts': 'حدث خطأ أثناء تحميل حسابات البنوك',
+
+          // Challenges
+          'challenge_completed_points': 'لقد أكملت هذا التحدي وحصلت على @points نقطة',
+          'challenge_week_title': 'تحدي الأسبوع',
+          'challenge_week_subtitle': 'أكمل 5 دروس هذا الأسبوع',
+          'challenge_tests_title': 'تحدي الاختبارات',
+          'challenge_tests_subtitle': 'احصل على 90% في 3 اختبارات',
+          'challenge_persistence_title': 'تحدي المثابرة',
+          'challenge_persistence_subtitle': 'ادخل التطبيق 7 أيام متتالية',
+          'challenge_speed_title': 'تحدي السرعة',
+          'challenge_speed_subtitle': 'أكمل درس في أقل من 10 دقائق',
+          'challenge_excellence_title': 'تحدي التفوق',
+          'challenge_excellence_subtitle': 'احصل على الدرجة الكاملة في اختبار',
+
           'select_image_source': 'اختر مصدر الصورة',
           'camera_source': 'الكاميرا',
           'gallery_source': 'المعرض',
@@ -733,12 +749,12 @@ class AppTranslations extends Translations {
           'continue_as_guest': 'Continue as Guest',
           'select_preferences': 'Select your preferences',
           'select_educational_stage_first': 'Select educational stage first',
-          'onboarding_title_1': 'Learn Smart, Not Hard',
-          'onboarding_desc_1': 'Start your journey with Major Class, the platform that builds your knowledge step by step using smart tools and a learning experience designed just for you.',
+          'onboarding_title_1': 'Welcome to Major Class App 🇲🇷',
+          'onboarding_desc_1': 'A smart educational platform that connects you with the best teachers and students, for deeper learning, better interaction, and an experience that makes a difference.',
           'onboarding_title_2': 'Interactive Learning That Fits You',
           'onboarding_desc_2': 'Learn the way you prefer – videos, quizzes, or interactive skills – Major Class makes every lesson an enjoyable and easy-to-understand experience.',
           'onboarding_title_3': 'Grow with the Major Class Community',
-          'onboarding_desc_3': 'Join a community of learners and teachers around the world, share experiences, celebrate your achievements, and take a step toward your career future.',
+          'onboarding_desc_3': 'At Major Class, we provide you with a modern educational environment where you exchange knowledge, follow your lessons easily, and benefit from teachers\' expertise to develop your academic level with confidence and continuity.',
 
           // Login
           'login': 'Login',
@@ -820,6 +836,7 @@ class AppTranslations extends Translations {
           'password_req_case': 'At least one uppercase and one lowercase letter',
           'password_req_special': 'At least one special character',
           'password_req_number': 'At least one number',
+          'password_req_8_chars': 'At least 8 characters',
           'passwords_must_match': 'Passwords must match',
 
           // Subscription
@@ -1155,6 +1172,7 @@ class AppTranslations extends Translations {
           'error_verifying_account': 'Error verifying account',
           'error_changing_password': 'Error changing password',
           'image_selected_success': 'Image selected successfully',
+          'crop_receipt': 'Crop Receipt',
           'please_enter_coupon_code': 'Please enter coupon code',
           'please_select_plan_first': 'Please select a subscription plan first',
           'coupon_applied_success': 'Coupon applied successfully',
@@ -1167,6 +1185,20 @@ class AppTranslations extends Translations {
           'error_completing_payment': 'Error completing payment',
           'error_loading_subscription_plans': 'Error loading subscription plans',
           'error_loading_bank_accounts': 'Error loading bank accounts',
+
+          // Challenges
+          'challenge_completed_points': 'You have completed this challenge and earned @points points',
+          'challenge_week_title': 'Weekly Challenge',
+          'challenge_week_subtitle': 'Complete 5 lessons this week',
+          'challenge_tests_title': 'Tests Challenge',
+          'challenge_tests_subtitle': 'Get 90% in 3 tests',
+          'challenge_persistence_title': 'Persistence Challenge',
+          'challenge_persistence_subtitle': 'Log in for 7 consecutive days',
+          'challenge_speed_title': 'Speed Challenge',
+          'challenge_speed_subtitle': 'Complete a lesson in less than 10 minutes',
+          'challenge_excellence_title': 'Excellence Challenge',
+          'challenge_excellence_subtitle': 'Get a perfect score on a test',
+
           'select_image_source': 'Select Image Source',
           'camera_source': 'Camera',
           'gallery_source': 'Gallery',
@@ -1323,12 +1355,12 @@ class AppTranslations extends Translations {
           'continue_as_guest': 'Continuer en tant qu\'invité',
           'select_preferences': 'Sélectionnez vos préférences',
           'select_educational_stage_first': 'Sélectionnez d\'abord le niveau d\'études',
-          'onboarding_title_1': 'Apprenez intelligemment, pas difficilement',
-          'onboarding_desc_1': 'Commencez votre voyage avec Major Class, la plateforme qui développe vos connaissances étape par étape avec des outils intelligents et une expérience d\'apprentissage conçue spécialement pour vous.',
+          'onboarding_title_1': 'Bienvenue sur l\'application Major Class 🇲🇷',
+          'onboarding_desc_1': 'Une plateforme éducative intelligente qui vous connecte avec les meilleurs enseignants et étudiants, pour un apprentissage plus profond, une meilleure interaction et une expérience qui fait la différence.',
           'onboarding_title_2': 'Un apprentissage interactif qui vous ressemble',
           'onboarding_desc_2': 'Apprenez comme vous le souhaitez – vidéos, quiz ou compétences interactives – Major Class rend chaque leçon agréable et facile à comprendre.',
           'onboarding_title_3': 'Grandissez avec la communauté Major Class',
-          'onboarding_desc_3': 'Rejoignez une communauté d\'apprenants et d\'enseignants du monde entier, partagez vos expériences, célébrez vos réussites et faites un pas vers votre avenir professionnel.',
+          'onboarding_desc_3': 'Chez Major Class, nous vous offrons un environnement éducatif moderne où vous échangez des connaissances, suivez vos cours facilement et profitez de l\'expertise des enseignants pour développer votre niveau académique avec confiance et continuité.',
 
           // Login
           'login': 'Connexion',
@@ -1410,6 +1442,7 @@ class AppTranslations extends Translations {
           'password_req_case': 'Au moins une majuscule et une minuscule',
           'password_req_special': 'Au moins un caractère spécial',
           'password_req_number': 'Au moins un chiffre',
+          'password_req_8_chars': 'Au moins 8 caractères',
           'passwords_must_match': 'Les mots de passe doivent correspondre',
 
           // Subscription
@@ -1745,6 +1778,7 @@ class AppTranslations extends Translations {
           'error_verifying_account': 'Erreur de vérification du compte',
           'error_changing_password': 'Erreur lors du changement du mot de passe',
           'image_selected_success': 'Image sélectionnée avec succès',
+          'crop_receipt': 'Recadrer le reçu',
           'please_enter_coupon_code': 'Veuillez entrer le code de coupon',
           'please_select_plan_first': 'Veuillez d\'abord sélectionner un plan d\'abonnement',
           'coupon_applied_success': 'Coupon appliqué avec succès',
@@ -1757,6 +1791,20 @@ class AppTranslations extends Translations {
           'error_completing_payment': 'Erreur lors de la finalisation du paiement',
           'error_loading_subscription_plans': 'Erreur lors du chargement des plans d\'abonnement',
           'error_loading_bank_accounts': 'Erreur lors du chargement des comptes bancaires',
+
+          // Challenges
+          'challenge_completed_points': 'Vous avez terminé ce défi et gagné @points points',
+          'challenge_week_title': 'Défi hebdomadaire',
+          'challenge_week_subtitle': 'Terminez 5 leçons cette semaine',
+          'challenge_tests_title': 'Défi des tests',
+          'challenge_tests_subtitle': 'Obtenez 90% dans 3 tests',
+          'challenge_persistence_title': 'Défi de persévérance',
+          'challenge_persistence_subtitle': 'Connectez-vous pendant 7 jours consécutifs',
+          'challenge_speed_title': 'Défi de vitesse',
+          'challenge_speed_subtitle': 'Terminez une leçon en moins de 10 minutes',
+          'challenge_excellence_title': 'Défi d\'excellence',
+          'challenge_excellence_subtitle': 'Obtenez un score parfait à un test',
+
           'select_image_source': 'Sélectionner la source de l\'image',
           'camera_source': 'Caméra',
           'gallery_source': 'Galerie',

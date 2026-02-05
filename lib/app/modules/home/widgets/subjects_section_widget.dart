@@ -233,7 +233,7 @@ class _SubjectsSectionWidgetState extends State<SubjectsSectionWidget> {
                                   textAlign: TextAlign.right,
                                 ),
                                 leading: const Icon(
-                                  Icons.play_circle_outline,
+                                  Icons.book_outlined,
                                   color: AppColors.primary,
                                 ),
                                 onTap: () {

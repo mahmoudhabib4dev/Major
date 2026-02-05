@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:screen_protector/screen_protector.dart';
 
 import 'package:get/get.dart';
 
@@ -36,6 +37,9 @@ void main() async {
 
   // Initialize Firebase Notification Service
   await FirebaseNotificationService().initialize();
+
+  // Prevent screenshots and screen recording
+  await ScreenProtector.protectDataLeakageOn();
 
   // Initialize Hive
   await HiveService.init();

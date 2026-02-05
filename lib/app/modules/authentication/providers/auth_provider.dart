@@ -374,7 +374,7 @@ class AuthProvider {
       }
 
       if (request.referenceNumber != null && request.referenceNumber!.isNotEmpty) {
-        fields['reference_number'] = request.referenceNumber!;
+        fields['transfer_number'] = request.referenceNumber!;
       }
 
       if (request.paymentMethod != null && request.paymentMethod!.isNotEmpty) {

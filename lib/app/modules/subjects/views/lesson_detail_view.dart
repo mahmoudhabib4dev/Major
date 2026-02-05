@@ -301,12 +301,10 @@ class LessonDetailView extends GetView<LessonDetailController> {
   // Build teacher info section - always dark style with image7 background
   Widget _buildTeacherInfoSection(BuildContext context, Size screenSize) {
     return Obx(() {
-      const dividerColor = Colors.white30;
-
       return Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 25,
+          horizontal: 16,
+          vertical: 20,
         ),
         decoration: BoxDecoration(
           image: const DecorationImage(
@@ -315,84 +313,106 @@ class LessonDetailView extends GetView<LessonDetailController> {
           ),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: Column(
           children: [
-            // Live time (left in RTL - appears on the left)
-            Expanded(
-              child: _buildInfoItem(
-                context,
-                'live_time'.tr,
-                Text(
-                  controller.hasLiveLesson.value
-                      ? 'ongoing'.tr
-                      : (controller.liveAt.value.isNotEmpty
-                          ? _formatTime(controller.liveAt.value)
-                          : '-'),
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+            // Row 1: Icons and Labels
+            Row(
+              children: [
+                // Teacher label (right in RTL)
+                Expanded(
+                  child: _buildLabelWithIcon(
+                    'teacher'.tr,
+                    AppImages.icon26,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-                AppImages.icon24,
-                true,
-              ),
+                const SizedBox(width: 8),
+                // Number of lessons label (middle)
+                Expanded(
+                  child: _buildLabelWithIcon(
+                    'number_of_lessons'.tr,
+                    AppImages.icon25,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Live time label (left in RTL)
+                Expanded(
+                  child: _buildLabelWithIcon(
+                    'live_time'.tr,
+                    AppImages.icon24,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(
-              width: 1,
-              height: 50,
-              child: ColoredBox(color: dividerColor),
-            ),
-            // Number of lessons (middle)
-            Expanded(
-              child: _buildInfoItem(
-                context,
-                'number_of_lessons'.tr,
-                Directionality(
-                  textDirection: Get.locale?.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+            const SizedBox(height: 12),
+            // Row 2: Values
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Teacher name (right in RTL)
+                Expanded(
                   child: Text(
-                    'lessons_count'.tr.replaceAll('@count', '${controller.lessonsCount.value}'),
+                    controller.teacherName.value.isNotEmpty
+                        ? controller.teacherName.value
+                        : 'صابرين الأحمد',
                     style: const TextStyle(
                       fontFamily: 'Tajawal',
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      height: 1.3,
                     ),
                     textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                AppImages.icon25,
-                true,
-              ),
-            ),
-            const SizedBox(
-              width: 1,
-              height: 50,
-              child: ColoredBox(color: dividerColor),
-            ),
-            // Teacher (right in RTL - appears on the right)
-            Expanded(
-              child: _buildInfoItem(
-                context,
-                'teacher'.tr,
-                Text(
-                  controller.teacherName.value.isNotEmpty ? controller.teacherName.value : 'صابرين الأحمد',
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                const SizedBox(width: 8),
+                // Number of lessons value (middle)
+                Expanded(
+                  child: Directionality(
+                    textDirection: Get.locale?.languageCode == 'ar'
+                        ? TextDirection.rtl
+                        : TextDirection.ltr,
+                    child: Text(
+                      'lessons_count'.tr.replaceAll(
+                        '@count',
+                        '${controller.lessonsCount.value}'
+                      ),
+                      style: const TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        height: 1.3,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                AppImages.icon26,
-                true,
-              ),
+                const SizedBox(width: 8),
+                // Live time value (left in RTL)
+                Expanded(
+                  child: Text(
+                    controller.hasLiveLesson.value
+                        ? 'ongoing'.tr
+                        : (controller.liveAt.value.isNotEmpty
+                            ? _formatTime(controller.liveAt.value)
+                            : '-'),
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.3,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -400,35 +420,32 @@ class LessonDetailView extends GetView<LessonDetailController> {
     });
   }
 
-  // Build individual info item - always white mode
-  Widget _buildInfoItem(BuildContext context, String label, Widget value, String iconPath, [bool isWhiteMode = true]) {
+  // Build label with icon (for header row)
+  Widget _buildLabelWithIcon(String label, String iconPath) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Icon - always white
         ColorFiltered(
           colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
           child: Image.asset(
             iconPath,
-            width: 28,
-            height: 28,
+            width: 24,
+            height: 24,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           label,
           style: const TextStyle(
             fontFamily: 'Tajawal',
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w500,
             color: Colors.white70,
+            height: 1.2,
           ),
           textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 4),
-        // Use SizedBox with fixed height to ensure alignment across all info items
-        SizedBox(
-          height: 36,
-          child: Center(child: value),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

@@ -857,27 +857,34 @@ class SignUpView extends GetView<AuthenticationController> {
 
   Widget _buildNextButton(BuildContext context) {
     return Obx(
-      () => controller.isLoading.value
-          ? const Center(child: AppLoader(size: 50))
-          : SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: controller.completeSignUp,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: Text(
-                  'create_account'.tr,
-                  style: AppTextStyles.buttonText(context).copyWith(
-                    color: Colors.white,
-                  ),
-                ),
+      () {
+        final isFormValid = controller.isSignUpFormValid;
+
+        if (controller.isLoading.value) {
+          return const Center(child: AppLoader(size: 50));
+        }
+
+        return SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: ElevatedButton(
+            onPressed: isFormValid ? controller.completeSignUp : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isFormValid ? AppColors.primary : AppColors.grey300,
+              disabledBackgroundColor: AppColors.grey300,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
               ),
             ),
+            child: Text(
+              'create_account'.tr,
+              style: AppTextStyles.buttonText(context).copyWith(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -910,7 +917,8 @@ class SignUpView extends GetView<AuthenticationController> {
     FocusScope.of(context).unfocus();
     SystemChannels.textInput.invokeMethod('TextInput.hide');
 
-    DateTime? selectedDate = controller.selectedBirthDate.value;
+    // Initialize with the default date that will be shown in the picker
+    DateTime selectedDate = controller.selectedBirthDate.value ?? DateTime(2000);
 
     await showModalBottomSheet(
       context: context,
@@ -918,14 +926,12 @@ class SignUpView extends GetView<AuthenticationController> {
       isScrollControlled: true,
       useSafeArea: false,
       builder: (context) => _DatePickerBottomSheet(
-        initialDate: controller.selectedBirthDate.value ?? DateTime(2000),
+        initialDate: selectedDate,
         onDateChanged: (date) {
           selectedDate = date;
         },
         onConfirm: () {
-          if (selectedDate != null) {
-            controller.selectBirthDate(selectedDate!);
-          }
+          controller.selectBirthDate(selectedDate);
           Get.back();
         },
       ),

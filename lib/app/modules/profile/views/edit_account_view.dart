@@ -68,14 +68,14 @@ class EditAccountView extends GetView<ProfileController> {
                 ),
               ),
               SizedBox(height: screenSize.height * 0.02),
-              // Email Field (Disabled)
+              // Email Field
               SlideInRight(
                 duration: const Duration(milliseconds: 500),
                 delay: const Duration(milliseconds: 200),
                 child: FadeIn(
                   duration: const Duration(milliseconds: 500),
                   delay: const Duration(milliseconds: 200),
-                  child: _buildEmailField(context, enabled: false),
+                  child: _buildEmailField(context, enabled: true),
                 ),
               ),
               SizedBox(height: screenSize.height * 0.02),

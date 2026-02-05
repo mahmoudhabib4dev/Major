@@ -39,36 +39,36 @@ class ChallengesController extends GetxController {
       challenges.value = [
         ChallengeModel(
           id: '1',
-          title: 'تحدي الأسبوع',
-          subtitle: 'أكمل 5 دروس هذا الأسبوع',
+          title: 'challenge_week_title'.tr,
+          subtitle: 'challenge_week_subtitle'.tr,
           isCompleted: false,
           points: 100,
         ),
         ChallengeModel(
           id: '2',
-          title: 'تحدي الاختبارات',
-          subtitle: 'احصل على 90% في 3 اختبارات',
+          title: 'challenge_tests_title'.tr,
+          subtitle: 'challenge_tests_subtitle'.tr,
           isCompleted: true,
           points: 150,
         ),
         ChallengeModel(
           id: '3',
-          title: 'تحدي المثابرة',
-          subtitle: 'ادخل التطبيق 7 أيام متتالية',
+          title: 'challenge_persistence_title'.tr,
+          subtitle: 'challenge_persistence_subtitle'.tr,
           isCompleted: false,
           points: 200,
         ),
         ChallengeModel(
           id: '4',
-          title: 'تحدي السرعة',
-          subtitle: 'أكمل درس في أقل من 10 دقائق',
+          title: 'challenge_speed_title'.tr,
+          subtitle: 'challenge_speed_subtitle'.tr,
           isCompleted: false,
           points: 50,
         ),
         ChallengeModel(
           id: '5',
-          title: 'تحدي التفوق',
-          subtitle: 'احصل على الدرجة الكاملة في اختبار',
+          title: 'challenge_excellence_title'.tr,
+          subtitle: 'challenge_excellence_subtitle'.tr,
           isCompleted: true,
           points: 250,
         ),
@@ -81,7 +81,7 @@ class ChallengesController extends GetxController {
   void onChallengeTap(ChallengeModel challenge) {
     if (challenge.isCompleted) {
       AppDialog.showSuccess(
-        message: 'لقد أكملت هذا التحدي وحصلت على ${challenge.points} نقطة',
+        message: 'challenge_completed_points'.tr.replaceAll('@points', '${challenge.points}'),
       );
     } else {
       AppDialog.showInfo(

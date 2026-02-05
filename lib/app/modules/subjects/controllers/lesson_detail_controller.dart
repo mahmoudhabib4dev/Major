@@ -409,7 +409,16 @@ class LessonDetailController extends GetxController {
           _playVideo(response.data.videoUrl);
         } else {
           developer.log('❌ No video URL available', name: 'LessonDetailController');
-          AppDialog.showError(message: 'video_not_available'.tr);
+          final storageService = Get.find<StorageService>();
+          final currentUser = storageService.currentUser;
+          final hasActiveSubscription = currentUser?.planStatus == 'active';
+
+          if (!hasActiveSubscription) {
+            developer.log('🔐 User not subscribed, showing subscription dialog', name: 'LessonDetailController');
+            _showSubscriptionDialog(false);
+          } else {
+            AppDialog.showError(message: 'video_not_available'.tr);
+          }
         }
       }
     } catch (e) {
@@ -417,10 +426,15 @@ class LessonDetailController extends GetxController {
 
       final storageService = Get.find<StorageService>();
       final isGuestMode = !storageService.isLoggedIn || storageService.currentUser == null;
+      final currentUser = storageService.currentUser;
+      final hasActiveSubscription = currentUser?.planStatus == 'active';
 
       if (isGuestMode) {
         developer.log('🔐 Guest user, showing login dialog', name: 'LessonDetailController');
         _showSubscriptionDialog(true);
+      } else if (!hasActiveSubscription) {
+        developer.log('🔐 User not subscribed, showing subscription dialog', name: 'LessonDetailController');
+        _showSubscriptionDialog(false);
       } else {
         AppDialog.showError(message: 'video_not_available'.tr);
       }

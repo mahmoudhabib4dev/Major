@@ -74,7 +74,7 @@ class _OnboardingPageState extends State<OnboardingPage>
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        SizedBox(height: AppDimensions.screenHeight(context) * 0.02),
+        SizedBox(height: AppDimensions.screenHeight(context) * 0.015),
 
         // Animated Image
         FadeTransition(
@@ -90,7 +90,7 @@ class _OnboardingPageState extends State<OnboardingPage>
           ),
         ),
 
-        SizedBox(height: AppDimensions.screenHeight(context) * 0.03),
+        SizedBox(height: AppDimensions.screenHeight(context) * 0.025),
 
         // Animated Title
         FadeTransition(
@@ -105,20 +105,24 @@ class _OnboardingPageState extends State<OnboardingPage>
           ),
         ),
 
-        SizedBox(height: AppDimensions.screenHeight(context) * 0.015),
+        SizedBox(height: AppDimensions.screenHeight(context) * 0.012),
 
         // Animated Description
-        FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: Padding(
-              padding: AppDimensions.paddingHorizontal(context, 0.08),
-              child: Text(
-                widget.description,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.onboardingDescription(context),
-                maxLines: 6,
+        Expanded(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: AppDimensions.paddingHorizontal(context, 0.08),
+                  child: Text(
+                    widget.description,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.onboardingDescription(context),
+                    maxLines: 8,
+                  ),
+                ),
               ),
             ),
           ),

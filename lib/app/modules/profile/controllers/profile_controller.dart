@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_images.dart';
@@ -692,13 +693,61 @@ class ProfileController extends GetxController {
       }
 
       if (imageFile != null) {
-        selectedProfileImage.value = imageFile;
-        userImageUrl.value = imageFile.path;
-        developer.log('✅ Image selected: ${imageFile.path}', name: 'ProfileController');
+        // Crop the image
+        final croppedFile = await _cropImage(imageFile);
+
+        if (croppedFile != null) {
+          selectedProfileImage.value = croppedFile;
+          userImageUrl.value = croppedFile.path;
+          developer.log('✅ Image selected and cropped: ${croppedFile.path}', name: 'ProfileController');
+        } else {
+          // If cropping was cancelled, still use the original image
+          selectedProfileImage.value = imageFile;
+          userImageUrl.value = imageFile.path;
+          developer.log('✅ Image selected (cropping cancelled): ${imageFile.path}', name: 'ProfileController');
+        }
       }
     } catch (e) {
       developer.log('❌ Error picking image: $e', name: 'ProfileController');
-      AppDialog.showError(message: 'فشل في اختيار الصورة');
+      AppDialog.showError(message: 'error_picking_image'.tr);
+    }
+  }
+
+  Future<File?> _cropImage(File imageFile) async {
+    try {
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        compressQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        compressFormat: ImageCompressFormat.jpg,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'crop_image'.tr,
+            toolbarColor: const Color(0xFF000D47),
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+            hideBottomControls: false,
+            showCropGrid: true,
+          ),
+          IOSUiSettings(
+            title: 'crop_image'.tr,
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+            aspectRatioPickerButtonHidden: true,
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        return File(croppedFile.path);
+      }
+      return null;
+    } catch (e) {
+      developer.log('❌ Error cropping image: $e', name: 'ProfileController');
+      return null;
     }
   }
 
@@ -735,6 +784,7 @@ class ProfileController extends GetxController {
         final request = UpdateProfileRequestModel(
           name: nameController.text,
           picture: selectedProfileImage.value?.path, // Only send if new local file selected
+          email: emailController.text.isNotEmpty ? emailController.text : null,
         );
 
         final response = await profileProvider.updateProfile(request: request);
@@ -752,6 +802,7 @@ class ProfileController extends GetxController {
           if (user != null) {
             user.name = data.name;
             user.profileImage = data.picture;
+            user.email = data.email;
             await storageService.saveUser(user);
           }
 
@@ -779,6 +830,12 @@ class ProfileController extends GetxController {
     }
     if (emailController.text.isEmpty) {
       AppDialog.showError(message: 'please_enter_email'.tr);
+      return false;
+    }
+    // Validate email format
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(emailController.text)) {
+      AppDialog.showError(message: 'please_enter_valid_email'.tr);
       return false;
     }
     if (phoneController.text.isEmpty) {
@@ -861,8 +918,8 @@ class ProfileController extends GetxController {
       AppDialog.showError(message: 'please_enter_new_password'.tr);
       return false;
     }
-    if (newPasswordController.text.length < 6) {
-      AppDialog.showError(message: 'password_min_length'.tr);
+    if (newPasswordController.text.length < 8) {
+      AppDialog.showError(message: 'password_must_be_8_chars'.tr);
       return false;
     }
     if (confirmPasswordController.text != newPasswordController.text) {

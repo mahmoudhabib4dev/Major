@@ -19,16 +19,23 @@ class NewPasswordView extends GetView<AuthenticationController> {
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: AppScaffold(
-        backgroundImage: AppImages.image2,
-        showContentContainer: true,
-        contentContainerPadding: EdgeInsets.symmetric(
-          horizontal: screenSize.width * 0.05,
-          vertical: screenSize.width * 0.05,
-        ),
-        children: [
-        SizedBox(height: screenSize.height * 0.02),
-        // Title
+      child: Obx(() {
+        return AppScaffold(
+          backgroundImage: AppImages.image2,
+          showContentContainer: true,
+          headerChildren: controller.isSignUpMode.value && controller.isActiveRegistrationSession.value
+              ? [
+                  SizedBox(height: screenSize.height * 0.06),
+                  _buildHeader(context),
+                  SizedBox(height: screenSize.height * 0.08),
+                ]
+              : null,
+          contentContainerPadding: EdgeInsets.symmetric(
+            horizontal: screenSize.width * 0.05,
+            vertical: screenSize.width * 0.05,
+          ),
+          children: [
+            // Title
         FadeInDown(
           duration: const Duration(milliseconds: 600),
           child: Obx(
@@ -78,8 +85,49 @@ class NewPasswordView extends GetView<AuthenticationController> {
           delay: const Duration(milliseconds: 400),
           child: _buildSaveButton(context, screenSize),
         ),
-        SizedBox(height: screenSize.height * 0.05),
-      ],
+            SizedBox(height: screenSize.height * 0.05),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final screenSize = MediaQuery.of(context).size;
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: screenSize.width * 0.04,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Back button (appears on the left in LTR, right in RTL)
+          if (!isRtl)
+            GestureDetector(
+              onTap: controller.backToOtpFromPassword,
+              child: const Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                size: 28,
+              ),
+            )
+          else
+            const SizedBox(width: 40),
+          const SizedBox.shrink(), // Empty center
+          // Back button (appears on the right in RTL, spacer in LTR)
+          if (isRtl)
+            GestureDetector(
+              onTap: controller.backToOtpFromPassword,
+              child: const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 28,
+              ),
+            )
+          else
+            const SizedBox(width: 40),
+        ],
       ),
     );
   }
@@ -142,26 +190,8 @@ class NewPasswordView extends GetView<AuthenticationController> {
         children: [
           _buildRequirementRow(
             context,
-            'password_req_length'.tr,
+            'password_req_8_chars'.tr,
             controller.hasMinLength.value,
-          ),
-          SizedBox(height: 8),
-          _buildRequirementRow(
-            context,
-            'password_req_case'.tr,
-            controller.hasUpperAndLower.value,
-          ),
-          SizedBox(height: 8),
-          _buildRequirementRow(
-            context,
-            'password_req_special'.tr,
-            controller.hasSpecialChar.value,
-          ),
-          SizedBox(height: 8),
-          _buildRequirementRow(
-            context,
-            'password_req_number'.tr,
-            controller.hasNumber.value,
           ),
         ],
       ),

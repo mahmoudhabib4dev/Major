@@ -12,16 +12,22 @@ class LoginButton extends GetView<AuthenticationController> {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => controller.isLoading.value
-          ? const Center(child: AppLoader(size: 50))
-          : AppButton(
-              text: 'login'.tr,
-              onPressed: controller.login,
-              backgroundColor: AppColors.primary,
-              textColor: AppColors.white,
-              borderColor: AppColors.primary,
-              width: double.infinity,
-            ),
+      () {
+        final isFormValid = controller.isLoginFormValid;
+
+        if (controller.isLoading.value) {
+          return const Center(child: AppLoader(size: 50));
+        }
+
+        return AppButton(
+          text: 'login'.tr,
+          onPressed: isFormValid ? controller.login : null,
+          backgroundColor: isFormValid ? AppColors.primary : AppColors.grey300,
+          textColor: AppColors.white,
+          borderColor: isFormValid ? AppColors.primary : AppColors.grey300,
+          width: double.infinity,
+        );
+      },
     );
   }
 }

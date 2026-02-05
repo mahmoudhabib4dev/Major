@@ -38,7 +38,6 @@ class _FilterViewState extends State<FilterView> {
   void initState() {
     super.initState();
     contentTypes = [
-      'filter_type_videos'.tr,
       'filter_type_lessons'.tr,
       'filter_type_pdf'.tr,
     ];
@@ -300,11 +299,9 @@ class _FilterViewState extends State<FilterView> {
                           ),
                           const SizedBox(width: 12),
                           Icon(
-                            filterType == 'video'
-                                ? Icons.play_circle_outline
-                                : filterType == 'lesson'
-                                    ? Icons.book_outlined
-                                    : Icons.picture_as_pdf_outlined,
+                            filterType == 'lesson'
+                                ? Icons.book_outlined
+                                : Icons.picture_as_pdf_outlined,
                             color: AppColors.primary,
                           ),
                         ],
@@ -343,8 +340,8 @@ class _FilterViewState extends State<FilterView> {
   void _onResultTap(Map<String, dynamic> item) {
     final int subjectId = item['subject_id'] as int;
 
-    // For videos and lessons, navigate to the subject detail page
-    if (filterType == 'video' || filterType == 'lesson') {
+    // For lessons, navigate to the subject detail page
+    if (filterType == 'lesson') {
       _navigateToSubject(subjectId);
     } else if (filterType == 'pdf') {
       // TODO: Handle PDF navigation if needed
@@ -417,9 +414,7 @@ class _FilterViewState extends State<FilterView> {
   void _applyFilters(BuildContext context) async {
     // Map content type to API type
     String? apiType;
-    if (selectedContentType == 'filter_type_videos'.tr) {
-      apiType = 'video';
-    } else if (selectedContentType == 'filter_type_lessons'.tr) {
+    if (selectedContentType == 'filter_type_lessons'.tr) {
       apiType = 'lesson';
     } else if (selectedContentType == 'filter_type_pdf'.tr) {
       apiType = 'pdf';

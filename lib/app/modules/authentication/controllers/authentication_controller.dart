@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:hive/hive.dart';
 
@@ -92,28 +93,22 @@ class AuthenticationController extends GetxController {
   }
 
   // Resume pending registration if user closed app during signup
-  void _resumePendingRegistration() {
+  void _resumePendingRegistration() async {
     final step = storageService.registrationStep;
-    developer.log('🔄 Resuming pending registration at step: $step', name: 'AuthController');
+    developer.log('🔄 User had pending registration at step: $step - returning to sign-up page', name: 'AuthController');
 
-    if (step == 'otp') {
-      // User was at OTP verification step
-      userEmail.value = storageService.registrationEmail ?? '';
-      isSignUpMode.value = true;
-      showRestorePasswordPage.value = true;
-      startResendCountdown();
-      developer.log('📱 Resumed at OTP step - email: ${userEmail.value}', name: 'AuthController');
-    } else if (step == 'password') {
-      // User was at password creation step - token should already be in storage
-      userEmail.value = storageService.registrationEmail ?? '';
-      isSignUpMode.value = true;
-      showNewPasswordPage.value = true;
-      developer.log('🔐 Resumed at password step', name: 'AuthController');
-    } else {
-      // Unknown step, clear and show login
-      storageService.clearRegistrationData();
-      showLoginPage.value = true;
+    // Clear the pending registration data
+    storageService.clearRegistrationData();
+
+    // Always show sign-up page to start fresh
+    showSignUpPage.value = true;
+
+    // Load stages if not already loaded
+    if (stages.isEmpty) {
+      await loadStages();
     }
+
+    developer.log('📝 Redirected to sign-up page', name: 'AuthController');
   }
 
   @override
@@ -438,6 +433,7 @@ class AuthenticationController extends GetxController {
   final RxBool showNewPasswordPage = false.obs;
   final RxBool showSubscriptionPage = false.obs;
   final RxBool isSignUpMode = false.obs; // true for sign up, false for password reset
+  final RxBool isActiveRegistrationSession = false.obs; // true for active session, false for resumed from saved state
 
   // Subscription state
   final RxString selectedPlan = 'yearly'.obs;
@@ -505,9 +501,6 @@ class AuthenticationController extends GetxController {
 
   // Password strength indicators
   final RxBool hasMinLength = false.obs;
-  final RxBool hasUpperAndLower = false.obs;
-  final RxBool hasSpecialChar = false.obs;
-  final RxBool hasNumber = false.obs;
   final RxBool passwordsMatch = false.obs;
 
   // Toggle password visibility
@@ -552,8 +545,8 @@ class AuthenticationController extends GetxController {
       return false;
     }
 
-    if (password.length < 6) {
-      passwordError.value = 'password_must_be_6_chars'.tr;
+    if (password.length < 8) {
+      passwordError.value = 'password_must_be_8_chars'.tr;
       return false;
     }
 
@@ -746,6 +739,43 @@ class AuthenticationController extends GetxController {
     _resetSignUpState();
     // Clear any pending registration data
     storageService.clearRegistrationData();
+  }
+
+  // Back to sign up from OTP page (only for active session)
+  void backToSignUpFromOtp() {
+    if (isActiveRegistrationSession.value) {
+      showRestorePasswordPage.value = false;
+      showSignUpPage.value = true;
+      // Clear OTP fields
+      otp1Controller.clear();
+      otp2Controller.clear();
+      otp3Controller.clear();
+      otp4Controller.clear();
+      otpError.value = '';
+      // Reset resend countdown
+      resendCountdown.value = 0;
+      canResend.value = true;
+      // Clear registration step from storage
+      storageService.clearRegistrationData();
+    }
+  }
+
+  // Back to OTP from password page (only for active session)
+  void backToOtpFromPassword() {
+    if (isActiveRegistrationSession.value) {
+      showNewPasswordPage.value = false;
+      showRestorePasswordPage.value = true;
+      // Clear password fields
+      newPasswordController.clear();
+      confirmNewPasswordController.clear();
+      hasMinLength.value = false;
+      passwordsMatch.value = false;
+      // Update registration step back to OTP
+      storageService.saveRegistrationOtpStep(
+        phone: storageService.registrationPhone ?? '',
+        email: userEmail.value,
+      );
+    }
   }
 
   // Reset sign up state
@@ -1039,6 +1069,7 @@ class AuthenticationController extends GetxController {
 
       // Navigate to OTP verification page (restore password page)
       isSignUpMode.value = true;
+      isActiveRegistrationSession.value = true; // Mark as active session - show back button
       showSignUpPage.value = false;
       showRestorePasswordPage.value = true;
 
@@ -1197,6 +1228,7 @@ class AuthenticationController extends GetxController {
           onButtonPressed: () {
             Get.back();
             // Navigate to password creation page
+            isActiveRegistrationSession.value = true; // Keep active session for password page
             showRestorePasswordPage.value = false;
             showNewPasswordPage.value = true;
           },
@@ -1326,19 +1358,8 @@ class AuthenticationController extends GetxController {
   void validateNewPasswordStrength() {
     final password = newPasswordController.text;
 
-    // Check minimum length (8-20 characters)
-    hasMinLength.value = password.length >= 8 && password.length <= 20;
-
-    // Check for uppercase and lowercase
-    hasUpperAndLower.value =
-        password.contains(RegExp(r'[A-Z]')) &&
-        password.contains(RegExp(r'[a-z]'));
-
-    // Check for special character
-    hasSpecialChar.value = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-
-    // Check for number
-    hasNumber.value = password.contains(RegExp(r'[0-9]'));
+    // Check minimum length (8 characters)
+    hasMinLength.value = password.length >= 8;
 
     // Also validate passwords match if confirm field has value
     if (confirmNewPasswordController.text.isNotEmpty) {
@@ -1357,10 +1378,22 @@ class AuthenticationController extends GetxController {
   // Check if new password is valid
   bool get isNewPasswordValid {
     return hasMinLength.value &&
-        hasUpperAndLower.value &&
-        hasSpecialChar.value &&
-        hasNumber.value &&
         passwordsMatch.value;
+  }
+
+  // Check if login form is valid (all required fields filled)
+  bool get isLoginFormValid {
+    return phoneController.text.trim().isNotEmpty &&
+        passwordController.text.trim().isNotEmpty;
+  }
+
+  // Check if sign-up form is valid (all required fields filled)
+  bool get isSignUpFormValid {
+    return usernameController.text.trim().isNotEmpty &&
+        signUpPhoneController.text.trim().isNotEmpty &&
+        signUpEmailController.text.trim().isNotEmpty &&
+        selectedGender.value.isNotEmpty &&
+        agreedToTerms.value;
   }
 
   // Save new password and verify OTP (handles both registration and password reset)
@@ -1528,9 +1561,6 @@ class AuthenticationController extends GetxController {
     obscureNewPassword.value = true;
     obscureConfirmNewPassword.value = true;
     hasMinLength.value = false;
-    hasUpperAndLower.value = false;
-    hasSpecialChar.value = false;
-    hasNumber.value = false;
     passwordsMatch.value = false;
     isSignUpMode.value = false;
   }
@@ -1649,14 +1679,61 @@ class AuthenticationController extends GetxController {
 
       developer.log('✅ Image selected: ${imageFile.path}', name: 'AuthController');
 
-      // Use the image directly without cropping
-      transferReceiptFile.value = imageFile;
-      transferReceiptFileName.value = imageFile.path.split('/').last;
-      developer.log('✅ Image saved: ${imageFile.path}', name: 'AuthController');
-      AppDialog.showSuccess(message: 'image_selected_success'.tr);
+      // Crop the image
+      final croppedFile = await _cropPaymentReceiptImage(imageFile);
+
+      if (croppedFile != null) {
+        transferReceiptFile.value = croppedFile;
+        transferReceiptFileName.value = croppedFile.path.split('/').last;
+        developer.log('✅ Image cropped and saved: ${croppedFile.path}', name: 'AuthController');
+        AppDialog.showSuccess(message: 'image_selected_success'.tr);
+      } else {
+        // If cropping was cancelled, use the original image
+        transferReceiptFile.value = imageFile;
+        transferReceiptFileName.value = imageFile.path.split('/').last;
+        developer.log('✅ Image saved (cropping cancelled): ${imageFile.path}', name: 'AuthController');
+        AppDialog.showSuccess(message: 'image_selected_success'.tr);
+      }
     } catch (e) {
       developer.log('❌ Error picking image: $e', name: 'AuthController');
       AppDialog.showError(message: 'error_picking_image'.tr);
+    }
+  }
+
+  // Crop payment receipt image
+  Future<File?> _cropPaymentReceiptImage(File imageFile) async {
+    try {
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        compressQuality: 85,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        compressFormat: ImageCompressFormat.jpg,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'crop_receipt'.tr,
+            toolbarColor: const Color(0xFF000D47),
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+            hideBottomControls: false,
+            showCropGrid: true,
+          ),
+          IOSUiSettings(
+            title: 'crop_receipt'.tr,
+            aspectRatioLockEnabled: false,
+            resetAspectRatioEnabled: true,
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        return File(croppedFile.path);
+      }
+      return null;
+    } catch (e) {
+      developer.log('❌ Error cropping receipt image: $e', name: 'AuthController');
+      return null;
     }
   }
 
